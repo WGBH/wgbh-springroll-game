@@ -1,3 +1,4 @@
+/// <reference types="pixi-animate" />
 import Scene from './Scene';
 export default class StageManager {
     curtains: PIXI.animate.MovieClip;

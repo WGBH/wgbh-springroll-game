@@ -12,6 +12,7 @@
         "moduleResolution": "node",
         "noUnusedLocals": true,
         "noImplicitAny": true,
+        "removeComments": false,
         "stripInternal": true,
         "types": []
     },
