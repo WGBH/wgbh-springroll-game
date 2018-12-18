@@ -49,7 +49,7 @@ export default class AssetManager {
                     }
                 }
                 for(let result of results){
-                    newList.concat(result);
+                    newList = newList.concat(result);
                 }
                 this.loadAssets(newList, callback);
             });
@@ -171,7 +171,9 @@ export default class AssetManager {
         return new Promise((resolve) => {
             PIXI.animate.load(animateStageDescriptor.stage, (movieClip)=>{
                 this.animations[animateStageDescriptor.id] = movieClip;
-                this.globalCache.animations.push(animateStageDescriptor.id);
+                if(animateStageDescriptor.isGlobal){
+                    this.globalCache.animations.push(animateStageDescriptor.id);
+                }
                 resolve();
             });
         });
@@ -196,17 +198,21 @@ export default class AssetManager {
 
     private loadSound(soundDescriptor:SoundDescriptor):Promise<void>{
         return new Promise((resolve)=>{
-            let soundOptions:PIXI.sound.Options = {url: soundDescriptor.path, preload:true, loaded:(err, sound)=>{
-                this.sounds[soundDescriptor.id] = sound;
-                if(soundDescriptor.isGlobal){
-                    this.globalCache.sounds.push(soundDescriptor.id);
-                }
-                resolve();
-            }};
+            let soundOptions:PIXI.sound.Options = {url: soundDescriptor.path, preload:soundDescriptor.preload !== false};
             if(soundDescriptor.volume !== undefined && typeof soundDescriptor.volume === 'number'){
                 soundOptions.volume = soundDescriptor.volume;
             }
-            PIXI.sound.add(soundDescriptor.id, soundOptions);
+            if(soundOptions.preload){
+                soundOptions.loaded = ()=>{ resolve(); };
+            }
+
+            this.sounds[soundDescriptor.id] = PIXI.sound.add(soundDescriptor.id, soundOptions);
+            if(soundDescriptor.isGlobal){
+                this.globalCache.sounds.push(soundDescriptor.id);
+            }
+            if(!soundOptions.preload){
+                resolve();
+            }
         });
     }
 
@@ -272,6 +278,8 @@ export interface SoundDescriptor extends AssetDescriptor {
     volume?: number;
     /** true to disallow playing multiple layered instances at once. */
     singleInstance?: boolean;
+    /** set `false` to not preload this sound - defaults to `true` */
+    preload?:boolean;
 }
 
 export interface ImageDescriptor extends AssetDescriptor {

@@ -58,6 +58,8 @@ export interface SoundDescriptor extends AssetDescriptor {
     volume?: number;
     /** true to disallow playing multiple layered instances at once. */
     singleInstance?: boolean;
+    /** set `false` to not preload this sound - defaults to `true` */
+    preload?: boolean;
 }
 export interface ImageDescriptor extends AssetDescriptor {
     /** identifier of image for later retrieval from cache */
