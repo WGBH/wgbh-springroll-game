@@ -2,14 +2,21 @@
 /// <reference types="pixi-sound" />
 /// <reference types="pixi-animate" />
 export default class AssetManager {
+    /** references to data objects from loaded JSON files */
     data: {
         [key: string]: any;
     };
+    /** references to Textures for loaded Images */
     images: {
         [key: string]: PIXI.Texture;
     };
+    /** instances of loaded Sounds */
     sounds: {
         [key: string]: PIXI.sound.Sound;
+    };
+    /** instances of loaded PixiAnimate stages - use these first when possible */
+    animations: {
+        [key: string]: PIXI.animate.MovieClip;
     };
     /** IDs of cached assets that should persist between scenes */
     private globalCache;
@@ -17,7 +24,7 @@ export default class AssetManager {
      * loads assets for a Scene
      * @param assetList assets to be loaded
      */
-    loadAssets(assetList: AssetList, callback: Function): void;
+    loadAssets(assetList: AssetList, callback: Function): any;
     private executeLoads;
     private saveCacheState;
     /**
@@ -26,7 +33,8 @@ export default class AssetManager {
      */
     unloadAssets(includeGlobal?: boolean): void;
     private loadAnimate;
-    private loadPixi;
+    private loadImages;
+    private loadSound;
     private loadData;
     private loadManifest;
 }
@@ -46,6 +54,10 @@ export interface SoundDescriptor extends AssetDescriptor {
     /** path to audio file. Supports automatic format selection via './path/to/file.{ogg,mp3}' */
     path: string;
     type: 'sound';
+    /** volume to initialize this sound to */
+    volume?: number;
+    /** true to disallow playing multiple layered instances at once. */
+    singleInstance?: boolean;
 }
 export interface ImageDescriptor extends AssetDescriptor {
     /** identifier of image for later retrieval from cache */
@@ -62,6 +74,8 @@ export interface DataDescriptor extends AssetDescriptor {
     type: 'data';
 }
 export interface AnimateStageDescriptor extends AssetDescriptor {
+    /** identifier of Animate stage for later retrieval from cache */
+    id: string;
     /** `stage` property from PixiAnimate export */
     stage: AnimateStage;
     type: 'animate';
