@@ -59,6 +59,14 @@ export default class AssetManager {
         const localList: AssetList = [];
         const globalList: AssetList = [];
         for(let asset of assetList){
+            if((asset.type === 'animate' && this.globalCache.animations.includes(asset.id)) ||
+                (asset.type === 'data' && this.globalCache.data.includes(asset.id)) ||
+                (asset.type === 'sound' && this.globalCache.sounds.includes(asset.id)) ||
+                (asset.type === 'image' && this.globalCache.textures.includes(asset.id))
+            ){
+                console.info('Using global asset: ', asset.id);
+                continue;
+            }
             asset.isGlobal ? globalList.push(asset) : localList.push(asset);
         }
         this.executeLoads(globalList)

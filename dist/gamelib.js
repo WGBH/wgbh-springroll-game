@@ -66,6 +66,13 @@ var AssetManager = /** @class */ (function () {
         var globalList = [];
         for (var _a = 0, assetList_2 = assetList; _a < assetList_2.length; _a++) {
             var asset = assetList_2[_a];
+            if ((asset.type === 'animate' && this.globalCache.animations.includes(asset.id)) ||
+                (asset.type === 'data' && this.globalCache.data.includes(asset.id)) ||
+                (asset.type === 'sound' && this.globalCache.sounds.includes(asset.id)) ||
+                (asset.type === 'image' && this.globalCache.textures.includes(asset.id))) {
+                console.info('Using global asset: ', asset.id);
+                continue;
+            }
             asset.isGlobal ? globalList.push(asset) : localList.push(asset);
         }
         this.executeLoads(globalList)
