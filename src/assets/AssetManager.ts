@@ -1,11 +1,11 @@
+import SoundManager from "../sound/SoundManager";
+
 export default class AssetManager {
 
     /** references to data objects from loaded JSON files */
     public data: {[key: string]: any} = {};
     /** references to Textures for loaded Images */
     public images: {[key: string]: PIXI.Texture} = {};
-    /** instances of loaded Sounds */
-    public sounds: {[key: string]: PIXI.sound.Sound} = {};
     /** instances of loaded PixiAnimate stages - use these first when possible */
     public animations: {[key: string]: PIXI.animate.MovieClip} = {};
 
@@ -18,6 +18,15 @@ export default class AssetManager {
         data: [],
         animations: []
     };
+
+    /** IDs of loaded Sounds */
+    private soundIDs: string[] = [];
+    private soundManager:SoundManager;
+
+
+    constructor(soundManager:SoundManager){
+        this.soundManager = soundManager;
+    }
  
     /**
      * loads assets for a Scene
@@ -125,8 +134,10 @@ export default class AssetManager {
 
         for(let id in this.animations){
             if(!this.globalCache.animations.includes(id)){
-                this.animations[id].destroy();
-                delete this.animations[id];
+                if(this.animations[id]){
+                    this.animations[id].destroy();
+                    delete this.animations[id];
+                }
             }
         }
         for(let id in PIXI.utils.TextureCache){
@@ -140,10 +151,11 @@ export default class AssetManager {
                 PIXI.animate.ShapesCache.remove(id);
             }
         }
-        for(let id in this.sounds){
+        for(let i = this.soundIDs.length - 1; i >= 0; i--){
+            let id = this.soundIDs[i];
             if(!this.globalCache.sounds.includes(id)){
-                delete this.sounds[id];
-                PIXI.sound.remove(id);
+                this.soundManager.removeSound(id);
+                this.soundIDs.splice(i, 1);
             }
         }
         for(let id in PIXI.loader.resources){
@@ -178,7 +190,9 @@ export default class AssetManager {
     private loadAnimate(animateStageDescriptor:AnimateStageDescriptor):Promise<any>{
         return new Promise((resolve) => {
             PIXI.animate.load(animateStageDescriptor.stage, (movieClip)=>{
-                this.animations[animateStageDescriptor.id] = movieClip;
+                if(animateStageDescriptor.cacheInstance){
+                    this.animations[animateStageDescriptor.id] = movieClip;
+                }
                 if(animateStageDescriptor.isGlobal){
                     this.globalCache.animations.push(animateStageDescriptor.id);
                 }
@@ -214,7 +228,8 @@ export default class AssetManager {
                 soundOptions.loaded = ()=>{ resolve(); };
             }
 
-            this.sounds[soundDescriptor.id] = PIXI.sound.add(soundDescriptor.id, soundOptions);
+            this.soundManager.addSound(PIXI.sound.add(soundDescriptor.id, soundOptions), soundDescriptor);
+            this.soundIDs.push(soundDescriptor.id);
             if(soundDescriptor.isGlobal){
                 this.globalCache.sounds.push(soundDescriptor.id);
             }
@@ -288,6 +303,8 @@ export interface SoundDescriptor extends AssetDescriptor {
     singleInstance?: boolean;
     /** set `false` to not preload this sound - defaults to `true` */
     preload?:boolean;
+    /** category of sound for group volume control - defaults to "sfx" */
+    context?: 'vo' | 'sfx' | 'music';
 }
 
 export interface ImageDescriptor extends AssetDescriptor {
@@ -312,6 +329,8 @@ export interface AnimateStageDescriptor extends AssetDescriptor {
     /** `stage` property from PixiAnimate export */
     stage: AnimateStage;
     type: 'animate';
+    /** should an instance of this Stage be saved on assets.animations? */
+    cacheInstance?:boolean;
 }
 
 /** Stage of PixiAnimate export, includes asset dependency manifest */

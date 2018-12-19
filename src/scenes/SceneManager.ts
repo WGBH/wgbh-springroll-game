@@ -1,7 +1,7 @@
 import Scene from './Scene';
 
 
-export default class StageManager{
+export default class SceneManager{
 
     public curtains:PIXI.animate.MovieClip;
     private _currentScene:Scene;

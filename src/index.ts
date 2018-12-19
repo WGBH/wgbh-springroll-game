@@ -4,15 +4,15 @@
 /// <reference types="springroll" />
 
 import Game from './Game';
-import Scene from './stagemanager/Scene';
-import StageManager from './stagemanager/StageManager';
-import AssetManager from './assetmanager/AssetManager';
-import {AssetList} from './assetmanager/AssetManager';
+import Scene from './scenes/Scene';
+import SceneManager from './scenes/SceneManager';
+import AssetManager from './assets/AssetManager';
+import {AssetList} from './assets/AssetManager';
 
 export {
     Game,
     Scene,
-    StageManager,
+    SceneManager,
     AssetManager,
     AssetList
 };
