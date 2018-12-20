@@ -1,4 +1,5 @@
 import Game from '../Game';
+import { AssetList } from '..';
 
 /**
  * Generic Scene base class
@@ -12,14 +13,16 @@ export default class Scene extends PIXI.Container {
     }
 
     /**
-     * asynchronous load tasks
-     * @returns {Promise}
+     * provide list of assets to preload
+     * @returns {AssetList}
      */
-    preload():Promise<any> {
-        //Override this if you have stuff to preload - don't call super(), return your own Promise
-        // add assets, and load them. Resolve a promise when it's all done
-        return Promise.resolve();
-      }
+    preload():AssetList {
+        return;
+    }
+
+    changeScene(sceneID:string){
+        this.game.changeScene(sceneID);
+    }
 
     /**
      * prepare initial visual state - called after preload is complete, while scene is obscured by loader

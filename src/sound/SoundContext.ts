@@ -1,6 +1,6 @@
 export default class SoundContext {
 
-    private sounds: {[key:string]: PIXI.sound.Sound} = {};
+    public sounds: {[key:string]: PIXI.sound.Sound} = {};
     private volumes: {[key:string]: number} = {};
 
     private _globalVolume:number = 1;
@@ -24,7 +24,7 @@ export default class SoundContext {
         this.sounds[id] = sound;
         this.volumes[id] = volume;
         this.applyVolume(id);
-    };
+    }
 
     applyVolume(id:string, volume?:number){
         if(volume !== undefined){

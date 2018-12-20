@@ -1,6 +1,9 @@
 import Game from './Game';
-import Scene from './stagemanager/Scene';
-import StageManager from './stagemanager/StageManager';
-import AssetManager from './assetmanager/AssetManager';
-import { AssetList } from './assetmanager/AssetManager';
-export { Game, Scene, StageManager, AssetManager, AssetList };
+import { GameOptions } from './Game';
+import Scene from './scenes/Scene';
+import StageManager from './scenes/StageManager';
+import AssetManager from './assets/AssetManager';
+import SoundManager from './sound/SoundManager';
+import SoundContext from './sound/SoundContext';
+import { AssetList } from './assets/AssetManager';
+export { Game, GameOptions, Scene, StageManager, AssetManager, AssetList, SoundManager, SoundContext };

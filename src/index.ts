@@ -4,15 +4,21 @@
 /// <reference types="springroll" />
 
 import Game from './Game';
+import {GameOptions} from './Game';
 import Scene from './scenes/Scene';
-import SceneManager from './scenes/SceneManager';
+import StageManager from './scenes/StageManager';
 import AssetManager from './assets/AssetManager';
+import SoundManager from './sound/SoundManager';
+import SoundContext from './sound/SoundContext';
 import {AssetList} from './assets/AssetManager';
 
 export {
     Game,
+    GameOptions,
     Scene,
-    SceneManager,
+    StageManager,
     AssetManager,
-    AssetList
+    AssetList,
+    SoundManager,
+    SoundContext
 };
