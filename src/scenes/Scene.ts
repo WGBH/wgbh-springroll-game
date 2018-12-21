@@ -2,10 +2,11 @@ import Game from '../Game';
 import { AssetList } from '..';
 
 /**
- * Generic Scene base class
+ * Generic Scene base class, parent container for all art and functionality in a given scene
  */
 export default class Scene extends PIXI.Container {
-    public game:Game;
+    /** reference to main Game instance */
+    protected game:Game;
   
     constructor(game:Game) {
         super();
@@ -20,6 +21,10 @@ export default class Scene extends PIXI.Container {
         return;
     }
 
+    /**
+     * Exit this Scene and transition to specified scene
+     * @param {string} sceneID ID of Scene to transition to
+     */
     changeScene(sceneID:string){
         this.game.changeScene(sceneID);
     }
@@ -46,7 +51,11 @@ export default class Scene extends PIXI.Container {
         //override this to get update ticks
     }
 
+    /**
+     * Called when Scene is about to transition out - override to clean up art or other objects in memory
+     * @returns {Promise | void} return a Promise to resolve when any asynchronous cleanup is complete
+     */
     cleanup():Promise<any>|void {
-        return Promise.reject('CLEANUP YOUR OWN STUFF!');
+        //override this to clean up Scene
     }
 }

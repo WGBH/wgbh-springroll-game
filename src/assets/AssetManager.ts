@@ -1,5 +1,8 @@
 import SoundManager from "../sound/SoundManager";
 
+/**
+ * Manages loading, caching, and unloading of assets
+ */
 export default class AssetManager {
 
     /** references to data objects from loaded JSON files */
@@ -10,10 +13,9 @@ export default class AssetManager {
     public animations: {[key: string]: PIXI.animate.MovieClip} = {};
 
     /** IDs of cached assets that should persist between scenes */
-    private globalCache:{shapes:string[], textures:string[], resources:string[], sounds:string[], data:string[], animations:string[]} = {
+    private globalCache:{shapes:string[], textures:string[], sounds:string[], data:string[], animations:string[]} = {
         shapes: [],
         textures: [],
-        resources: [],
         sounds: [],
         data: [],
         animations: []
@@ -30,7 +32,8 @@ export default class AssetManager {
  
     /**
      * loads assets for a Scene
-     * @param assetList assets to be loaded
+     * @param {AssetList} assetList assets to be loaded
+     * @param {Function} callback called when all assets in assetList have been loaded
      */
     public loadAssets(assetList:AssetList, callback:Function){
         if(!assetList || !assetList.length){
@@ -84,6 +87,7 @@ export default class AssetManager {
         .then(()=>{callback();});
     }
 
+    /** custom handling for loading different types of assets */
     private executeLoads(assetList:AssetList):Promise<any>{
         return new Promise((resolve)=>{
             const loads:Promise<any>[] = [];
@@ -111,16 +115,15 @@ export default class AssetManager {
         });
     }
 
+    /** Save current state of PIXI Global caches, to prevent unloading global assets */
     private saveCacheState = () => {
-        //TODO: de-dupe
         Object.keys(PIXI.animate.ShapesCache).forEach((key) => this.globalCache.shapes.push(key));
         Object.keys(PIXI.utils.TextureCache).forEach((key) => this.globalCache.textures.push(key));
-        Object.keys(PIXI.loader.resources).forEach((key) => this.globalCache.resources.push(key));
     }
 
     /**
      * unload assets loaded via loadAssets
-     * @param {boolean} includeGlobal  should global caches be cleared?
+     * @param {boolean} [includeGlobal = false]  should global caches be cleared?
      */
     public unloadAssets(includeGlobal = false){
         if(includeGlobal){
@@ -129,7 +132,6 @@ export default class AssetManager {
             this.globalCache.sounds.length = 0;
             this.globalCache.shapes.length = 0;
             this.globalCache.textures.length = 0;
-            this.globalCache.resources.length = 0;
         }
 
         for(let id in this.animations){
@@ -161,32 +163,12 @@ export default class AssetManager {
         for(let id in PIXI.loader.resources){
             console.warn('unmanaged resource detected: ', id, PIXI.loader.resources[id]);
         }
-
-        //TODO: should we touch this cache?
-        // for(let id in PIXI.loader.resources){
-        //     if(!this.globalCache.resources.includes(id)){
-        //         let resource = PIXI.loader.resources[id];
-        //         if(resource.type === PIXI.loaders.Resource.TYPE.AUDIO || resource.hasOwnProperty('sound')){
-        //             console.warn('found a rogue sound', resource);
-        //             continue;
-        //             //((resource as any).sound as PIXI.sound.Sound).destroy();
-        //         }
-        //         else if(resource.type === PIXI.loaders.Resource.TYPE.IMAGE || resource.hasOwnProperty('texture') || resource.hasOwnProperty('textures')){
-        //             if(resource.textures){
-        //                 for(let key in resource.textures){
-        //                     resource.textures[key].destroy();
-        //                 }
-        //             }
-        //             if(resource.texture){
-        //                 resource.texture.destroy();
-        //             }
-        //             delete this.images[id];
-        //             delete PIXI.loader.resources[id];
-        //         }
-        //     }
-        // }
     }
-
+    
+    /**
+     * load assets for a PixiAnimate stage
+     * @param {AnimateStageDescriptor} animateStageDescriptor 
+     */
     private loadAnimate(animateStageDescriptor:AnimateStageDescriptor):Promise<any>{
         return new Promise((resolve) => {
             PIXI.animate.load(animateStageDescriptor.stage, (movieClip)=>{
@@ -201,6 +183,10 @@ export default class AssetManager {
         });
     }
 
+    /**
+     * Load list of individual image files to PIXI Textures
+     * @param {ImageDescriptor[]} assets Array of imnages assets to load
+     */
     private loadImages(assets:ImageDescriptor[]):Promise<any>{
         let imageLoader = new PIXI.loaders.Loader();
         return new Promise((resolve)=>{
@@ -217,7 +203,10 @@ export default class AssetManager {
         });
     }
 
-
+    /**
+     * Load an audio file to PIXI Sound
+     * @param {SoundDescriptor} soundDescriptor 
+     */
     private loadSound(soundDescriptor:SoundDescriptor):Promise<void>{
         return new Promise((resolve)=>{
             let soundOptions:PIXI.sound.Options = {url: soundDescriptor.path, preload:soundDescriptor.preload !== false};
@@ -239,6 +228,10 @@ export default class AssetManager {
         });
     }
 
+    /**
+     * Load JSON data
+     * @param {DataDescriptor} dataDescriptor 
+     */
     private loadData(dataDescriptor:DataDescriptor):Promise<void>{
         return new Promise((resolve)=>{
             const request = new XMLHttpRequest();
@@ -257,6 +250,10 @@ export default class AssetManager {
         });
     }
 
+    /**
+     * Load JSON file containing an AssetList
+     * @param {ManifestDescriptor} manifestDescriptor 
+     */
     private loadManifest(manifestDescriptor:ManifestDescriptor):Promise<AssetDescriptor[]>{
         return new Promise((resolve)=>{
             const request = new XMLHttpRequest();
@@ -278,19 +275,23 @@ export default class AssetManager {
     }
 }
 
+/** Array of  */
 export type AssetList = (ManifestDescriptor|AnimateStageDescriptor|DataDescriptor|ImageDescriptor|SoundDescriptor)[];
 
+/** Load instruction base interface */
 export interface AssetDescriptor {
     /** Should asset stay in cache after current Scene is exited? */
     isGlobal?: boolean;
 }
 
+/** Load instructions for JSON file containing an AssetList - Manifests cannot include 'animate' type assets */
 export interface ManifestDescriptor extends AssetDescriptor {
     /** path to JSON format AssetList */
     path: string;
     type: 'manifest';
 }
 
+/** Load instructions for Sound assets */
 export interface SoundDescriptor extends AssetDescriptor {
     /** identifier of sound for later retrieval from cache */
     id: string;
@@ -307,6 +308,7 @@ export interface SoundDescriptor extends AssetDescriptor {
     context?: 'vo' | 'sfx' | 'music';
 }
 
+/** Load instructions for individual image assets */
 export interface ImageDescriptor extends AssetDescriptor {
     /** identifier of image for later retrieval from cache */
     id: string;
@@ -315,6 +317,7 @@ export interface ImageDescriptor extends AssetDescriptor {
     type: 'image';
 }
 
+/** Load instructions for JSON data assets */
 export interface DataDescriptor extends AssetDescriptor {
     /** identifier of data object for later retrieval from cache */
     id: string;
@@ -323,6 +326,7 @@ export interface DataDescriptor extends AssetDescriptor {
     type: 'data';
 }
 
+/** Load instructions for PixiAnimate stage dependency assets */
 export interface AnimateStageDescriptor extends AssetDescriptor {
     /** identifier of Animate stage for later retrieval from cache */
     id: string;

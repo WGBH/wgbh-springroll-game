@@ -4,6 +4,9 @@ import AssetManager, { AnimateStage } from '../assets/AssetManager';
 
 const TRANSITION_ID = 'wgbhSpringRollGameTransition';
 
+/**
+ * Manages rendering and transitioning between Scenes
+ */
 export default class StageManager{
     public pixi: PIXI.Application;
     public width: number;

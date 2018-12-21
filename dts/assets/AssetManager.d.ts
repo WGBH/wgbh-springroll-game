@@ -1,6 +1,9 @@
 /// <reference types="pixi.js" />
 /// <reference types="pixi-animate" />
 import SoundManager from "../sound/SoundManager";
+/**
+ * Manages loading, caching, and unloading of assets
+ */
 export default class AssetManager {
     /** references to data objects from loaded JSON files */
     data: {
@@ -22,32 +25,59 @@ export default class AssetManager {
     constructor(soundManager: SoundManager);
     /**
      * loads assets for a Scene
-     * @param assetList assets to be loaded
+     * @param {AssetList} assetList assets to be loaded
+     * @param {Function} callback called when all assets in assetList have been loaded
      */
     loadAssets(assetList: AssetList, callback: Function): any;
+    /** custom handling for loading different types of assets */
     private executeLoads;
+    /** Save current state of PIXI Global caches, to prevent unloading global assets */
     private saveCacheState;
     /**
      * unload assets loaded via loadAssets
-     * @param {boolean} includeGlobal  should global caches be cleared?
+     * @param {boolean} [includeGlobal = false]  should global caches be cleared?
      */
     unloadAssets(includeGlobal?: boolean): void;
+    /**
+     * load assets for a PixiAnimate stage
+     * @param {AnimateStageDescriptor} animateStageDescriptor
+     */
     private loadAnimate;
+    /**
+     * Load list of individual image files to PIXI Textures
+     * @param {ImageDescriptor[]} assets Array of imnages assets to load
+     */
     private loadImages;
+    /**
+     * Load an audio file to PIXI Sound
+     * @param {SoundDescriptor} soundDescriptor
+     */
     private loadSound;
+    /**
+     * Load JSON data
+     * @param {DataDescriptor} dataDescriptor
+     */
     private loadData;
+    /**
+     * Load JSON file containing an AssetList
+     * @param {ManifestDescriptor} manifestDescriptor
+     */
     private loadManifest;
 }
+/** Array of  */
 export declare type AssetList = (ManifestDescriptor | AnimateStageDescriptor | DataDescriptor | ImageDescriptor | SoundDescriptor)[];
+/** Load instruction base interface */
 export interface AssetDescriptor {
     /** Should asset stay in cache after current Scene is exited? */
     isGlobal?: boolean;
 }
+/** Load instructions for JSON file containing an AssetList - Manifests cannot include 'animate' type assets */
 export interface ManifestDescriptor extends AssetDescriptor {
     /** path to JSON format AssetList */
     path: string;
     type: 'manifest';
 }
+/** Load instructions for Sound assets */
 export interface SoundDescriptor extends AssetDescriptor {
     /** identifier of sound for later retrieval from cache */
     id: string;
@@ -63,6 +93,7 @@ export interface SoundDescriptor extends AssetDescriptor {
     /** category of sound for group volume control - defaults to "sfx" */
     context?: 'vo' | 'sfx' | 'music';
 }
+/** Load instructions for individual image assets */
 export interface ImageDescriptor extends AssetDescriptor {
     /** identifier of image for later retrieval from cache */
     id: string;
@@ -70,6 +101,7 @@ export interface ImageDescriptor extends AssetDescriptor {
     path: string;
     type: 'image';
 }
+/** Load instructions for JSON data assets */
 export interface DataDescriptor extends AssetDescriptor {
     /** identifier of data object for later retrieval from cache */
     id: string;
@@ -77,6 +109,7 @@ export interface DataDescriptor extends AssetDescriptor {
     path: string;
     type: 'data';
 }
+/** Load instructions for PixiAnimate stage dependency assets */
 export interface AnimateStageDescriptor extends AssetDescriptor {
     /** identifier of Animate stage for later retrieval from cache */
     id: string;

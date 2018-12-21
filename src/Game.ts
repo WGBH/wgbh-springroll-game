@@ -5,15 +5,20 @@ import StageManager from "./scenes/StageManager";
 import SoundManager from './sound/SoundManager';
 import { Scene } from '.';
 
+
+/** Base Class for WGBH SpringRoll Games - extend this Class in your project */
 export default class Game {
 
+    /** SpringRoll Application, interface to Container */
     public app: SpringRoll.Application;
-    private _isPaused: boolean;
-
+    /** Asset Manager, for loading, caching, and unloading of assets */
     public assets:AssetManager;
+    /** Stage Manager, for managing Scenes, transitions, and renderer */
     public stageManager: StageManager;
+    /** Sound Manager, for controlling Playback, pausing/resuming, and volume of Sounds */
     public sound: SoundManager;
 
+    /** Map of Scenes by Scene IDs, set this in your instance extending this Class */
     protected scenes: {[key:string]:Scene};
 
     constructor(options:GameOptions){
@@ -35,7 +40,8 @@ export default class Game {
             this.sound.voVolume = volume;
         });
         this.app.state.pause.subscribe((pause)=>{
-            this.pause = pause;
+            pause ? this.sound.pause() : this.sound.resume();
+            this.stageManager.pause = pause;
         });
 
         this.app.state.ready.subscribe(() => {
@@ -43,11 +49,15 @@ export default class Game {
             });
     }
 
-    /** called when game is ready to enter first scene - set first scene here */
+    /** called when game is ready to enter first scene - override this function and set first scene here */
     protected gameReady(){
         //override and set first scene in this function
     }
-
+    
+    /**
+     * Transition to specified scene
+     * @param {string} sceneID ID of Scene to transition to
+     */
     changeScene(sceneID:string){
         const scene = this.scenes[sceneID];
         if(!scene){
@@ -55,21 +65,18 @@ export default class Game {
         }
         this.stageManager.scene = scene;
     }
-
-    get pause(){
-        return this._isPaused;
-    }
-    set pause(pause:boolean){
-        this._isPaused = pause;
-        pause ? this.sound.pause() : this.sound.resume();
-        this.stageManager.pause = pause;
-    }
 }
 
+/** Configuration object for Game */
 export interface GameOptions {
+    /** SpringRoll Application configuration options */
     springRollConfig: SpringRoll.ApplicationConfig;
+    /** target width of game in pixels */
     width: number;
+    /** target height of game in pixels */
     height: number;
+    /** Class of Animate Stage to use for transitions */
     transition: AnimateStage;
+    /** ID of HTML element on your page to add this game's Canvas to */
     containerID: string;
 }

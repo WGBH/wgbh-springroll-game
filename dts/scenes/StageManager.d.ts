@@ -2,6 +2,9 @@
 /// <reference types="pixi-animate" />
 import Scene from './Scene';
 import AssetManager, { AnimateStage } from '../assets/AssetManager';
+/**
+ * Manages rendering and transitioning between Scenes
+ */
 export default class StageManager {
     pixi: PIXI.Application;
     width: number;
