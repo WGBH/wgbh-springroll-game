@@ -1,16 +1,24 @@
 import Game from '../Game';
-import { AssetList } from '..';
+import { AssetList, AssetManager, SoundManager, StageManager } from '..';
 
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
  */
 export default class Scene extends PIXI.Container {
-    /** reference to main Game instance */
-    protected game:Game;
-  
+    protected readonly assets: AssetManager;
+
+    protected readonly sound: SoundManager;
+
+    protected readonly dataStore: {[key:string]:any};
+
+    private readonly stageManager: StageManager;
+
     constructor(game:Game) {
         super();
-        this.game = game;
+        this.assets = game.assets;
+        this.sound = game.sound;
+        this.stageManager = game.stageManager;
+        this.dataStore = game.dataStore;
     }
 
     /**
@@ -26,7 +34,7 @@ export default class Scene extends PIXI.Container {
      * @param {string} sceneID ID of Scene to transition to
      */
     changeScene(sceneID:string){
-        this.game.changeScene(sceneID);
+        this.stageManager.changeScene(sceneID);
     }
 
     /**
@@ -44,6 +52,16 @@ export default class Scene extends PIXI.Container {
     }
 
     /**
+     * pause scene - override this if you need to pause functionality of your scene
+     * when the rendering and sound is paused
+     * @param paused whether or not the game is being paused (false if being resumed)
+     */
+    pause(paused:boolean){
+        //override this if you have custom timed functionality that should be paused
+        //with the rest of the game
+    }
+
+    /**
      * callback for frame ticks
      * @param {number} deltaTime time since last frame in multiples of one frame's length of time.
      */
@@ -53,9 +71,9 @@ export default class Scene extends PIXI.Container {
 
     /**
      * Called when Scene is about to transition out - override to clean up art or other objects in memory
-     * @returns {Promise | void} return a Promise to resolve when any asynchronous cleanup is complete
+     * @returns {void} return a Promise to resolve when any asynchronous cleanup is complete
      */
-    cleanup():Promise<any>|void {
+    cleanup():void {
         //override this to clean up Scene
     }
 }

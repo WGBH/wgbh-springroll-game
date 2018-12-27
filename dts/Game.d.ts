@@ -13,13 +13,17 @@ export default class Game {
     stageManager: StageManager;
     /** Sound Manager, for controlling Playback, pausing/resuming, and volume of Sounds */
     sound: SoundManager;
-    /** Map of Scenes by Scene IDs, set this in your instance extending this Class */
-    protected scenes: {
-        [key: string]: Scene;
+    /** object for storing global data - accessible from all Scenes */
+    dataStore: {
+        [key: string]: any;
     };
     constructor(options: GameOptions);
     /** called when game is ready to enter first scene - override this function and set first scene here */
     protected gameReady(): void;
+    addScene(id: string, scene: typeof Scene): void;
+    addScenes(sceneMap: {
+        [key: string]: typeof Scene;
+    }): void;
     /**
      * Transition to specified scene
      * @param {string} sceneID ID of Scene to transition to

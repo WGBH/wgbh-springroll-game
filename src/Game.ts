@@ -17,14 +17,13 @@ export default class Game {
     public stageManager: StageManager;
     /** Sound Manager, for controlling Playback, pausing/resuming, and volume of Sounds */
     public sound: SoundManager;
-
-    /** Map of Scenes by Scene IDs, set this in your instance extending this Class */
-    protected scenes: {[key:string]:Scene};
+    /** object for storing global data - accessible from all Scenes */
+    public dataStore: {[key:string]:any} = {};
 
     constructor(options:GameOptions){
         this.sound = new SoundManager();
         this.assets = new AssetManager(this.sound);
-        this.stageManager = new StageManager(this.assets, options.containerID, options.width, options.height);
+        this.stageManager = new StageManager(this, options.containerID, options.width, options.height);
 
         this.app = new SpringRoll.Application(options.springRollConfig);
         this.app.state.soundVolume.subscribe((volume)=>{
@@ -53,17 +52,20 @@ export default class Game {
     protected gameReady(){
         //override and set first scene in this function
     }
+
+    addScene(id:string, scene:typeof Scene){
+        this.stageManager.addScene(id, scene);
+    }
+    addScenes(sceneMap:{[key:string]:typeof Scene}){
+        this.stageManager.addScenes(sceneMap);
+    }
     
     /**
      * Transition to specified scene
      * @param {string} sceneID ID of Scene to transition to
      */
     changeScene(sceneID:string){
-        const scene = this.scenes[sceneID];
-        if(!scene){
-            throw new Error(`No Scene found with ID "${sceneID}"`);
-        }
-        this.stageManager.scene = scene;
+        this.stageManager.changeScene(sceneID);
     }
 }
 

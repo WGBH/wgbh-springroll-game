@@ -1,7 +1,8 @@
 /// <reference types="pixi.js" />
 /// <reference types="pixi-animate" />
 import Scene from './Scene';
-import AssetManager, { AnimateStage } from '../assets/AssetManager';
+import { AnimateStage } from '../assets/AssetManager';
+import { Game } from '..';
 /**
  * Manages rendering and transitioning between Scenes
  */
@@ -11,14 +12,22 @@ export default class StageManager {
     height: number;
     transition: PIXI.animate.MovieClip;
     private _currentScene;
-    private assetManager;
     private transitioning;
     private isPaused;
-    constructor(assetManager: AssetManager, containerID: string, width: number, height: number);
-    init(transition: AnimateStage, firstScene: Scene): void;
-    scene: Scene;
+    private game;
+    /** Map of Scenes by Scene IDs */
+    private scenes;
+    constructor(game: Game, containerID: string, width: number, height: number);
+    addScene(id: string, scene: typeof Scene): void;
+    addScenes(sceneMap: {
+        [key: string]: typeof Scene;
+    }): void;
     setTransition(stage: AnimateStage, callback: Function): void;
-    changeScene: (newScene: Scene) => void;
+    /**
+     * Transition to specified scene
+     * @param {string} sceneID ID of Scene to transition to
+     */
+    changeScene: (newScene: string) => void;
     pause: boolean;
     update(deltaTime: number): void;
 }

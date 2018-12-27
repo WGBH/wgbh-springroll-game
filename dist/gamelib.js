@@ -273,11 +273,21 @@ var TRANSITION_ID = 'wgbhSpringRollGameTransition';
  * Manages rendering and transitioning between Scenes
  */
 var StageManager = /** @class */ (function () {
-    function StageManager(assetManager, containerID, width, height) {
+    function StageManager(game, containerID, width, height) {
         var _this = this;
         this.transitioning = true;
         this.isPaused = false;
+        /** Map of Scenes by Scene IDs */
+        this.scenes = {};
+        /**
+         * Transition to specified scene
+         * @param {string} sceneID ID of Scene to transition to
+         */
         this.changeScene = function (newScene) {
+            var NewScene = _this.scenes[newScene];
+            if (!NewScene) {
+                throw new Error("No Scene found with ID \"" + newScene + "\"");
+            }
             var oldScene = _this._currentScene;
             _this.transitioning = true;
             Promise.resolve()
@@ -294,22 +304,20 @@ var StageManager = /** @class */ (function () {
                 PIXI.animate.Animator.play(_this.transition, 'load');
                 if (oldScene) {
                     _this.pixi.stage.removeChild(oldScene);
-                    return oldScene.cleanup();
+                    oldScene.cleanup();
+                    oldScene.destroy({ children: true });
+                    _this.game.assets.unloadAssets();
                 }
             })
                 .then(function () {
-                //clear PIXI caches
-                _this.assetManager.unloadAssets();
-            })
-                .then(function () {
-                _this._currentScene = newScene;
+                _this._currentScene = new NewScene(_this.game);
                 return new Promise(function (resolve) {
-                    _this.assetManager.loadAssets(newScene.preload(), resolve);
+                    _this.game.assets.loadAssets(_this._currentScene.preload(), resolve);
                 });
             })
                 .then(function () {
-                newScene.setup();
-                _this.pixi.stage.addChildAt(newScene, 0);
+                _this._currentScene.setup();
+                _this.pixi.stage.addChildAt(_this._currentScene, 0);
                 return new Promise(function (resolve) {
                     PIXI.animate.Animator.play(_this.transition, 'reveal', resolve);
                 });
@@ -317,38 +325,30 @@ var StageManager = /** @class */ (function () {
                 .then(function () {
                 _this.transitioning = false;
                 _this.pixi.stage.removeChild(_this.transition);
-                newScene.start();
+                _this._currentScene.start();
             });
         };
-        this.assetManager = assetManager;
+        this.game = game;
         this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, autoResize: true });
         this.pixi.view.style.height = null;
         this.pixi.view.style.width = '100%';
         document.getElementById(containerID).appendChild(this.pixi.view);
         this.pixi.ticker.add(this.update.bind(this));
     }
-    StageManager.prototype.init = function (transition, firstScene) {
-        var _this = this;
-        this.setTransition(transition, function () {
-            _this.scene = firstScene;
-        });
+    StageManager.prototype.addScene = function (id, scene) {
+        this.scenes[id] = scene;
     };
-    Object.defineProperty(StageManager.prototype, "scene", {
-        get: function () {
-            return this._currentScene;
-        },
-        set: function (scene) {
-            this.changeScene(scene);
-        },
-        enumerable: true,
-        configurable: true
-    });
+    StageManager.prototype.addScenes = function (sceneMap) {
+        for (var id in sceneMap) {
+            this.scenes[id] = sceneMap[id];
+        }
+    };
     StageManager.prototype.setTransition = function (stage, callback) {
         var _this = this;
-        this.assetManager.loadAssets([
+        this.game.assets.loadAssets([
             { type: 'animate', stage: stage, id: TRANSITION_ID, isGlobal: true, cacheInstance: true }
         ], function () {
-            _this.transition = _this.assetManager.animations[TRANSITION_ID];
+            _this.transition = _this.game.assets.animations[TRANSITION_ID];
             var curtainLabels = [
                 'cover',
                 'cover_stop',
@@ -374,6 +374,7 @@ var StageManager = /** @class */ (function () {
         },
         set: function (pause) {
             this.isPaused = pause;
+            this._currentScene.pause(pause);
             pause ? this.pixi.ticker.stop() : this.pixi.ticker.start();
         },
         enumerable: true,
@@ -580,9 +581,11 @@ var SoundManager = /** @class */ (function () {
 var Game = /** @class */ (function () {
     function Game(options) {
         var _this = this;
+        /** object for storing global data - accessible from all Scenes */
+        this.dataStore = {};
         this.sound = new SoundManager();
         this.assets = new AssetManager(this.sound);
-        this.stageManager = new StageManager(this.assets, options.containerID, options.width, options.height);
+        this.stageManager = new StageManager(this, options.containerID, options.width, options.height);
         this.app = new Application(options.springRollConfig);
         this.app.state.soundVolume.subscribe(function (volume) {
             _this.sound.volume = volume;
@@ -608,16 +611,18 @@ var Game = /** @class */ (function () {
     Game.prototype.gameReady = function () {
         //override and set first scene in this function
     };
+    Game.prototype.addScene = function (id, scene) {
+        this.stageManager.addScene(id, scene);
+    };
+    Game.prototype.addScenes = function (sceneMap) {
+        this.stageManager.addScenes(sceneMap);
+    };
     /**
      * Transition to specified scene
      * @param {string} sceneID ID of Scene to transition to
      */
     Game.prototype.changeScene = function (sceneID) {
-        var scene = this.scenes[sceneID];
-        if (!scene) {
-            throw new Error("No Scene found with ID \"" + sceneID + "\"");
-        }
-        this.stageManager.scene = scene;
+        this.stageManager.changeScene(sceneID);
     };
     return Game;
 }());
@@ -658,7 +663,10 @@ var Scene = /** @class */ (function (_super) {
     __extends(Scene, _super);
     function Scene(game) {
         var _this = _super.call(this) || this;
-        _this.game = game;
+        _this.assets = game.assets;
+        _this.sound = game.sound;
+        _this.stageManager = game.stageManager;
+        _this.dataStore = game.dataStore;
         return _this;
     }
     /**
@@ -673,7 +681,7 @@ var Scene = /** @class */ (function (_super) {
      * @param {string} sceneID ID of Scene to transition to
      */
     Scene.prototype.changeScene = function (sceneID) {
-        this.game.changeScene(sceneID);
+        this.stageManager.changeScene(sceneID);
     };
     /**
      * prepare initial visual state - called after preload is complete, while scene is obscured by loader
@@ -688,6 +696,15 @@ var Scene = /** @class */ (function (_super) {
         //override this - called to start scene
     };
     /**
+     * pause scene - override this if you need to pause functionality of your scene
+     * when the rendering and sound is paused
+     * @param paused whether or not the game is being paused (false if being resumed)
+     */
+    Scene.prototype.pause = function (paused) {
+        //override this if you have custom timed functionality that should be paused
+        //with the rest of the game
+    };
+    /**
      * callback for frame ticks
      * @param {number} deltaTime time since last frame in multiples of one frame's length of time.
      */
@@ -696,7 +713,7 @@ var Scene = /** @class */ (function (_super) {
     };
     /**
      * Called when Scene is about to transition out - override to clean up art or other objects in memory
-     * @returns {Promise | void} return a Promise to resolve when any asynchronous cleanup is complete
+     * @returns {void} return a Promise to resolve when any asynchronous cleanup is complete
      */
     Scene.prototype.cleanup = function () {
         //override this to clean up Scene

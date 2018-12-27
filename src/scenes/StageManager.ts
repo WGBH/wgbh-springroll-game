@@ -1,5 +1,6 @@
 import Scene from './Scene';
-import AssetManager, { AnimateStage } from '../assets/AssetManager';
+import { AnimateStage } from '../assets/AssetManager';
+import { Game } from '..';
 
 
 const TRANSITION_ID = 'wgbhSpringRollGameTransition';
@@ -15,12 +16,15 @@ export default class StageManager{
 
     private _currentScene:Scene;
 
-    private assetManager:AssetManager;
     private transitioning = true;
     private isPaused = false;
+    private game:Game;
 
-    constructor(assetManager:AssetManager, containerID:string, width:number, height:number){
-        this.assetManager = assetManager;
+    /** Map of Scenes by Scene IDs */
+    private scenes: {[key:string]:typeof Scene} = {};
+
+    constructor(game:Game, containerID:string, width:number, height:number){
+        this.game = game;
 
         this.pixi = new PIXI.Application({ width, height, antialias:true, autoResize:true});
         this.pixi.view.style.height = null;
@@ -29,25 +33,20 @@ export default class StageManager{
         this.pixi.ticker.add(this.update.bind(this));
     }
 
-    init(transition:AnimateStage, firstScene:Scene){
-        this.setTransition(transition, ()=>{
-            this.scene = firstScene;
-        });
+    addScene(id:string, scene:typeof Scene){
+        this.scenes[id] = scene;
     }
-
-    get scene(){
-        return this._currentScene;
-    }
-
-    set scene(scene:Scene){
-        this.changeScene(scene);
+    addScenes(sceneMap:{[key:string]:typeof Scene}){
+        for(let id in sceneMap){
+            this.scenes[id] = sceneMap[id];
+        }
     }
 
     setTransition(stage:AnimateStage, callback:Function){
-        this.assetManager.loadAssets([
+        this.game.assets.loadAssets([
                 {type:'animate', stage:stage, id:TRANSITION_ID, isGlobal:true, cacheInstance:true}
             ], ()=>{
-                this.transition = this.assetManager.animations[TRANSITION_ID];
+                this.transition = this.game.assets.animations[TRANSITION_ID];
                 const curtainLabels = [
                     'cover',
                     'cover_stop',
@@ -67,7 +66,16 @@ export default class StageManager{
             });
     }
 
-    changeScene = (newScene:Scene) => {
+    /**
+     * Transition to specified scene
+     * @param {string} sceneID ID of Scene to transition to
+     */
+    changeScene = (newScene:string) => {
+        const NewScene = this.scenes[newScene];
+        if(!NewScene){
+            throw new Error(`No Scene found with ID "${newScene}"`);
+        }
+
         const oldScene = this._currentScene;
         this.transitioning = true;
         Promise.resolve()
@@ -84,22 +92,20 @@ export default class StageManager{
                 PIXI.animate.Animator.play(this.transition, 'load');
                 if(oldScene){
                     this.pixi.stage.removeChild(oldScene);
-                    return oldScene.cleanup();
+                    oldScene.cleanup();
+                    oldScene.destroy({children:true});
+                    this.game.assets.unloadAssets();
                 }
             })
-            .then(()=>{
-                //clear PIXI caches
-                this.assetManager.unloadAssets();
-            })
             .then(() => {
-                this._currentScene = newScene;
+                this._currentScene = new NewScene(this.game);
                 return new Promise((resolve)=>{
-                    this.assetManager.loadAssets(newScene.preload(), resolve);
+                    this.game.assets.loadAssets(this._currentScene.preload(), resolve);
                 });
             })
             .then(()=>{
-                newScene.setup();
-                this.pixi.stage.addChildAt(newScene, 0);
+                this._currentScene.setup();
+                this.pixi.stage.addChildAt(this._currentScene, 0);
                 return new Promise((resolve)=>{
                     PIXI.animate.Animator.play(this.transition, 'reveal', resolve);
                 });
@@ -107,7 +113,7 @@ export default class StageManager{
             .then(()=>{
                 this.transitioning = false;
                 this.pixi.stage.removeChild(this.transition);
-                newScene.start();
+                this._currentScene.start();
             });
     }
 
@@ -116,6 +122,7 @@ export default class StageManager{
     }
     set pause(pause:boolean){
         this.isPaused = pause;
+        this._currentScene.pause(pause);
         pause ? this.pixi.ticker.stop() : this.pixi.ticker.start();
     }
 
