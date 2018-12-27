@@ -1,16 +1,15 @@
 /// <reference types="pixi-sound" />
 import { SoundDescriptor } from "../assets/AssetManager";
-import SoundContext from "./SoundContext";
 /**
  * Manages Sound playback, pausing, resuming, and volume control
  */
 export default class SoundManager {
     /** Context for managing SFX sounds */
-    sfx: SoundContext;
+    private sfx;
     /** Context for managing VO sounds */
-    vo: SoundContext;
+    private vo;
     /** Context for managing music sounds */
-    music: SoundContext;
+    private music;
     /** Mapping of which SoundContexts each Sound belongs to, by ID */
     private soundMeta;
     /** Global volume of all SoundContexts */

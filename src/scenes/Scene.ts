@@ -1,21 +1,33 @@
 import Game from '../Game';
 import { AssetList, AssetManager, SoundManager, StageManager } from '..';
+import { AssetCache } from '../assets/AssetManager';
 
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
  */
 export default class Scene extends PIXI.Container {
-    protected readonly assets: AssetManager;
 
-    protected readonly sound: SoundManager;
+    /** Object containing references to cached instances of assets loaded by the AssetManager */
+    protected readonly cache: AssetCache;
 
+    /** Object for storing any data (such as state or progress) which needs to persist beyone a single Scene */
     protected readonly dataStore: {[key:string]:any};
 
+    /** interface for playing back and controlling sounds */
+    protected readonly sound: SoundManager;
+    
+    /** 
+     * Manages loading and unloading of assets.
+     * Should not be controlled directly by a game Scene except in advanced use cases.
+     */
+    protected readonly assetManager: AssetManager;
+
+    /** Manages transitioning between Scenes - not intended to be controlled directly by a game Scene */
     private readonly stageManager: StageManager;
 
     constructor(game:Game) {
         super();
-        this.assets = game.assets;
+        this.assetManager = game.assetManager;
         this.sound = game.sound;
         this.stageManager = game.stageManager;
         this.dataStore = game.dataStore;

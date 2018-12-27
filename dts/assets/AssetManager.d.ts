@@ -1,27 +1,18 @@
-/// <reference types="pixi.js" />
 /// <reference types="pixi-animate" />
+/// <reference types="pixi.js" />
 import SoundManager from "../sound/SoundManager";
 /**
  * Manages loading, caching, and unloading of assets
  */
 export default class AssetManager {
-    /** references to data objects from loaded JSON files */
-    data: {
-        [key: string]: any;
-    };
-    /** references to Textures for loaded Images */
-    images: {
-        [key: string]: PIXI.Texture;
-    };
-    /** instances of loaded PixiAnimate stages - use these first when possible */
-    animations: {
-        [key: string]: PIXI.animate.MovieClip;
-    };
+    /** object containing references to cached instances of loaded assets */
+    cache: AssetCache;
     /** IDs of cached assets that should persist between scenes */
     private globalCache;
     /** IDs of loaded Sounds */
     private soundIDs;
     private soundManager;
+    private sceneActive;
     constructor(soundManager: SoundManager);
     /**
      * loads assets for a Scene
@@ -125,3 +116,17 @@ export declare type AnimateStage = typeof PIXI.animate.MovieClip & {
         [key: string]: string;
     };
 };
+export interface AssetCache {
+    /** references to data objects from loaded JSON files */
+    data: {
+        [key: string]: any;
+    };
+    /** references to Textures for loaded Images */
+    images: {
+        [key: string]: PIXI.Texture;
+    };
+    /** instances of loaded PixiAnimate stages - use these first when possible */
+    animations: {
+        [key: string]: PIXI.animate.MovieClip;
+    };
+}

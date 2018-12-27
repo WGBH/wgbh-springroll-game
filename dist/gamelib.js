@@ -6,12 +6,8 @@ function createCommonjsModule(t,e){return t(e={exports:{}},e.exports),e.exports}
 var AssetManager = /** @class */ (function () {
     function AssetManager(soundManager) {
         var _this = this;
-        /** references to data objects from loaded JSON files */
-        this.data = {};
-        /** references to Textures for loaded Images */
-        this.images = {};
-        /** instances of loaded PixiAnimate stages - use these first when possible */
-        this.animations = {};
+        /** object containing references to cached instances of loaded assets */
+        this.cache = { data: {}, images: {}, animations: {} };
         /** IDs of cached assets that should persist between scenes */
         this.globalCache = {
             shapes: [],
@@ -22,6 +18,7 @@ var AssetManager = /** @class */ (function () {
         };
         /** IDs of loaded Sounds */
         this.soundIDs = [];
+        this.sceneActive = false;
         /** Save current state of PIXI Global caches, to prevent unloading global assets */
         this.saveCacheState = function () {
             Object.keys(PIXI.animate.ShapesCache).forEach(function (key) { return _this.globalCache.shapes.push(key); });
@@ -80,8 +77,13 @@ var AssetManager = /** @class */ (function () {
             }
             asset.isGlobal ? globalList.push(asset) : localList.push(asset);
         }
-        this.executeLoads(globalList)
-            .then(this.saveCacheState)
+        if (this.sceneActive && globalList.length) {
+            console.error('Mid-Scene loading of global assets is unsupported - move these to preload() or disable global caching of all mid-Scene assets');
+        }
+        this.sceneActive = true;
+        Promise.resolve()
+            .then(function () { return _this.executeLoads(globalList); })
+            .then(function () { return _this.saveCacheState(); })
             .then(function () { return _this.executeLoads(localList); })
             .then(function () { callback(); });
     };
@@ -127,18 +129,18 @@ var AssetManager = /** @class */ (function () {
             this.globalCache.shapes.length = 0;
             this.globalCache.textures.length = 0;
         }
-        for (var id in this.animations) {
+        for (var id in this.cache.animations) {
             if (!this.globalCache.animations.includes(id)) {
-                if (this.animations[id]) {
-                    this.animations[id].destroy();
-                    delete this.animations[id];
+                if (this.cache.animations[id]) {
+                    this.cache.animations[id].destroy();
+                    delete this.cache.animations[id];
                 }
             }
         }
         for (var id in PIXI.utils.TextureCache) {
             if (!this.globalCache.textures.includes(id)) {
                 PIXI.utils.TextureCache[id].destroy(true);
-                delete this.images[id];
+                delete this.cache.images[id];
             }
         }
         for (var id in PIXI.animate.ShapesCache) {
@@ -156,6 +158,7 @@ var AssetManager = /** @class */ (function () {
         for (var id in PIXI.loader.resources) {
             console.warn('unmanaged resource detected: ', id, PIXI.loader.resources[id]);
         }
+        this.sceneActive = false;
     };
     /**
      * load assets for a PixiAnimate stage
@@ -166,7 +169,7 @@ var AssetManager = /** @class */ (function () {
         return new Promise(function (resolve) {
             PIXI.animate.load(animateStageDescriptor.stage, function (movieClip) {
                 if (animateStageDescriptor.cacheInstance) {
-                    _this.animations[animateStageDescriptor.id] = movieClip;
+                    _this.cache.animations[animateStageDescriptor.id] = movieClip;
                 }
                 if (animateStageDescriptor.isGlobal) {
                     _this.globalCache.animations.push(animateStageDescriptor.id);
@@ -190,7 +193,7 @@ var AssetManager = /** @class */ (function () {
             imageLoader.load(function (loader, resources) {
                 for (var _i = 0, _a = Object.keys(resources); _i < _a.length; _i++) {
                     var key = _a[_i];
-                    _this.images[key] = resources[key].texture;
+                    _this.cache.images[key] = resources[key].texture;
                 }
                 imageLoader.destroy();
                 resolve();
@@ -232,7 +235,7 @@ var AssetManager = /** @class */ (function () {
             request.open('GET', dataDescriptor.path);
             request.onreadystatechange = function () {
                 if ((request.status === 200) && (request.readyState === 4)) {
-                    _this.data[dataDescriptor.id] = JSON.parse(request.responseText);
+                    _this.cache.data[dataDescriptor.id] = JSON.parse(request.responseText);
                     if (dataDescriptor.isGlobal) {
                         _this.globalCache.data.push(dataDescriptor.id);
                     }
@@ -306,13 +309,13 @@ var StageManager = /** @class */ (function () {
                     _this.pixi.stage.removeChild(oldScene);
                     oldScene.cleanup();
                     oldScene.destroy({ children: true });
-                    _this.game.assets.unloadAssets();
                 }
+                _this.game.assetManager.unloadAssets();
             })
                 .then(function () {
                 _this._currentScene = new NewScene(_this.game);
                 return new Promise(function (resolve) {
-                    _this.game.assets.loadAssets(_this._currentScene.preload(), resolve);
+                    _this.game.assetManager.loadAssets(_this._currentScene.preload(), resolve);
                 });
             })
                 .then(function () {
@@ -345,10 +348,10 @@ var StageManager = /** @class */ (function () {
     };
     StageManager.prototype.setTransition = function (stage, callback) {
         var _this = this;
-        this.game.assets.loadAssets([
+        this.game.assetManager.loadAssets([
             { type: 'animate', stage: stage, id: TRANSITION_ID, isGlobal: true, cacheInstance: true }
         ], function () {
-            _this.transition = _this.game.assets.animations[TRANSITION_ID];
+            _this.transition = _this.game.cache.animations[TRANSITION_ID];
             var curtainLabels = [
                 'cover',
                 'cover_stop',
@@ -584,7 +587,8 @@ var Game = /** @class */ (function () {
         /** object for storing global data - accessible from all Scenes */
         this.dataStore = {};
         this.sound = new SoundManager();
-        this.assets = new AssetManager(this.sound);
+        this.assetManager = new AssetManager(this.sound);
+        this.cache = this.assetManager.cache;
         this.stageManager = new StageManager(this, options.containerID, options.width, options.height);
         this.app = new Application(options.springRollConfig);
         this.app.state.soundVolume.subscribe(function (volume) {
@@ -663,7 +667,7 @@ var Scene = /** @class */ (function (_super) {
     __extends(Scene, _super);
     function Scene(game) {
         var _this = _super.call(this) || this;
-        _this.assets = game.assets;
+        _this.assetManager = game.assetManager;
         _this.sound = game.sound;
         _this.stageManager = game.stageManager;
         _this.dataStore = game.dataStore;

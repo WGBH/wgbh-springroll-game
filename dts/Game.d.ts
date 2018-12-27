@@ -1,5 +1,5 @@
 import * as SpringRoll from 'springroll';
-import AssetManager, { AnimateStage } from "./assets/AssetManager";
+import AssetManager, { AnimateStage, AssetCache } from "./assets/AssetManager";
 import StageManager from "./scenes/StageManager";
 import SoundManager from './sound/SoundManager';
 import { Scene } from '.';
@@ -8,7 +8,9 @@ export default class Game {
     /** SpringRoll Application, interface to Container */
     app: SpringRoll.Application;
     /** Asset Manager, for loading, caching, and unloading of assets */
-    assets: AssetManager;
+    assetManager: AssetManager;
+    /** Object containing references to instances of cached assets */
+    cache: AssetCache;
     /** Stage Manager, for managing Scenes, transitions, and renderer */
     stageManager: StageManager;
     /** Sound Manager, for controlling Playback, pausing/resuming, and volume of Sounds */

@@ -43,10 +43,10 @@ export default class StageManager{
     }
 
     setTransition(stage:AnimateStage, callback:Function){
-        this.game.assets.loadAssets([
+        this.game.assetManager.loadAssets([
                 {type:'animate', stage:stage, id:TRANSITION_ID, isGlobal:true, cacheInstance:true}
             ], ()=>{
-                this.transition = this.game.assets.animations[TRANSITION_ID];
+                this.transition = this.game.cache.animations[TRANSITION_ID];
                 const curtainLabels = [
                     'cover',
                     'cover_stop',
@@ -94,13 +94,13 @@ export default class StageManager{
                     this.pixi.stage.removeChild(oldScene);
                     oldScene.cleanup();
                     oldScene.destroy({children:true});
-                    this.game.assets.unloadAssets();
                 }
+                this.game.assetManager.unloadAssets();
             })
             .then(() => {
                 this._currentScene = new NewScene(this.game);
                 return new Promise((resolve)=>{
-                    this.game.assets.loadAssets(this._currentScene.preload(), resolve);
+                    this.game.assetManager.loadAssets(this._currentScene.preload(), resolve);
                 });
             })
             .then(()=>{

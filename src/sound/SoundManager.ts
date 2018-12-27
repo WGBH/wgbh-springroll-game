@@ -8,11 +8,11 @@ import SoundContext from "./SoundContext";
 export default class SoundManager {
 
     /** Context for managing SFX sounds */
-    public sfx = new SoundContext();
+    private sfx = new SoundContext();
     /** Context for managing VO sounds */
-    public vo = new SoundContext();
+    private vo = new SoundContext();
     /** Context for managing music sounds */
-    public music = new SoundContext();
+    private music = new SoundContext();
     /** Mapping of which SoundContexts each Sound belongs to, by ID */
     private soundMeta: {[key:string]:SoundContext} = {};
 
