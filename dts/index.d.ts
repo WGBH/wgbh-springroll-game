@@ -6,4 +6,5 @@ import AssetManager from './assets/AssetManager';
 import SoundManager from './sound/SoundManager';
 import SoundContext from './sound/SoundContext';
 import { AssetList } from './assets/AssetManager';
-export { Game, GameOptions, Scene, StageManager, AssetManager, AssetList, SoundManager, SoundContext };
+import Tween from './tween/Tween';
+export { Game, GameOptions, Scene, StageManager, AssetManager, AssetList, SoundManager, SoundContext, Tween };

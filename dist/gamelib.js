@@ -1068,5 +1068,5 @@ var Scene = /** @class */ (function (_super) {
 
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, Tween };
 //# sourceMappingURL=gamelib.js.map

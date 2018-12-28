@@ -2,7 +2,6 @@
 /// <reference types="pixi-sound" />
 /// <reference types="pixi.js" />
 /// <reference types="springroll" />
-/// <reference types="tween.js" />
 
 import Game from './Game';
 import {GameOptions} from './Game';
@@ -12,6 +11,7 @@ import AssetManager from './assets/AssetManager';
 import SoundManager from './sound/SoundManager';
 import SoundContext from './sound/SoundContext';
 import {AssetList} from './assets/AssetManager';
+import Tween from './tween/Tween';
 
 export {
     Game,
@@ -21,5 +21,6 @@ export {
     AssetManager,
     AssetList,
     SoundManager,
-    SoundContext
+    SoundContext,
+    Tween
 };
