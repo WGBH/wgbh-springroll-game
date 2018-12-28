@@ -2,6 +2,7 @@
 /// <reference types="pixi-sound" />
 /// <reference types="pixi.js" />
 /// <reference types="springroll" />
+/// <reference types="tween.js" />
 
 import Game from './Game';
 import {GameOptions} from './Game';

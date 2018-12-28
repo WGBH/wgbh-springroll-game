@@ -3,6 +3,7 @@
 import Scene from './Scene';
 import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
+import Tween from '../tween/Tween';
 /**
  * Manages rendering and transitioning between Scenes
  */
@@ -17,6 +18,7 @@ export default class StageManager {
     private game;
     /** Map of Scenes by Scene IDs */
     private scenes;
+    private tweens;
     constructor(game: Game, containerID: string, width: number, height: number);
     addScene(id: string, scene: typeof Scene): void;
     addScenes(sceneMap: {
@@ -29,5 +31,6 @@ export default class StageManager {
      */
     changeScene: (newScene: string) => void;
     pause: boolean;
+    addTween(tween: Tween): void;
     update(deltaTime: number): void;
 }

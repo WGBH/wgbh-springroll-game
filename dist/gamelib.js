@@ -282,6 +282,7 @@ var StageManager = /** @class */ (function () {
         this.isPaused = false;
         /** Map of Scenes by Scene IDs */
         this.scenes = {};
+        this.tweens = [];
         /**
          * Transition to specified scene
          * @param {string} sceneID ID of Scene to transition to
@@ -383,10 +384,23 @@ var StageManager = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
+    StageManager.prototype.addTween = function (tween) {
+        this.tweens.push(tween);
+    };
     StageManager.prototype.update = function (deltaTime) {
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
         if (this.transitioning || this.isPaused || !this._currentScene) {
             return;
+        }
+        if (this.tweens.length) {
+            for (var i = this.tweens.length - 1; i >= 0; i--) {
+                if (this.tweens[i].active) {
+                    this.tweens[i].update(deltaTime);
+                }
+                if (!this.tweens[i].active) {
+                    this.tweens.splice(i, 1);
+                }
+            }
         }
         this._currentScene.update(deltaTime);
     };
@@ -660,6 +674,318 @@ function __extends(d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 }
 
+function backInOut(t) {
+  var s = 1.70158 * 1.525;
+  if ((t *= 2) < 1)
+    return 0.5 * (t * t * ((s + 1) * t - s))
+  return 0.5 * ((t -= 2) * t * ((s + 1) * t + s) + 2)
+}
+
+var backInOut_1 = backInOut;
+
+function backIn(t) {
+  var s = 1.70158;
+  return t * t * ((s + 1) * t - s)
+}
+
+var backIn_1 = backIn;
+
+function backOut(t) {
+  var s = 1.70158;
+  return --t * t * ((s + 1) * t + s) + 1
+}
+
+var backOut_1 = backOut;
+
+function bounceOut(t) {
+  var a = 4.0 / 11.0;
+  var b = 8.0 / 11.0;
+  var c = 9.0 / 10.0;
+
+  var ca = 4356.0 / 361.0;
+  var cb = 35442.0 / 1805.0;
+  var cc = 16061.0 / 1805.0;
+
+  var t2 = t * t;
+
+  return t < a
+    ? 7.5625 * t2
+    : t < b
+      ? 9.075 * t2 - 9.9 * t + 3.4
+      : t < c
+        ? ca * t2 - cb * t + cc
+        : 10.8 * t * t - 20.52 * t + 10.72
+}
+
+var bounceOut_1 = bounceOut;
+
+function bounceInOut(t) {
+  return t < 0.5
+    ? 0.5 * (1.0 - bounceOut_1(1.0 - t * 2.0))
+    : 0.5 * bounceOut_1(t * 2.0 - 1.0) + 0.5
+}
+
+var bounceInOut_1 = bounceInOut;
+
+function bounceIn(t) {
+  return 1.0 - bounceOut_1(1.0 - t)
+}
+
+var bounceIn_1 = bounceIn;
+
+function circInOut(t) {
+  if ((t *= 2) < 1) return -0.5 * (Math.sqrt(1 - t * t) - 1)
+  return 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1)
+}
+
+var circInOut_1 = circInOut;
+
+function circIn(t) {
+  return 1.0 - Math.sqrt(1.0 - t * t)
+}
+
+var circIn_1 = circIn;
+
+function circOut(t) {
+  return Math.sqrt(1 - ( --t * t ))
+}
+
+var circOut_1 = circOut;
+
+function cubicInOut(t) {
+  return t < 0.5
+    ? 4.0 * t * t * t
+    : 0.5 * Math.pow(2.0 * t - 2.0, 3.0) + 1.0
+}
+
+var cubicInOut_1 = cubicInOut;
+
+function cubicIn(t) {
+  return t * t * t
+}
+
+var cubicIn_1 = cubicIn;
+
+function cubicOut(t) {
+  var f = t - 1.0;
+  return f * f * f + 1.0
+}
+
+var cubicOut_1 = cubicOut;
+
+function elasticInOut(t) {
+  return t < 0.5
+    ? 0.5 * Math.sin(+13.0 * Math.PI/2 * 2.0 * t) * Math.pow(2.0, 10.0 * (2.0 * t - 1.0))
+    : 0.5 * Math.sin(-13.0 * Math.PI/2 * ((2.0 * t - 1.0) + 1.0)) * Math.pow(2.0, -10.0 * (2.0 * t - 1.0)) + 1.0
+}
+
+var elasticInOut_1 = elasticInOut;
+
+function elasticIn(t) {
+  return Math.sin(13.0 * t * Math.PI/2) * Math.pow(2.0, 10.0 * (t - 1.0))
+}
+
+var elasticIn_1 = elasticIn;
+
+function elasticOut(t) {
+  return Math.sin(-13.0 * (t + 1.0) * Math.PI/2) * Math.pow(2.0, -10.0 * t) + 1.0
+}
+
+var elasticOut_1 = elasticOut;
+
+function expoInOut(t) {
+  return (t === 0.0 || t === 1.0)
+    ? t
+    : t < 0.5
+      ? +0.5 * Math.pow(2.0, (20.0 * t) - 10.0)
+      : -0.5 * Math.pow(2.0, 10.0 - (t * 20.0)) + 1.0
+}
+
+var expoInOut_1 = expoInOut;
+
+function expoIn(t) {
+  return t === 0.0 ? t : Math.pow(2.0, 10.0 * (t - 1.0))
+}
+
+var expoIn_1 = expoIn;
+
+function expoOut(t) {
+  return t === 1.0 ? t : 1.0 - Math.pow(2.0, -10.0 * t)
+}
+
+var expoOut_1 = expoOut;
+
+function linear(t) {
+  return t
+}
+
+var linear_1 = linear;
+
+function quadInOut(t) {
+    t /= 0.5;
+    if (t < 1) return 0.5*t*t
+    t--;
+    return -0.5 * (t*(t-2) - 1)
+}
+
+var quadInOut_1 = quadInOut;
+
+function quadIn(t) {
+  return t * t
+}
+
+var quadIn_1 = quadIn;
+
+function quadOut(t) {
+  return -t * (t - 2.0)
+}
+
+var quadOut_1 = quadOut;
+
+function quarticInOut(t) {
+  return t < 0.5
+    ? +8.0 * Math.pow(t, 4.0)
+    : -8.0 * Math.pow(t - 1.0, 4.0) + 1.0
+}
+
+var quartInOut = quarticInOut;
+
+function quarticIn(t) {
+  return Math.pow(t, 4.0)
+}
+
+var quartIn = quarticIn;
+
+function quarticOut(t) {
+  return Math.pow(t - 1.0, 3.0) * (1.0 - t) + 1.0
+}
+
+var quartOut = quarticOut;
+
+function qinticInOut(t) {
+    if ( ( t *= 2 ) < 1 ) return 0.5 * t * t * t * t * t
+    return 0.5 * ( ( t -= 2 ) * t * t * t * t + 2 )
+}
+
+var quintInOut = qinticInOut;
+
+function qinticIn(t) {
+  return t * t * t * t * t
+}
+
+var quintIn = qinticIn;
+
+function qinticOut(t) {
+  return --t * t * t * t * t + 1
+}
+
+var quintOut = qinticOut;
+
+function sineInOut(t) {
+  return -0.5 * (Math.cos(Math.PI*t) - 1)
+}
+
+var sineInOut_1 = sineInOut;
+
+function sineIn (t) {
+  var v = Math.cos(t * Math.PI * 0.5);
+  if (Math.abs(v) < 1e-14) return 1
+  else return 1 - v
+}
+
+var sineIn_1 = sineIn;
+
+function sineOut(t) {
+  return Math.sin(t * Math.PI/2)
+}
+
+var sineOut_1 = sineOut;
+
+var eases = {
+	'backInOut': backInOut_1,
+	'backIn': backIn_1,
+	'backOut': backOut_1,
+	'bounceInOut': bounceInOut_1,
+	'bounceIn': bounceIn_1,
+	'bounceOut': bounceOut_1,
+	'circInOut': circInOut_1,
+	'circIn': circIn_1,
+	'circOut': circOut_1,
+	'cubicInOut': cubicInOut_1,
+	'cubicIn': cubicIn_1,
+	'cubicOut': cubicOut_1,
+	'elasticInOut': elasticInOut_1,
+	'elasticIn': elasticIn_1,
+	'elasticOut': elasticOut_1,
+	'expoInOut': expoInOut_1,
+	'expoIn': expoIn_1,
+	'expoOut': expoOut_1,
+	'linear': linear_1,
+	'quadInOut': quadInOut_1,
+	'quadIn': quadIn_1,
+	'quadOut': quadOut_1,
+	'quartInOut': quartInOut,
+	'quartIn': quartIn,
+	'quartOut': quartOut,
+	'quintInOut': quintInOut,
+	'quintIn': quintIn,
+	'quintOut': quintOut,
+	'sineInOut': sineInOut_1,
+	'sineIn': sineIn_1,
+	'sineOut': sineOut_1
+};
+
+var Tween = /** @class */ (function () {
+    function Tween(target, values, time, complete, ease) {
+        if (ease === void 0) { ease = 'linear'; }
+        this.active = true;
+        this.currentTime = 0;
+        this.initialValues = {};
+        this.paused = false;
+        this.target = target;
+        this.targetValues = values;
+        for (var key in this.targetValues) {
+            this.initialValues[key] = this.target[key];
+        }
+        this.totalTime = time;
+        var Eases = eases;
+        this.ease = Eases[ease];
+        if (!this.ease) {
+            console.error("No ease found with name " + ease);
+            this.ease = Eases.linear;
+        }
+        this.onComplete = complete;
+    }
+    Tween.prototype.pause = function (pause) {
+        this.paused = pause;
+    };
+    Tween.prototype.update = function (deltaTime) {
+        if (this.paused) {
+            return;
+        }
+        this.currentTime += deltaTime;
+        var time = this.currentTime / this.totalTime > 1 ? 1 : this.currentTime / this.totalTime;
+        for (var key in this.targetValues) {
+            this.target[key] = this.initialValues[key] + this.ease(time) * (this.targetValues[key] - this.initialValues[key]);
+        }
+        if (time >= 1) {
+            if (this.onComplete) {
+                this.onComplete();
+            }
+            this.destroy();
+        }
+    };
+    Tween.prototype.destroy = function () {
+        this.active = null;
+        this.target = null;
+        this.targetValues = null;
+        this.totalTime = null;
+        this.ease = null;
+        this.onComplete = null;
+    };
+    return Tween;
+}());
+
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
  */
@@ -715,6 +1041,20 @@ var Scene = /** @class */ (function (_super) {
      */
     Scene.prototype.update = function (deltaTime) {
         //override this to get update ticks
+    };
+    /**
+     * Simple tween target's numeric properties to specified values over time with easinbg
+     * @param target object with values to tween
+     * @param values numeric end values of tweening target, keyed by target property names
+     * @param time number of frames over which to tween target values
+     * @param [callback] function to call on completion of tween
+     * @param [ease] name of easing curve to apply to tween
+     * @returns {Tween} instance of tween, for pausing/cancelling
+     */
+    Scene.prototype.tween = function (target, values, time, callback, ease) {
+        var tween = new Tween(target, values, time, callback, ease);
+        this.stageManager.addTween(tween);
+        return tween;
     };
     /**
      * Called when Scene is about to transition out - override to clean up art or other objects in memory

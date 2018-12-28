@@ -16,7 +16,9 @@
   "author": "",
   "license": "UNLICENSED",
   "devDependencies": {
+    "@types/eases": "^1.0.0",
     "@types/pixi.js": "^4.8.4",
+    "@types/tween.js": "^16.9.0",
     "pixi-animate": "git+https://github.com/ericente/pixi-animate.git#publish",
     "pixi-sound": "^2.0.3",
     "pixi.js": "^4.8.3",
@@ -34,6 +36,10 @@
     "pixi-animate": "git+https://github.com/ericente/pixi-animate.git#publish",
     "pixi-sound": "^2.0.3",
     "pixi.js": "^4.8.3",
-    "springroll": "git+https://github.com/SpringRoll/SpringRoll.git#v2"
+    "springroll": "git+https://github.com/SpringRoll/SpringRoll.git#v2",
+    "@tweenjs/tween.js": "^17.2.0"
+  },
+  "dependencies": {
+    "eases": "^1.0.8"
   }
 }

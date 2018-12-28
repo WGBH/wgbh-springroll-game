@@ -1,6 +1,7 @@
 import Scene from './Scene';
 import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
+import Tween from '../tween/Tween';
 
 
 const TRANSITION_ID = 'wgbhSpringRollGameTransition';
@@ -22,6 +23,8 @@ export default class StageManager{
 
     /** Map of Scenes by Scene IDs */
     private scenes: {[key:string]:typeof Scene} = {};
+
+    private tweens:Tween[] = [];
 
     constructor(game:Game, containerID:string, width:number, height:number){
         this.game = game;
@@ -126,12 +129,25 @@ export default class StageManager{
         pause ? this.pixi.ticker.stop() : this.pixi.ticker.start();
     }
 
+    addTween(tween:Tween){
+        this.tweens.push(tween);
+    }
+
     update(deltaTime:number){
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
         if (this.transitioning || this.isPaused || !this._currentScene){
             return;
         }
-
+        if(this.tweens.length){
+            for(let i = this.tweens.length - 1; i >= 0; i--){
+                if(this.tweens[i].active){
+                    this.tweens[i].update(deltaTime);
+                }
+                if(!this.tweens[i].active){
+                    this.tweens.splice(i, 1);
+                }
+            }
+        }
         this._currentScene.update(deltaTime);
     }
 

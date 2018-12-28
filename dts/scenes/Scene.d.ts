@@ -2,6 +2,7 @@
 import Game from '../Game';
 import { AssetList, AssetManager, SoundManager } from '..';
 import { AssetCache } from '../assets/AssetManager';
+import Tween, { Ease } from '../tween/Tween';
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
  */
@@ -51,6 +52,16 @@ export default class Scene extends PIXI.Container {
      * @param {number} deltaTime time since last frame in multiples of one frame's length of time.
      */
     update(deltaTime: number): void;
+    /**
+     * Simple tween target's numeric properties to specified values over time with easinbg
+     * @param target object with values to tween
+     * @param values numeric end values of tweening target, keyed by target property names
+     * @param time number of frames over which to tween target values
+     * @param [callback] function to call on completion of tween
+     * @param [ease] name of easing curve to apply to tween
+     * @returns {Tween} instance of tween, for pausing/cancelling
+     */
+    tween(target: any, values: any, time: number, callback?: Function, ease?: Ease): Tween;
     /**
      * Called when Scene is about to transition out - override to clean up art or other objects in memory
      * @returns {void} return a Promise to resolve when any asynchronous cleanup is complete
