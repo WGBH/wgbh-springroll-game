@@ -90,7 +90,7 @@ export default class Scene extends PIXI.Container {
      * @param time number of frames over which to tween target values
      * @param [callback] function to call on completion of tween
      * @param [ease] name of easing curve to apply to tween
-     * @returns {Tween} instance of tween, for pausing/cancelling
+     * @returns {Tween} instance of Tween, for pausing/cancelling
      */
     tween(target:any, values:any, time:number, callback?:Function, ease?:Ease){
         const tween = new Tween(target, values, time, callback, ease);
