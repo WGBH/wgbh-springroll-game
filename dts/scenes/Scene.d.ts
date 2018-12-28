@@ -56,9 +56,9 @@ export default class Scene extends PIXI.Container {
      * Simple tween target's numeric properties to specified values over time with easinbg
      * @param target object with values to tween
      * @param values numeric end values of tweening target, keyed by target property names
-     * @param time number of frames over which to tween target values
-     * @param [callback] function to call on completion of tween
-     * @param [ease] name of easing curve to apply to tween
+     * @param {number} time number of frames over which to tween target values
+     * @param {Function} [callback] function to call on completion of tween
+     * @param {Ease} [ease] name of easing curve to apply to tween
      * @returns {Tween} instance of tween, for pausing/cancelling
      */
     tween(target: any, values: any, time: number, callback?: Function, ease?: Ease): Tween;
