@@ -1049,7 +1049,7 @@ var Scene = /** @class */ (function (_super) {
      * @param time number of frames over which to tween target values
      * @param [callback] function to call on completion of tween
      * @param [ease] name of easing curve to apply to tween
-     * @returns {Tween} instance of tween, for pausing/cancelling
+     * @returns {Tween} instance of Tween, for pausing/cancelling
      */
     Scene.prototype.tween = function (target, values, time, callback, ease) {
         var tween = new Tween(target, values, time, callback, ease);
