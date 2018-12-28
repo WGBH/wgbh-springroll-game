@@ -28,6 +28,7 @@ export default class Scene extends PIXI.Container {
     constructor(game:Game) {
         super();
         this.assetManager = game.assetManager;
+        this.cache = this.assetManager.cache;
         this.sound = game.sound;
         this.stageManager = game.stageManager;
         this.dataStore = game.dataStore;

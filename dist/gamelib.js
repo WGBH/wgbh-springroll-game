@@ -668,6 +668,7 @@ var Scene = /** @class */ (function (_super) {
     function Scene(game) {
         var _this = _super.call(this) || this;
         _this.assetManager = game.assetManager;
+        _this.cache = _this.assetManager.cache;
         _this.sound = game.sound;
         _this.stageManager = game.stageManager;
         _this.dataStore = game.dataStore;
