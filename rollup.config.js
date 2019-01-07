@@ -31,6 +31,7 @@ export default [
         format: 'es'
       }
     ],
-    plugins: plugins
+    plugins: plugins,
+    external: ['springroll']
   }
 ];
