@@ -24,7 +24,7 @@ export default class Scene extends PIXI.Container {
     protected readonly assetManager: AssetManager;
 
     /** Manages transitioning between Scenes - not intended to be controlled directly by a game Scene */
-    private readonly stageManager: StageManager;
+    protected readonly stageManager: StageManager;
 
     constructor(game:Game) {
         super();

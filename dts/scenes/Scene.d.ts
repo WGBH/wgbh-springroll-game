@@ -1,6 +1,6 @@
 /// <reference types="pixi.js" />
 import Game from '../Game';
-import { AssetList, AssetManager, SoundManager } from '..';
+import { AssetList, AssetManager, SoundManager, StageManager } from '..';
 import { AssetCache } from '../assets/AssetManager';
 import Tween, { Ease } from '../tween/Tween';
 /**
@@ -21,7 +21,7 @@ export default class Scene extends PIXI.Container {
      */
     protected readonly assetManager: AssetManager;
     /** Manages transitioning between Scenes - not intended to be controlled directly by a game Scene */
-    private readonly stageManager;
+    protected readonly stageManager: StageManager;
     constructor(game: Game);
     /**
      * provide list of assets to preload
