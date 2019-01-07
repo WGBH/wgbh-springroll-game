@@ -1,5 +1,6 @@
 import * as eases from 'eases';
 export default class Tween{
+    public promise: Promise<void>;
     public active = true;
     private currentTime = 0;
     private totalTime:number;
@@ -8,11 +9,14 @@ export default class Tween{
     private initialValues:any = {};
     private targetValues:any;
     private ease: (t:number) => number;
-    private onComplete: Function;
+    
 
     private paused = false;
 
-    constructor(target:any, values:any, time:number, complete?:Function, ease:Ease = 'linear'){
+    private resolve:Function;
+    private reject:Function;
+
+    constructor(target:any, values:any, time:number, ease:Ease = 'linear'){
         this.target = target;
         this.targetValues = values;
         for(let key in this.targetValues){
@@ -26,7 +30,10 @@ export default class Tween{
             this.ease = Eases.linear;
         }
 
-        this.onComplete = complete;
+        this.promise = new Promise((resolve, reject)=>{
+            this.resolve = resolve;
+            this.reject = reject;
+        });
     }
 
     pause(pause:boolean){
@@ -44,20 +51,20 @@ export default class Tween{
         }
 
         if(time >= 1){
-            if(this.onComplete){
-                this.onComplete();
-            }
-            this.destroy();
+            this.destroy(true);
         }
     }
 
-    destroy(){
+    destroy(isComplete = false){
+        isComplete ? this.resolve() : this.reject();
+        this.promise = null;
+        this.resolve = null;
+        this.reject = null;
         this.active = null;
         this.target = null;
         this.targetValues = null;
         this.totalTime = null;
         this.ease = null;
-        this.onComplete = null;
     }
 }
 

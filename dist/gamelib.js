@@ -938,8 +938,9 @@ var eases = {
 };
 
 var Tween = /** @class */ (function () {
-    function Tween(target, values, time, complete, ease) {
+    function Tween(target, values, time, ease) {
         if (ease === void 0) { ease = 'linear'; }
+        var _this = this;
         this.active = true;
         this.currentTime = 0;
         this.initialValues = {};
@@ -956,7 +957,10 @@ var Tween = /** @class */ (function () {
             console.error("No ease found with name " + ease);
             this.ease = Eases.linear;
         }
-        this.onComplete = complete;
+        this.promise = new Promise(function (resolve, reject) {
+            _this.resolve = resolve;
+            _this.reject = reject;
+        });
     }
     Tween.prototype.pause = function (pause) {
         this.paused = pause;
@@ -971,19 +975,20 @@ var Tween = /** @class */ (function () {
             this.target[key] = this.initialValues[key] + this.ease(time) * (this.targetValues[key] - this.initialValues[key]);
         }
         if (time >= 1) {
-            if (this.onComplete) {
-                this.onComplete();
-            }
-            this.destroy();
+            this.destroy(true);
         }
     };
-    Tween.prototype.destroy = function () {
+    Tween.prototype.destroy = function (isComplete) {
+        if (isComplete === void 0) { isComplete = false; }
+        isComplete ? this.resolve() : this.reject();
+        this.promise = null;
+        this.resolve = null;
+        this.reject = null;
         this.active = null;
         this.target = null;
         this.targetValues = null;
         this.totalTime = null;
         this.ease = null;
-        this.onComplete = null;
     };
     return Tween;
 }());
@@ -1049,12 +1054,11 @@ var Scene = /** @class */ (function (_super) {
      * @param target object with values to tween
      * @param values numeric end values of tweening target, keyed by target property names
      * @param time number of frames over which to tween target values
-     * @param [callback] function to call on completion of tween
      * @param [ease] name of easing curve to apply to tween
      * @returns {Tween} instance of Tween, for pausing/cancelling
      */
-    Scene.prototype.tween = function (target, values, time, callback, ease) {
-        var tween = new Tween(target, values, time, callback, ease);
+    Scene.prototype.tween = function (target, values, time, ease) {
+        var tween = new Tween(target, values, time, ease);
         this.stageManager.addTween(tween);
         return tween;
     };

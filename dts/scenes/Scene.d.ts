@@ -57,11 +57,10 @@ export default class Scene extends PIXI.Container {
      * @param target object with values to tween
      * @param values numeric end values of tweening target, keyed by target property names
      * @param time number of frames over which to tween target values
-     * @param [callback] function to call on completion of tween
      * @param [ease] name of easing curve to apply to tween
      * @returns {Tween} instance of Tween, for pausing/cancelling
      */
-    tween(target: any, values: any, time: number, callback?: Function, ease?: Ease): Tween;
+    tween(target: any, values: any, time: number, ease?: Ease): Tween;
     /**
      * Called when Scene is about to transition out - override to clean up art or other objects in memory
      * @returns {void} return a Promise to resolve when any asynchronous cleanup is complete

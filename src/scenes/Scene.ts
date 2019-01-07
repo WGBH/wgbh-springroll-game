@@ -88,12 +88,11 @@ export default class Scene extends PIXI.Container {
      * @param target object with values to tween
      * @param values numeric end values of tweening target, keyed by target property names
      * @param time number of frames over which to tween target values
-     * @param [callback] function to call on completion of tween
      * @param [ease] name of easing curve to apply to tween
      * @returns {Tween} instance of Tween, for pausing/cancelling
      */
-    tween(target:any, values:any, time:number, callback?:Function, ease?:Ease){
-        const tween = new Tween(target, values, time, callback, ease);
+    tween(target:any, values:any, time:number, ease?:Ease){
+        const tween = new Tween(target, values, time, ease);
         this.stageManager.addTween(tween);
         return tween;
     }
