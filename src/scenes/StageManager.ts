@@ -29,6 +29,9 @@ export default class StageManager{
     constructor(game:Game, containerID:string, width:number, height:number){
         this.game = game;
 
+        this.width = width;
+        this.height = height;
+
         this.pixi = new PIXI.Application({ width, height, antialias:true, autoResize:true});
         this.pixi.view.style.height = null;
         this.pixi.view.style.width = '100%';

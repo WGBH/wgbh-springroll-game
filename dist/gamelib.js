@@ -333,6 +333,8 @@ var StageManager = /** @class */ (function () {
             });
         };
         this.game = game;
+        this.width = width;
+        this.height = height;
         this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, autoResize: true });
         this.pixi.view.style.height = null;
         this.pixi.view.style.width = '100%';
