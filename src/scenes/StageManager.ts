@@ -136,22 +136,23 @@ export default class StageManager{
         this.tweens.push(tween);
     }
 
-    update(deltaTime:number){
+    update(){
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
         if (this.transitioning || this.isPaused || !this._currentScene){
             return;
         }
+        const elapsed = PIXI.ticker.shared.elapsedMS;
         if(this.tweens.length){
             for(let i = this.tweens.length - 1; i >= 0; i--){
                 if(this.tweens[i].active){
-                    this.tweens[i].update(deltaTime);
+                    this.tweens[i].update(elapsed);
                 }
                 if(!this.tweens[i].active){
                     this.tweens.splice(i, 1);
                 }
             }
         }
-        this._currentScene.update(deltaTime);
+        this._currentScene.update(elapsed);
     }
 
 }

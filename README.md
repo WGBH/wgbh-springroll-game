@@ -40,7 +40,7 @@ This method is called once all assets specified in `preload()` have completed lo
 This method is called when the transition-in is complete, fully revealing the contents of this `Scene`. Start this `Scene's` behavior sequence here.
 
 #### update(deltaTime:number)
-This method is called on each tick of the render loop (target: 60FPS), starting just after `start()` is called. The `deltaTime` value passed in represents the actual time since the previous frame, as a multiple of the target frame rate. For example, if the frame update happened at 1/60 of a second after the previous frame, `deltaTime` would equal `1`. If the update instead happened at 1/30 of a second after the previous frame, `deltaTime` would equal `2`.
+This method is called on each tick of the render loop (target: 60FPS), starting just after `start()` is called. The `deltaTime` value passed in represents the actual time since the previous frame, in milliseconds.
 
 #### changeScene(nextScene:string)
 *Do not override this method.* This method should be called to transition out of this `Scene` and into the next. A valid ID for the next scene must be passed in.

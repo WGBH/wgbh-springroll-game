@@ -389,22 +389,23 @@ var StageManager = /** @class */ (function () {
     StageManager.prototype.addTween = function (tween) {
         this.tweens.push(tween);
     };
-    StageManager.prototype.update = function (deltaTime) {
+    StageManager.prototype.update = function () {
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
         if (this.transitioning || this.isPaused || !this._currentScene) {
             return;
         }
+        var elapsed = PIXI.ticker.shared.elapsedMS;
         if (this.tweens.length) {
             for (var i = this.tweens.length - 1; i >= 0; i--) {
                 if (this.tweens[i].active) {
-                    this.tweens[i].update(deltaTime);
+                    this.tweens[i].update(elapsed);
                 }
                 if (!this.tweens[i].active) {
                     this.tweens.splice(i, 1);
                 }
             }
         }
-        this._currentScene.update(deltaTime);
+        this._currentScene.update(elapsed);
     };
     return StageManager;
 }());
@@ -1044,7 +1045,7 @@ var Scene = /** @class */ (function (_super) {
     };
     /**
      * callback for frame ticks
-     * @param {number} deltaTime time since last frame in multiples of one frame's length of time.
+     * @param {number} deltaTime time since last frame in milliseconds.
      */
     Scene.prototype.update = function (deltaTime) {
         //override this to get update ticks

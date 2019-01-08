@@ -77,7 +77,7 @@ export default class Scene extends PIXI.Container {
 
     /**
      * callback for frame ticks
-     * @param {number} deltaTime time since last frame in multiples of one frame's length of time.
+     * @param {number} deltaTime time since last frame in milliseconds.
      */
     update(deltaTime:number) {
         //override this to get update ticks

@@ -32,5 +32,5 @@ export default class StageManager {
     changeScene: (newScene: string) => void;
     pause: boolean;
     addTween(tween: Tween): void;
-    update(deltaTime: number): void;
+    update(): void;
 }
