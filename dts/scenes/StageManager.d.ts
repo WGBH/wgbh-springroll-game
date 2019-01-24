@@ -4,6 +4,7 @@ import Scene from './Scene';
 import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
 import Tween from '../tween/Tween';
+import PauseableTimer from '../timer/PauseableTimer';
 /**
  * Manages rendering and transitioning between Scenes
  */
@@ -19,6 +20,7 @@ export default class StageManager {
     /** Map of Scenes by Scene IDs */
     private scenes;
     private tweens;
+    private timers;
     constructor(game: Game, containerID: string, width: number, height: number);
     addScene(id: string, scene: typeof Scene): void;
     addScenes(sceneMap: {
@@ -32,5 +34,8 @@ export default class StageManager {
     changeScene: (newScene: string) => void;
     pause: boolean;
     addTween(tween: Tween): void;
+    clearTweens(): void;
+    addTimer(timer: PauseableTimer): void;
+    clearTimers(): void;
     update(): void;
 }

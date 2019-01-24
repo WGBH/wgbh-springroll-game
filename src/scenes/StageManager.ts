@@ -2,6 +2,7 @@ import Scene from './Scene';
 import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
 import Tween from '../tween/Tween';
+import PauseableTimer from '../timer/PauseableTimer';
 
 
 const TRANSITION_ID = 'wgbhSpringRollGameTransition';
@@ -25,6 +26,7 @@ export default class StageManager{
     private scenes: {[key:string]:typeof Scene} = {};
 
     private tweens:Tween[] = [];
+    private timers:PauseableTimer[] = [];
 
     constructor(game:Game, containerID:string, width:number, height:number){
         this.game = game;
@@ -135,6 +137,25 @@ export default class StageManager{
     addTween(tween:Tween){
         this.tweens.push(tween);
     }
+    
+    clearTweens() {
+        this.tweens.forEach(function(tween:Tween) {
+            tween.destroy(false);
+        });
+        this.tweens = [];
+    }
+
+    addTimer(timer:PauseableTimer){
+        this.timers.push(timer);
+    }
+
+    clearTimers() {
+        this.timers.forEach(function(timer:PauseableTimer) {
+            timer.destroy(false);
+        });
+        this.timers = [];
+    }
+
 
     update(){
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
@@ -149,6 +170,16 @@ export default class StageManager{
                 }
                 if(!this.tweens[i].active){
                     this.tweens.splice(i, 1);
+                }
+            }
+        }
+        if(this.timers.length){
+            for(let i = this.timers.length - 1; i >= 0; i--){
+                if(this.timers[i].active){
+                    this.timers[i].update(elapsed);
+                }
+                if(!this.timers[i].active){
+                    this.timers.splice(i, 1);
                 }
             }
         }

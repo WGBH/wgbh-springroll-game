@@ -283,6 +283,7 @@ var StageManager = /** @class */ (function () {
         /** Map of Scenes by Scene IDs */
         this.scenes = {};
         this.tweens = [];
+        this.timers = [];
         /**
          * Transition to specified scene
          * @param {string} sceneID ID of Scene to transition to
@@ -389,6 +390,21 @@ var StageManager = /** @class */ (function () {
     StageManager.prototype.addTween = function (tween) {
         this.tweens.push(tween);
     };
+    StageManager.prototype.clearTweens = function () {
+        this.tweens.forEach(function (tween) {
+            tween.destroy(false);
+        });
+        this.tweens = [];
+    };
+    StageManager.prototype.addTimer = function (timer) {
+        this.timers.push(timer);
+    };
+    StageManager.prototype.clearTimers = function () {
+        this.timers.forEach(function (timer) {
+            timer.destroy(false);
+        });
+        this.timers = [];
+    };
     StageManager.prototype.update = function () {
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
         if (this.transitioning || this.isPaused || !this._currentScene) {
@@ -402,6 +418,16 @@ var StageManager = /** @class */ (function () {
                 }
                 if (!this.tweens[i].active) {
                     this.tweens.splice(i, 1);
+                }
+            }
+        }
+        if (this.timers.length) {
+            for (var i = this.timers.length - 1; i >= 0; i--) {
+                if (this.timers[i].active) {
+                    this.timers[i].update(elapsed);
+                }
+                if (!this.timers[i].active) {
+                    this.timers.splice(i, 1);
                 }
             }
         }
@@ -994,6 +1020,58 @@ var Tween = /** @class */ (function () {
     return Tween;
 }());
 
+var PauseableTimer = /** @class */ (function () {
+    function PauseableTimer(callback, time, loop) {
+        var _this = this;
+        this.active = true;
+        this.paused = true;
+        this.repeat = false;
+        this.targetTime = time;
+        this.currentTime = 0;
+        this.onComplete = callback;
+        this.repeat = loop;
+        this.promise = new Promise(function (resolve, reject) {
+            _this.resolve = resolve;
+            _this.reject = reject;
+        });
+    }
+    PauseableTimer.prototype.pause = function (pause) {
+        this.paused = pause;
+    };
+    PauseableTimer.prototype.reset = function (deltaTime) {
+        // deltaTime shows how far over the end we went = do we care?
+        this.currentTime = deltaTime ? deltaTime : 0;
+    };
+    PauseableTimer.prototype.update = function (deltaTime) {
+        if (this.paused) {
+            return;
+        }
+        this.currentTime += deltaTime;
+        var time = this.currentTime / this.targetTime > 1 ? 1 : this.currentTime / this.targetTime;
+        if (time >= 1) {
+            if (this.onComplete) {
+                this.onComplete();
+            }
+            if (this.repeat) {
+                var delta = this.currentTime - this.targetTime;
+                this.reset(delta);
+            }
+            else {
+                this.destroy(true);
+            }
+        }
+    };
+    PauseableTimer.prototype.destroy = function (isComplete) {
+        if (isComplete === void 0) { isComplete = false; }
+        isComplete ? this.resolve() : this.reject('destroyed');
+        this.promise = null;
+        this.resolve = null;
+        this.reject = null;
+        this.targetTime = null;
+    };
+    return PauseableTimer;
+}());
+
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
  */
@@ -1063,6 +1141,24 @@ var Scene = /** @class */ (function (_super) {
         this.stageManager.addTween(tween);
         return tween;
     };
+    /*
+    */
+    Scene.prototype.setTimeout = function (callback, time) {
+        var timer = new PauseableTimer(callback, time);
+        this.stageManager.addTimer(timer);
+        return timer;
+    };
+    Scene.prototype.clearTimeout = function (timer) {
+        timer.destroy(false); // destroy without triggering the callback function
+    };
+    Scene.prototype.setInterval = function (callback, time) {
+        var timer = new PauseableTimer(callback, time, true);
+        this.stageManager.addTimer(timer);
+        return timer;
+    };
+    Scene.prototype.clearInterval = function (timer) {
+        timer.destroy(false); // destroy without triggering the callback function
+    };
     /**
      * Called when Scene is about to transition out - override to clean up art or other objects in memory
      * @returns {void} return a Promise to resolve when any asynchronous cleanup is complete
@@ -1075,5 +1171,5 @@ var Scene = /** @class */ (function (_super) {
 
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, Tween };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, Tween };
 //# sourceMappingURL=gamelib.js.map
