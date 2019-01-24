@@ -49,6 +49,7 @@ export default class Game {
         this.app.state.ready.subscribe(() => {
                 this.stageManager.setTransition(options.transition, this.gameReady.bind(this));
             });
+
     }
 
     /** called when game is ready to enter first scene - override this function and set first scene here */

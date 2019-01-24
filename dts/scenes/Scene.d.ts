@@ -62,10 +62,19 @@ export default class Scene extends PIXI.Container {
      * @returns {Tween} instance of Tween, for pausing/cancelling
      */
     tween(target: any, values: any, time: number, ease?: Ease): Tween;
+    /**
+     *
+     * Replacement for the window.setTimeout, this timeout will pause when the game is paused.
+     * Similar to Tween
+     *
+     * @param callback
+     * @param time
+     */
     setTimeout(callback: Function, time: number): PauseableTimer;
     clearTimeout(timer: PauseableTimer): void;
     setInterval(callback: Function, time: number): PauseableTimer;
     clearInterval(timer: PauseableTimer): void;
+    resize(width: number, height: number): void;
     /**
      * Called when Scene is about to transition out - override to clean up art or other objects in memory
      * @returns {void} return a Promise to resolve when any asynchronous cleanup is complete

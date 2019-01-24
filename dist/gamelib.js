@@ -1,4 +1,4 @@
-import { Application } from 'springroll';
+import { ScaleManager, Application } from 'springroll';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -336,11 +336,16 @@ var StageManager = /** @class */ (function () {
         this.game = game;
         this.width = width;
         this.height = height;
-        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, autoResize: true });
-        this.pixi.view.style.height = null;
-        this.pixi.view.style.width = '100%';
+        this.offset = new PIXI.Point(0, 0);
+        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, autoResize: false });
+        //this.pixi.view.style.height = null;
+        //this.pixi.view.style.width = '100%';
+        this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
+        this.setscaling({ width: 1024, height: 768 }, { width: 1024, height: 768 }, { width: 1536, height: 768 });
         this.pixi.ticker.add(this.update.bind(this));
+        this.scalemanager = new ScaleManager(this.gotresize.bind(this));
+        console.log(this.scalemanager); // just to quiet the errors... what else should be done with scalemanager instance?
     }
     StageManager.prototype.addScene = function (id, scene) {
         this.scenes[id] = scene;
@@ -387,6 +392,70 @@ var StageManager = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
+    StageManager.prototype.getsize = function (width, height) {
+        if (height === 0) {
+            return null;
+        }
+        return {
+            width: width,
+            height: height,
+            ratio: width / height
+        };
+    };
+    StageManager.prototype.setscaling = function (origin, min, max) {
+        this._originsize = this.getsize(origin.width, origin.height);
+        this._minsize = this.getsize(min.width, min.height);
+        this._maxsize = this.getsize(max.width, max.height);
+        this.resize(window.innerWidth, window.innerHeight);
+    };
+    StageManager.prototype.gotresize = function (newsize) {
+        this.resize(newsize.width, newsize.height);
+    };
+    StageManager.prototype.resize = function (width, height) {
+        var aspect = width / height;
+        var offset = 0;
+        //let scale;
+        var calcwidth = this._minsize.width;
+        if (aspect > this._maxsize.ratio) {
+            // locked in at max (2:1)
+            this.scale = this._minsize.ratio / this._maxsize.ratio;
+            calcwidth = this._maxsize.width;
+            // these styles could - probably should - be replaced by media queries in CSS
+            this.pixi.view.style.height = '100vh';
+            this.pixi.view.style.width = parseInt((this._maxsize.ratio * 100).toString()) + 'vh';
+            this.pixi.view.style.margin = '0 auto';
+        }
+        else if (aspect < this._minsize.ratio) {
+            this.scale = 1;
+            this.pixi.view.style.height = parseInt((100 / this._minsize.ratio).toString()) + 'vw';
+            this.pixi.view.style.width = '100vw';
+            this.pixi.view.style.margin = 'calc((100vh - ' + (100 / this._minsize.ratio).toString() + 'vw)/2) auto';
+        }
+        else {
+            // between min and max ratio (wider than min)
+            this.scale = this._minsize.ratio / aspect;
+            calcwidth = this._minsize.width / this.scale; // how much wider is this?
+            this.pixi.view.style.height = '100vh';
+            this.pixi.view.style.width = '100vw';
+            this.pixi.view.style.margin = 'auto 0';
+        }
+        offset = (calcwidth - this._originsize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 
+        this.pixi.stage.position.x = offset;
+        this.pixi.renderer.resize(calcwidth, this._minsize.height);
+        this.offset.x = offset;
+        if (this._currentScene) {
+            this._currentScene.resize(width, height);
+        }
+    };
+    /**
+     *
+     * globalToScene converts a "global" from PIXI into the scene level, taking into account the offset based on responsive resize
+     *
+     * @param pointin
+     */
+    StageManager.prototype.globalToScene = function (pointin) {
+        return { x: pointin.x - this.offset.x, y: pointin.y - this.offset.y };
+    };
     StageManager.prototype.addTween = function (tween) {
         this.tweens.push(tween);
     };
@@ -1141,8 +1210,14 @@ var Scene = /** @class */ (function (_super) {
         this.stageManager.addTween(tween);
         return tween;
     };
-    /*
-    */
+    /**
+     *
+     * Replacement for the window.setTimeout, this timeout will pause when the game is paused.
+     * Similar to Tween
+     *
+     * @param callback
+     * @param time
+     */
     Scene.prototype.setTimeout = function (callback, time) {
         var timer = new PauseableTimer(callback, time);
         this.stageManager.addTimer(timer);
@@ -1158,6 +1233,9 @@ var Scene = /** @class */ (function (_super) {
     };
     Scene.prototype.clearInterval = function (timer) {
         timer.destroy(false); // destroy without triggering the callback function
+    };
+    Scene.prototype.resize = function (width, height) {
+        // in case something special needs to happen on resize
     };
     /**
      * Called when Scene is about to transition out - override to clean up art or other objects in memory

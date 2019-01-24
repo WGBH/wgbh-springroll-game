@@ -126,6 +126,10 @@ export default class Scene extends PIXI.Container {
         timer.destroy(false); // destroy without triggering the callback function
     }
 
+    resize(width:number, height:number) {
+        // in case something special needs to happen on resize
+    }
+
     /**
      * Called when Scene is about to transition out - override to clean up art or other objects in memory
      * @returns {void} return a Promise to resolve when any asynchronous cleanup is complete

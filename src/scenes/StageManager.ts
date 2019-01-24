@@ -3,6 +3,8 @@ import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
 import Tween from '../tween/Tween';
 import PauseableTimer from '../timer/PauseableTimer';
+import { PointLike } from 'pixi.js';
+import { ScaleManager } from 'springroll';
 
 
 const TRANSITION_ID = 'wgbhSpringRollGameTransition';
@@ -14,9 +16,16 @@ export default class StageManager{
     public pixi: PIXI.Application;
     public width: number;
     public height: number;
+    public scale:number;
+    public offset:PointLike; // offset for the x,y origin when resizing
     public transition:PIXI.animate.MovieClip;
 
     private _currentScene:Scene;
+
+    private scalemanager:ScaleManager;
+    private _minsize:Screensize;
+    private _maxsize:Screensize;
+    private _originsize:Screensize;
 
     private transitioning = true;
     private isPaused = false;
@@ -34,11 +43,24 @@ export default class StageManager{
         this.width = width;
         this.height = height;
 
-        this.pixi = new PIXI.Application({ width, height, antialias:true, autoResize:true});
-        this.pixi.view.style.height = null;
-        this.pixi.view.style.width = '100%';
+        this.offset = new PIXI.Point(0,0);
+
+
+        this.pixi = new PIXI.Application({ width, height, antialias:true, autoResize:false});
+        //this.pixi.view.style.height = null;
+        //this.pixi.view.style.width = '100%';
+        this.pixi.view.style.display = 'block';
+
         document.getElementById(containerID).appendChild(this.pixi.view);
+        this.setscaling(
+            {width:1024,height:768},
+            {width:1024,height:768},
+            {width:1536,height:768}
+        );
         this.pixi.ticker.add(this.update.bind(this));
+
+        this.scalemanager = new ScaleManager(this.gotresize.bind(this));
+        console.log(this.scalemanager); // just to quiet the errors... what else should be done with scalemanager instance?
     }
 
     addScene(id:string, scene:typeof Scene){
@@ -134,6 +156,76 @@ export default class StageManager{
         pause ? this.pixi.ticker.stop() : this.pixi.ticker.start();
     }
 
+    getsize(width:number,height:number):Screensize {
+        if (height === 0) { return null; }
+        return {
+            width:width,
+            height:height,
+            ratio:width/height
+        };
+    }
+
+    setscaling(origin:Rectlike, min:Rectlike, max:Rectlike ) {
+        this._originsize = this.getsize(origin.width,origin.height);
+        this._minsize = this.getsize(min.width,min.height);
+        this._maxsize = this.getsize(max.width,max.height);
+        this.resize(window.innerWidth, window.innerHeight);
+    }
+
+    gotresize(newsize:Screensize) {
+        this.resize(newsize.width,newsize.height);
+    }
+
+    resize(width:number, height:number) {
+        const aspect = width / height;
+        let offset = 0;
+        //let scale;
+        let calcwidth = this._minsize.width;
+        if(aspect > this._maxsize.ratio) {
+            // locked in at max (2:1)
+            this.scale = this._minsize.ratio/this._maxsize.ratio;
+            calcwidth = this._maxsize.width;
+            
+            // these styles could - probably should - be replaced by media queries in CSS
+            this.pixi.view.style.height = '100vh';
+            this.pixi.view.style.width = parseInt((this._maxsize.ratio * 100).toString()) + 'vh';
+            this.pixi.view.style.margin = '0 auto';
+        } else if (aspect < this._minsize.ratio) {
+            this.scale = 1;
+
+            this.pixi.view.style.height = parseInt((100 / this._minsize.ratio).toString()) + 'vw';
+            this.pixi.view.style.width = '100vw';
+            this.pixi.view.style.margin = 'calc((100vh - ' + (100 / this._minsize.ratio).toString() + 'vw)/2) auto';
+        } else {
+            // between min and max ratio (wider than min)
+            this.scale = this._minsize.ratio / aspect;
+            calcwidth = this._minsize.width / this.scale; // how much wider is this?
+
+            this.pixi.view.style.height = '100vh';
+            this.pixi.view.style.width = '100vw';
+            this.pixi.view.style.margin = 'auto 0';
+        }
+        offset = (calcwidth - this._originsize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 
+        this.pixi.stage.position.x = offset;
+
+        this.pixi.renderer.resize(calcwidth,this._minsize.height);
+        this.offset.x = offset;
+        if (this._currentScene) {
+          this._currentScene.resize(width,height);
+        }
+    }
+
+
+    /**
+     * 
+     * globalToScene converts a "global" from PIXI into the scene level, taking into account the offset based on responsive resize
+     * 
+     * @param pointin 
+     */
+    globalToScene(pointin:PointLike) {
+        return {x:pointin.x - this.offset.x, y:pointin.y - this.offset.y};
+    }
+
     addTween(tween:Tween){
         this.tweens.push(tween);
     }
@@ -187,3 +279,15 @@ export default class StageManager{
     }
 
 }
+
+
+export type Screensize = {
+    width:number,
+    height:number,
+    ratio:number
+};
+
+export type Rectlike = {
+    width:number,
+    height:number
+};
