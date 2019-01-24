@@ -195,7 +195,7 @@ export default class StageManager{
 
             this.pixi.view.style.height = parseInt((100 / this._minsize.ratio).toString()) + 'vw';
             this.pixi.view.style.width = '100vw';
-            this.pixi.view.style.margin = 'calc((100vh - ' + (100 / this._minsize.ratio).toString() + 'vw)/2) auto';
+            this.pixi.view.style.margin = 'calc((100vh - ' + (100 / this._minsize.ratio).toString() + 'vw)/2) 0';
         } else {
             // between min and max ratio (wider than min)
             this.scale = this._minsize.ratio / aspect;
@@ -203,7 +203,7 @@ export default class StageManager{
 
             this.pixi.view.style.height = '100vh';
             this.pixi.view.style.width = '100vw';
-            this.pixi.view.style.margin = 'auto 0';
+            this.pixi.view.style.margin = '0';
         }
         offset = (calcwidth - this._originsize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 
         this.pixi.stage.position.x = offset;
