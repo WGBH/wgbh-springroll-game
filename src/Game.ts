@@ -50,6 +50,7 @@ export default class Game {
                 this.stageManager.setTransition(options.transition, this.gameReady.bind(this));
             });
 
+        this.stageManager.addCaptions(options.captions.config,options.captions.display);
     }
 
     /** called when game is ready to enter first scene - override this function and set first scene here */
@@ -83,8 +84,15 @@ export interface GameOptions {
     height: number;
     /** alternate width - wider or narrower than base width  */
     altwidth?: number;
+    /** caption configuration */
+    captions: CaptionParams;
     /** Class of Animate Stage to use for transitions */
     transition: AnimateStage;
     /** ID of HTML element on your page to add this game's Canvas to */
     containerID: string;
 }
+
+export type CaptionParams = {
+    config:SpringRoll.CaptionData,
+    display:SpringRoll.IRender
+};

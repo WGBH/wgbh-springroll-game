@@ -4,7 +4,7 @@ import { Game } from '..';
 import Tween from '../tween/Tween';
 import PauseableTimer from '../timer/PauseableTimer';
 import { PointLike } from 'pixi.js';
-import { ScaleManager } from 'springroll';
+import { ScaleManager, CaptionPlayer, CaptionData, IRender } from 'springroll';
 
 
 const TRANSITION_ID = 'wgbhSpringRollGameTransition';
@@ -31,6 +31,8 @@ export default class StageManager{
     private isPaused = false;
     private game:Game;
 
+    private captions:CaptionPlayer;
+
     /** Map of Scenes by Scene IDs */
     private scenes: {[key:string]:typeof Scene} = {};
 
@@ -45,9 +47,9 @@ export default class StageManager{
 
         this.offset = new PIXI.Point(0,0);
 
-
         this.pixi = new PIXI.Application({ width, height, antialias:true, autoResize:false, resolution:window.devicePixelRatio});
         this.pixi.view.style.display = 'block';
+
 
         document.getElementById(containerID).appendChild(this.pixi.view);
 
@@ -65,6 +67,14 @@ export default class StageManager{
 
         this.scaleManager = new ScaleManager(this.gotResize);
         console.log(this.scaleManager); // just to quiet the errors... what else should be done with scalemanager instance?
+    }
+
+    addCaptions(captionData:CaptionData, renderer:IRender) {
+        this.captions = new CaptionPlayer(captionData, renderer);
+    }
+
+    setCaptionRenderer(renderer:IRender) {
+        this.captions.renderer = renderer;
     }
 
     addScene(id:string, scene:typeof Scene){
@@ -258,6 +268,14 @@ export default class StageManager{
         this.timers = [];
     }
 
+    showcaption(captionid:string,begin?:number,args?:any) {
+        begin = begin || 0;
+        this.captions.start(captionid,begin,args);
+    }
+
+    stopcaption() {
+        this.captions.stop();
+    }
 
     update(){
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
@@ -284,6 +302,9 @@ export default class StageManager{
                     this.timers.splice(i, 1);
                 }
             }
+        }
+        if (this.captions) {
+            this.captions.update(elapsed/1000); // captions go by seconds, not ms
         }
         this._currentScene.update(elapsed);
     }

@@ -5,6 +5,7 @@ import { Game } from '..';
 import Tween from '../tween/Tween';
 import PauseableTimer from '../timer/PauseableTimer';
 import { PointLike } from 'pixi.js';
+import { CaptionData, IRender } from 'springroll';
 /**
  * Manages rendering and transitioning between Scenes
  */
@@ -23,11 +24,14 @@ export default class StageManager {
     private transitioning;
     private isPaused;
     private game;
+    private captions;
     /** Map of Scenes by Scene IDs */
     private scenes;
     private tweens;
     private timers;
     constructor(game: Game, containerID: string, width: number, height: number, altwidth?: number);
+    addCaptions(captionData: CaptionData, renderer: IRender): void;
+    setCaptionRenderer(renderer: IRender): void;
     addScene(id: string, scene: typeof Scene): void;
     addScenes(sceneMap: {
         [key: string]: typeof Scene;
@@ -57,6 +61,8 @@ export default class StageManager {
     clearTweens(): void;
     addTimer(timer: PauseableTimer): void;
     clearTimers(): void;
+    showcaption(captionid: string, begin?: number, args?: any): void;
+    stopcaption(): void;
     update(): void;
 }
 export declare type ScreenSize = {
