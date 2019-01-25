@@ -40,6 +40,8 @@ export interface GameOptions {
     width: number;
     /** target height of game in pixels */
     height: number;
+    /** alternate width - wider or narrower than base width  */
+    altwidth?: number;
     /** Class of Animate Stage to use for transitions */
     transition: AnimateStage;
     /** ID of HTML element on your page to add this game's Canvas to */

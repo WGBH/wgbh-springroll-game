@@ -27,7 +27,7 @@ export default class StageManager {
     private scenes;
     private tweens;
     private timers;
-    constructor(game: Game, containerID: string, width: number, height: number);
+    constructor(game: Game, containerID: string, width: number, height: number, altwidth?: number);
     addScene(id: string, scene: typeof Scene): void;
     addScenes(sceneMap: {
         [key: string]: typeof Scene;
@@ -40,7 +40,7 @@ export default class StageManager {
     changeScene: (newScene: string) => void;
     pause: boolean;
     getsize(width: number, height: number): Screensize;
-    setscaling(origin: Rectlike, min: Rectlike, max: Rectlike): void;
+    setscaling(scaleconfig: Scaleconfig): void;
     gotresize(newsize: Screensize): void;
     resize(width: number, height: number): void;
     /**
@@ -67,4 +67,9 @@ export declare type Screensize = {
 export declare type Rectlike = {
     width: number;
     height: number;
+};
+export declare type Scaleconfig = {
+    origin?: Rectlike;
+    min?: Rectlike;
+    max?: Rectlike;
 };

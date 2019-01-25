@@ -276,7 +276,7 @@ var TRANSITION_ID = 'wgbhSpringRollGameTransition';
  * Manages rendering and transitioning between Scenes
  */
 var StageManager = /** @class */ (function () {
-    function StageManager(game, containerID, width, height) {
+    function StageManager(game, containerID, width, height, altwidth) {
         var _this = this;
         this.transitioning = true;
         this.isPaused = false;
@@ -338,11 +338,17 @@ var StageManager = /** @class */ (function () {
         this.height = height;
         this.offset = new PIXI.Point(0, 0);
         this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, autoResize: false });
-        //this.pixi.view.style.height = null;
-        //this.pixi.view.style.width = '100%';
         this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
-        this.setscaling({ width: 1024, height: 768 }, { width: 1024, height: 768 }, { width: 1536, height: 768 });
+        var basesize = { width: width, height: height };
+        altwidth = altwidth || width;
+        var altsize = { width: altwidth, height: height };
+        var scale = {
+            origin: basesize,
+            min: (altwidth > width) ? basesize : altsize,
+            max: (altwidth > width) ? altsize : basesize
+        };
+        this.setscaling(scale);
         this.pixi.ticker.add(this.update.bind(this));
         this.scalemanager = new ScaleManager(this.gotresize.bind(this));
         console.log(this.scalemanager); // just to quiet the errors... what else should be done with scalemanager instance?
@@ -402,10 +408,16 @@ var StageManager = /** @class */ (function () {
             ratio: width / height
         };
     };
-    StageManager.prototype.setscaling = function (origin, min, max) {
-        this._originsize = this.getsize(origin.width, origin.height);
-        this._minsize = this.getsize(min.width, min.height);
-        this._maxsize = this.getsize(max.width, max.height);
+    StageManager.prototype.setscaling = function (scaleconfig) {
+        if (scaleconfig.origin) {
+            this._originsize = this.getsize(scaleconfig.origin.width, scaleconfig.origin.height);
+        }
+        if (scaleconfig.min) {
+            this._minsize = this.getsize(scaleconfig.min.width, scaleconfig.min.height);
+        }
+        if (scaleconfig.max) {
+            this._maxsize = this.getsize(scaleconfig.max.width, scaleconfig.max.height);
+        }
         this.resize(window.innerWidth, window.innerHeight);
     };
     StageManager.prototype.gotresize = function (newsize) {
@@ -429,7 +441,7 @@ var StageManager = /** @class */ (function () {
             this.scale = 1;
             this.pixi.view.style.height = parseInt((100 / this._minsize.ratio).toString()) + 'vw';
             this.pixi.view.style.width = '100vw';
-            this.pixi.view.style.margin = 'calc((100vh - ' + (100 / this._minsize.ratio).toString() + 'vw)/2) auto';
+            this.pixi.view.style.margin = 'calc((100vh - ' + (100 / this._minsize.ratio).toString() + 'vw)/2) 0';
         }
         else {
             // between min and max ratio (wider than min)
@@ -437,7 +449,7 @@ var StageManager = /** @class */ (function () {
             calcwidth = this._minsize.width / this.scale; // how much wider is this?
             this.pixi.view.style.height = '100vh';
             this.pixi.view.style.width = '100vw';
-            this.pixi.view.style.margin = 'auto 0';
+            this.pixi.view.style.margin = '0';
         }
         offset = (calcwidth - this._originsize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 
         this.pixi.stage.position.x = offset;
@@ -701,7 +713,7 @@ var Game = /** @class */ (function () {
         this.sound = new SoundManager();
         this.assetManager = new AssetManager(this.sound);
         this.cache = this.assetManager.cache;
-        this.stageManager = new StageManager(this, options.containerID, options.width, options.height);
+        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altwidth);
         this.app = new Application(options.springRollConfig);
         this.app.state.soundVolume.subscribe(function (volume) {
             _this.sound.volume = volume;

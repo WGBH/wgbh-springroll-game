@@ -37,7 +37,7 @@ export default class StageManager{
     private tweens:Tween[] = [];
     private timers:PauseableTimer[] = [];
 
-    constructor(game:Game, containerID:string, width:number, height:number){
+    constructor(game:Game, containerID:string, width:number, height:number, altwidth?:number){
         this.game = game;
 
         this.width = width;
@@ -47,16 +47,20 @@ export default class StageManager{
 
 
         this.pixi = new PIXI.Application({ width, height, antialias:true, autoResize:false});
-        //this.pixi.view.style.height = null;
-        //this.pixi.view.style.width = '100%';
         this.pixi.view.style.display = 'block';
 
         document.getElementById(containerID).appendChild(this.pixi.view);
-        this.setscaling(
-            {width:1024,height:768},
-            {width:1024,height:768},
-            {width:1536,height:768}
-        );
+
+        const basesize = {width:width,height:height};
+        altwidth = altwidth || width;
+        const altsize = {width:altwidth,height:height};
+        const scale = {
+            origin:basesize,
+            min:(altwidth > width) ? basesize : altsize,
+            max:(altwidth > width) ? altsize : basesize
+        };
+        this.setscaling(scale);
+
         this.pixi.ticker.add(this.update.bind(this));
 
         this.scalemanager = new ScaleManager(this.gotresize.bind(this));
@@ -165,10 +169,16 @@ export default class StageManager{
         };
     }
 
-    setscaling(origin:Rectlike, min:Rectlike, max:Rectlike ) {
-        this._originsize = this.getsize(origin.width,origin.height);
-        this._minsize = this.getsize(min.width,min.height);
-        this._maxsize = this.getsize(max.width,max.height);
+    setscaling(scaleconfig:Scaleconfig) {
+        if(scaleconfig.origin) {
+            this._originsize = this.getsize(scaleconfig.origin.width,scaleconfig.origin.height);
+        }
+        if(scaleconfig.min) {
+            this._minsize = this.getsize(scaleconfig.min.width,scaleconfig.min.height);
+        }
+        if(scaleconfig.max) {
+            this._maxsize = this.getsize(scaleconfig.max.width,scaleconfig.max.height);
+        }
         this.resize(window.innerWidth, window.innerHeight);
     }
 
@@ -290,4 +300,10 @@ export type Screensize = {
 export type Rectlike = {
     width:number,
     height:number
+};
+
+export type Scaleconfig = {
+    origin?:Rectlike,
+    min?:Rectlike,
+    max?:Rectlike
 };
