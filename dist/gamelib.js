@@ -333,11 +333,14 @@ var StageManager = /** @class */ (function () {
                 _this._currentScene.start();
             });
         };
+        this.gotResize = function (newsize) {
+            _this.resize(newsize.width, newsize.height);
+        };
         this.game = game;
         this.width = width;
         this.height = height;
         this.offset = new PIXI.Point(0, 0);
-        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, autoResize: false });
+        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, autoResize: false, resolution: window.devicePixelRatio });
         this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
         var basesize = { width: width, height: height };
@@ -348,10 +351,10 @@ var StageManager = /** @class */ (function () {
             min: (altwidth > width) ? basesize : altsize,
             max: (altwidth > width) ? altsize : basesize
         };
-        this.setscaling(scale);
+        this.setScaling(scale);
         this.pixi.ticker.add(this.update.bind(this));
-        this.scalemanager = new ScaleManager(this.gotresize.bind(this));
-        console.log(this.scalemanager); // just to quiet the errors... what else should be done with scalemanager instance?
+        this.scaleManager = new ScaleManager(this.gotResize);
+        console.log(this.scaleManager); // just to quiet the errors... what else should be done with scalemanager instance?
     }
     StageManager.prototype.addScene = function (id, scene) {
         this.scenes[id] = scene;
@@ -398,7 +401,7 @@ var StageManager = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    StageManager.prototype.getsize = function (width, height) {
+    StageManager.prototype.getSize = function (width, height) {
         if (height === 0) {
             return null;
         }
@@ -408,20 +411,17 @@ var StageManager = /** @class */ (function () {
             ratio: width / height
         };
     };
-    StageManager.prototype.setscaling = function (scaleconfig) {
+    StageManager.prototype.setScaling = function (scaleconfig) {
         if (scaleconfig.origin) {
-            this._originsize = this.getsize(scaleconfig.origin.width, scaleconfig.origin.height);
+            this._originsize = this.getSize(scaleconfig.origin.width, scaleconfig.origin.height);
         }
         if (scaleconfig.min) {
-            this._minsize = this.getsize(scaleconfig.min.width, scaleconfig.min.height);
+            this._minsize = this.getSize(scaleconfig.min.width, scaleconfig.min.height);
         }
         if (scaleconfig.max) {
-            this._maxsize = this.getsize(scaleconfig.max.width, scaleconfig.max.height);
+            this._maxsize = this.getSize(scaleconfig.max.width, scaleconfig.max.height);
         }
         this.resize(window.innerWidth, window.innerHeight);
-    };
-    StageManager.prototype.gotresize = function (newsize) {
-        this.resize(newsize.width, newsize.height);
     };
     StageManager.prototype.resize = function (width, height) {
         var aspect = width / height;
@@ -456,7 +456,7 @@ var StageManager = /** @class */ (function () {
         this.pixi.renderer.resize(calcwidth, this._minsize.height);
         this.offset.x = offset;
         if (this._currentScene) {
-            this._currentScene.resize(width, height);
+            this._currentScene.resize(calcwidth, this._minsize.height, this.offset);
         }
     };
     /**
@@ -1246,7 +1246,7 @@ var Scene = /** @class */ (function (_super) {
     Scene.prototype.clearInterval = function (timer) {
         timer.destroy(false); // destroy without triggering the callback function
     };
-    Scene.prototype.resize = function (width, height) {
+    Scene.prototype.resize = function (width, height, offset) {
         // in case something special needs to happen on resize
     };
     /**

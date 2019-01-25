@@ -22,10 +22,10 @@ export default class StageManager{
 
     private _currentScene:Scene;
 
-    private scalemanager:ScaleManager;
-    private _minsize:Screensize;
-    private _maxsize:Screensize;
-    private _originsize:Screensize;
+    private scaleManager:ScaleManager;
+    private _minsize:ScreenSize;
+    private _maxsize:ScreenSize;
+    private _originsize:ScreenSize;
 
     private transitioning = true;
     private isPaused = false;
@@ -46,7 +46,7 @@ export default class StageManager{
         this.offset = new PIXI.Point(0,0);
 
 
-        this.pixi = new PIXI.Application({ width, height, antialias:true, autoResize:false});
+        this.pixi = new PIXI.Application({ width, height, antialias:true, autoResize:false, resolution:window.devicePixelRatio});
         this.pixi.view.style.display = 'block';
 
         document.getElementById(containerID).appendChild(this.pixi.view);
@@ -59,12 +59,12 @@ export default class StageManager{
             min:(altwidth > width) ? basesize : altsize,
             max:(altwidth > width) ? altsize : basesize
         };
-        this.setscaling(scale);
+        this.setScaling(scale);
 
         this.pixi.ticker.add(this.update.bind(this));
 
-        this.scalemanager = new ScaleManager(this.gotresize.bind(this));
-        console.log(this.scalemanager); // just to quiet the errors... what else should be done with scalemanager instance?
+        this.scaleManager = new ScaleManager(this.gotResize);
+        console.log(this.scaleManager); // just to quiet the errors... what else should be done with scalemanager instance?
     }
 
     addScene(id:string, scene:typeof Scene){
@@ -160,7 +160,7 @@ export default class StageManager{
         pause ? this.pixi.ticker.stop() : this.pixi.ticker.start();
     }
 
-    getsize(width:number,height:number):Screensize {
+    getSize(width:number,height:number):ScreenSize {
         if (height === 0) { return null; }
         return {
             width:width,
@@ -169,20 +169,20 @@ export default class StageManager{
         };
     }
 
-    setscaling(scaleconfig:Scaleconfig) {
+    setScaling(scaleconfig:ScaleConfig) {
         if(scaleconfig.origin) {
-            this._originsize = this.getsize(scaleconfig.origin.width,scaleconfig.origin.height);
+            this._originsize = this.getSize(scaleconfig.origin.width,scaleconfig.origin.height);
         }
         if(scaleconfig.min) {
-            this._minsize = this.getsize(scaleconfig.min.width,scaleconfig.min.height);
+            this._minsize = this.getSize(scaleconfig.min.width,scaleconfig.min.height);
         }
         if(scaleconfig.max) {
-            this._maxsize = this.getsize(scaleconfig.max.width,scaleconfig.max.height);
+            this._maxsize = this.getSize(scaleconfig.max.width,scaleconfig.max.height);
         }
         this.resize(window.innerWidth, window.innerHeight);
     }
 
-    gotresize(newsize:Screensize) {
+    gotResize = (newsize:ScreenSize) => {
         this.resize(newsize.width,newsize.height);
     }
 
@@ -221,7 +221,7 @@ export default class StageManager{
         this.pixi.renderer.resize(calcwidth,this._minsize.height);
         this.offset.x = offset;
         if (this._currentScene) {
-          this._currentScene.resize(width,height);
+          this._currentScene.resize(calcwidth,this._minsize.height,this.offset);
         }
     }
 
@@ -291,19 +291,19 @@ export default class StageManager{
 }
 
 
-export type Screensize = {
+export type ScreenSize = {
     width:number,
     height:number,
     ratio:number
 };
 
-export type Rectlike = {
+export type RectLike = {
     width:number,
     height:number
 };
 
-export type Scaleconfig = {
-    origin?:Rectlike,
-    min?:Rectlike,
-    max?:Rectlike
+export type ScaleConfig = {
+    origin?:RectLike,
+    min?:RectLike,
+    max?:RectLike
 };

@@ -16,7 +16,7 @@ export default class StageManager {
     offset: PointLike;
     transition: PIXI.animate.MovieClip;
     private _currentScene;
-    private scalemanager;
+    private scaleManager;
     private _minsize;
     private _maxsize;
     private _originsize;
@@ -39,9 +39,9 @@ export default class StageManager {
      */
     changeScene: (newScene: string) => void;
     pause: boolean;
-    getsize(width: number, height: number): Screensize;
-    setscaling(scaleconfig: Scaleconfig): void;
-    gotresize(newsize: Screensize): void;
+    getSize(width: number, height: number): ScreenSize;
+    setScaling(scaleconfig: ScaleConfig): void;
+    gotResize: (newsize: ScreenSize) => void;
     resize(width: number, height: number): void;
     /**
      *
@@ -59,17 +59,17 @@ export default class StageManager {
     clearTimers(): void;
     update(): void;
 }
-export declare type Screensize = {
+export declare type ScreenSize = {
     width: number;
     height: number;
     ratio: number;
 };
-export declare type Rectlike = {
+export declare type RectLike = {
     width: number;
     height: number;
 };
-export declare type Scaleconfig = {
-    origin?: Rectlike;
-    min?: Rectlike;
-    max?: Rectlike;
+export declare type ScaleConfig = {
+    origin?: RectLike;
+    min?: RectLike;
+    max?: RectLike;
 };
