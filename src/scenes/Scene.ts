@@ -127,7 +127,7 @@ export default class Scene extends PIXI.Container {
         timer.destroy(false); // destroy without triggering the callback function
     }
 
-    resize(width:number, height:number, offset?:PointLike) {
+    resize(width:number, height:number, offset:PointLike) {
         // in case something special needs to happen on resize
     }
 

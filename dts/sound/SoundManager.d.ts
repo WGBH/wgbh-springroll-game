@@ -1,5 +1,6 @@
 /// <reference types="pixi-sound" />
 import { SoundDescriptor } from "../assets/AssetManager";
+import SoundContext from "./SoundContext";
 /**
  * Manages Sound playback, pausing, resuming, and volume control
  */
@@ -7,7 +8,7 @@ export default class SoundManager {
     /** Context for managing SFX sounds */
     private sfx;
     /** Context for managing VO sounds */
-    private vo;
+    vo: SoundContext;
     /** Context for managing music sounds */
     private music;
     /** Mapping of which SoundContexts each Sound belongs to, by ID */
@@ -33,6 +34,7 @@ export default class SoundManager {
      * @returns {PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>} instace of playing sound (or promise of to-be-played sound if not preloaded)
      */
     play(soundID: string, onComplete?: PIXI.sound.CompleteCallback): PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>;
+    stop(soundID: string): void;
     /** Retrieve reference to Sound instance by ID
      * @param {string} soundID ID of sound to retrieve
      * @returns {PIXI.sound.Sound} Sound instance

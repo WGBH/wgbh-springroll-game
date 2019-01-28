@@ -1,4 +1,4 @@
-import { ScaleManager, Application } from 'springroll';
+import { ScaleManager, CaptionPlayer, Application } from 'springroll';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -356,6 +356,12 @@ var StageManager = /** @class */ (function () {
         this.scaleManager = new ScaleManager(this.gotResize);
         console.log(this.scaleManager); // just to quiet the errors... what else should be done with scalemanager instance?
     }
+    StageManager.prototype.addCaptions = function (captionData, renderer) {
+        this.captions = new CaptionPlayer(captionData, renderer);
+    };
+    StageManager.prototype.setCaptionRenderer = function (renderer) {
+        this.captions.renderer = renderer;
+    };
     StageManager.prototype.addScene = function (id, scene) {
         this.scenes[id] = scene;
     };
@@ -486,6 +492,13 @@ var StageManager = /** @class */ (function () {
         });
         this.timers = [];
     };
+    StageManager.prototype.showcaption = function (captionid, begin, args) {
+        begin = begin || 0;
+        this.captions.start(captionid, begin, args);
+    };
+    StageManager.prototype.stopcaption = function () {
+        this.captions.stop();
+    };
     StageManager.prototype.update = function () {
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
         if (this.transitioning || this.isPaused || !this._currentScene) {
@@ -512,19 +525,25 @@ var StageManager = /** @class */ (function () {
                 }
             }
         }
+        if (this.captions) {
+            this.captions.update(elapsed / 1000); // captions go by seconds, not ms
+        }
         this._currentScene.update(elapsed);
     };
     return StageManager;
 }());
 
 var SoundContext = /** @class */ (function () {
-    function SoundContext() {
+    function SoundContext(issingle) {
         /** Map of Sounds by ID */
         this.sounds = {};
         /** Map of individual Sound volumes by ID */
         this.volumes = {};
         this._globalVolume = 1;
         this._volume = 1;
+        this.single = false;
+        this.single = (issingle === true);
+        this.currentSound = null;
     }
     Object.defineProperty(SoundContext.prototype, "volume", {
         /** Context-specific volume */
@@ -575,6 +594,52 @@ var SoundContext = /** @class */ (function () {
         this.sounds[id].volume = this.volumes[id] * this._globalVolume * this._volume;
     };
     /**
+     *
+     * @param {string} id
+     * @param {CompleteCallback} onComplete
+     */
+    SoundContext.prototype.play = function (id, onComplete) {
+        if (this.single) {
+            // stop anything currently playing
+            this.stopAll();
+        }
+        this.currentSound = id;
+        return this.sounds[id].play(onComplete);
+    };
+    SoundContext.prototype.stop = function (id) {
+        if (id === this.currentSound) {
+            this.currentSound = null;
+        }
+        this.sounds[id].stop();
+    };
+    SoundContext.prototype.stopAll = function () {
+        this.currentSound = null;
+        for (var key in this.sounds) {
+            this.sounds[key].stop();
+        }
+    };
+    /**
+     *
+     * @param soundid ID of sound to get position of - if none, then find position of most recently played sound
+     */
+    SoundContext.prototype.getPosition = function (soundid) {
+        if (!soundid) {
+            soundid = this.currentSound;
+        }
+        if (!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {
+            return 0;
+        }
+        return this.sounds[soundid].instances[0].progress;
+    };
+    SoundContext.prototype.isPlaying = function () {
+        for (var key in this.sounds) {
+            if (this.sounds[key].isPlaying) {
+                return true;
+            }
+        }
+        return false;
+    };
+    /**
      * Destroy sound, remove from context and PIXI Sound cache
      * @param id ID of sound to remove
      */
@@ -594,7 +659,7 @@ var SoundManager = /** @class */ (function () {
         /** Context for managing SFX sounds */
         this.sfx = new SoundContext();
         /** Context for managing VO sounds */
-        this.vo = new SoundContext();
+        this.vo = new SoundContext(true);
         /** Context for managing music sounds */
         this.music = new SoundContext();
         /** Mapping of which SoundContexts each Sound belongs to, by ID */
@@ -651,7 +716,11 @@ var SoundManager = /** @class */ (function () {
      * @returns {PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>} instace of playing sound (or promise of to-be-played sound if not preloaded)
      */
     SoundManager.prototype.play = function (soundID, onComplete) {
-        return this.soundMeta[soundID].sounds[soundID].play(onComplete);
+        return this.soundMeta[soundID].play(soundID, onComplete);
+        // return this.soundMeta[soundID].sounds[soundID].play(onComplete);
+    };
+    SoundManager.prototype.stop = function (soundID) {
+        this.soundMeta[soundID].stop(soundID);
     };
     /** Retrieve reference to Sound instance by ID
      * @param {string} soundID ID of sound to retrieve
@@ -734,6 +803,7 @@ var Game = /** @class */ (function () {
         this.app.state.ready.subscribe(function () {
             _this.stageManager.setTransition(options.transition, _this.gameReady.bind(_this));
         });
+        this.stageManager.addCaptions(options.captions.config, options.captions.display);
     }
     /** called when game is ready to enter first scene - override this function and set first scene here */
     Game.prototype.gameReady = function () {

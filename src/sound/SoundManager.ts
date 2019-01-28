@@ -10,7 +10,7 @@ export default class SoundManager {
     /** Context for managing SFX sounds */
     private sfx = new SoundContext();
     /** Context for managing VO sounds */
-    private vo = new SoundContext();
+    public vo = new SoundContext(true);
     /** Context for managing music sounds */
     private music = new SoundContext();
     /** Mapping of which SoundContexts each Sound belongs to, by ID */
@@ -56,7 +56,12 @@ export default class SoundManager {
      * @returns {PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>} instace of playing sound (or promise of to-be-played sound if not preloaded)
      */
     play(soundID:string, onComplete?:PIXI.sound.CompleteCallback){
-        return this.soundMeta[soundID].sounds[soundID].play(onComplete);
+        return this.soundMeta[soundID].play(soundID,onComplete);
+       // return this.soundMeta[soundID].sounds[soundID].play(onComplete);
+    }
+
+    stop(soundID:string) {
+        this.soundMeta[soundID].stop(soundID);
     }
 
     /** Retrieve reference to Sound instance by ID

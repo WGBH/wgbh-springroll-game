@@ -26,7 +26,7 @@ export default class Game {
         this.sound = new SoundManager();
         this.assetManager = new AssetManager(this.sound);
         this.cache = this.assetManager.cache;
-        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altwidth);
+        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth);
 
         this.app = new SpringRoll.Application(options.springRollConfig);
         this.app.state.soundVolume.subscribe((volume)=>{
@@ -83,7 +83,7 @@ export interface GameOptions {
     /** target height of game in pixels */
     height: number;
     /** alternate width - wider or narrower than base width  */
-    altwidth?: number;
+    altWidth?: number;
     /** caption configuration */
     captions: CaptionParams;
     /** Class of Animate Stage to use for transitions */

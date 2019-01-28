@@ -18,6 +18,8 @@ export default class StageManager{
     public height: number;
     public scale:number;
     public offset:PointLike; // offset for the x,y origin when resizing
+    public leftEdge:number; // shortcut to find the left edge
+    public rightEdge:number; // shortcut to find the right edge
     public transition:PIXI.animate.MovieClip;
 
     private _currentScene:Scene;
@@ -39,7 +41,7 @@ export default class StageManager{
     private tweens:Tween[] = [];
     private timers:PauseableTimer[] = [];
 
-    constructor(game:Game, containerID:string, width:number, height:number, altwidth?:number){
+    constructor(game:Game, containerID:string, width:number, height:number, altWidth?:number){
         this.game = game;
 
         this.width = width;
@@ -54,12 +56,12 @@ export default class StageManager{
         document.getElementById(containerID).appendChild(this.pixi.view);
 
         const basesize = {width:width,height:height};
-        altwidth = altwidth || width;
-        const altsize = {width:altwidth,height:height};
+        altWidth = altWidth || width;
+        const altsize = {width:altWidth,height:height};
         const scale = {
             origin:basesize,
-            min:(altwidth > width) ? basesize : altsize,
-            max:(altwidth > width) ? altsize : basesize
+            min:(altWidth > width) ? basesize : altsize,
+            max:(altWidth > width) ? altsize : basesize
         };
         this.setScaling(scale);
 
@@ -225,7 +227,7 @@ export default class StageManager{
             this.pixi.view.style.width = '100vw';
             this.pixi.view.style.margin = '0';
         }
-        offset = (calcwidth - this._originsize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 
+        offset = (calcwidth - this._originsize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0. Also that the center is constant as the scale changes. 
         this.pixi.stage.position.x = offset;
 
         this.pixi.renderer.resize(calcwidth,this._minsize.height);
@@ -233,6 +235,8 @@ export default class StageManager{
         if (this._currentScene) {
           this._currentScene.resize(calcwidth,this._minsize.height,this.offset);
         }
+        this.leftEdge = offset * -1;
+        this.rightEdge = calcwidth - offset;
     }
 
 
