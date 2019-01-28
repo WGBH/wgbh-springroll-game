@@ -14,12 +14,14 @@ export default class StageManager {
     height: number;
     scale: number;
     offset: PointLike;
+    leftEdge: number;
+    rightEdge: number;
     transition: PIXI.animate.MovieClip;
     private _currentScene;
     private scaleManager;
-    private _minsize;
-    private _maxsize;
-    private _originsize;
+    private _minSize;
+    private _maxSize;
+    private _originSize;
     private transitioning;
     private isPaused;
     private game;
@@ -27,7 +29,7 @@ export default class StageManager {
     private scenes;
     private tweens;
     private timers;
-    constructor(game: Game, containerID: string, width: number, height: number, altwidth?: number);
+    constructor(game: Game, containerID: string, width: number, height: number, altWidth?: number);
     addScene(id: string, scene: typeof Scene): void;
     addScenes(sceneMap: {
         [key: string]: typeof Scene;
