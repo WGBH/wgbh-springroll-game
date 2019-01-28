@@ -340,7 +340,7 @@ var StageManager = /** @class */ (function () {
         this.width = width;
         this.height = height;
         this.offset = new PIXI.Point(0, 0);
-        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, autoResize: false, resolution: window.devicePixelRatio });
+        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true });
         this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
         var baseSize = { width: width, height: height };

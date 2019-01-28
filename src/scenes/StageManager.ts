@@ -48,7 +48,7 @@ export default class StageManager{
         this.offset = new PIXI.Point(0,0);
 
 
-        this.pixi = new PIXI.Application({ width, height, antialias:true, autoResize:false, resolution:window.devicePixelRatio});
+        this.pixi = new PIXI.Application({ width, height, antialias:true});
         this.pixi.view.style.display = 'block';
 
         document.getElementById(containerID).appendChild(this.pixi.view);
