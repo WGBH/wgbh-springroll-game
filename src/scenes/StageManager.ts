@@ -18,14 +18,16 @@ export default class StageManager{
     public height: number;
     public scale:number;
     public offset:PointLike; // offset for the x,y origin when resizing
+    public leftEdge:number; // shortcut to find the left edge
+    public rightEdge:number; // shortcut to find the right edge
     public transition:PIXI.animate.MovieClip;
 
     private _currentScene:Scene;
 
     private scaleManager:ScaleManager;
-    private _minsize:ScreenSize;
-    private _maxsize:ScreenSize;
-    private _originsize:ScreenSize;
+    private _minSize:ScreenSize;
+    private _maxSize:ScreenSize;
+    private _originSize:ScreenSize;
 
     private transitioning = true;
     private isPaused = false;
@@ -37,7 +39,7 @@ export default class StageManager{
     private tweens:Tween[] = [];
     private timers:PauseableTimer[] = [];
 
-    constructor(game:Game, containerID:string, width:number, height:number, altwidth?:number){
+    constructor(game:Game, containerID:string, width:number, height:number, altWidth?:number){
         this.game = game;
 
         this.width = width;
@@ -51,13 +53,13 @@ export default class StageManager{
 
         document.getElementById(containerID).appendChild(this.pixi.view);
 
-        const basesize = {width:width,height:height};
-        altwidth = altwidth || width;
-        const altsize = {width:altwidth,height:height};
+        const baseSize = {width:width,height:height};
+        altWidth = altWidth || width;
+        const altSize = {width:altWidth,height:height};
         const scale = {
-            origin:basesize,
-            min:(altwidth > width) ? basesize : altsize,
-            max:(altwidth > width) ? altsize : basesize
+            origin:baseSize,
+            min:(altWidth > width) ? baseSize : altSize,
+            max:(altWidth > width) ? altSize : baseSize
         };
         this.setScaling(scale);
 
@@ -171,13 +173,13 @@ export default class StageManager{
 
     setScaling(scaleconfig:ScaleConfig) {
         if(scaleconfig.origin) {
-            this._originsize = this.getSize(scaleconfig.origin.width,scaleconfig.origin.height);
+            this._originSize = this.getSize(scaleconfig.origin.width,scaleconfig.origin.height);
         }
         if(scaleconfig.min) {
-            this._minsize = this.getSize(scaleconfig.min.width,scaleconfig.min.height);
+            this._minSize = this.getSize(scaleconfig.min.width,scaleconfig.min.height);
         }
         if(scaleconfig.max) {
-            this._maxsize = this.getSize(scaleconfig.max.width,scaleconfig.max.height);
+            this._maxSize = this.getSize(scaleconfig.max.width,scaleconfig.max.height);
         }
         this.resize(window.innerWidth, window.innerHeight);
     }
@@ -190,38 +192,38 @@ export default class StageManager{
         const aspect = width / height;
         let offset = 0;
         //let scale;
-        let calcwidth = this._minsize.width;
-        if(aspect > this._maxsize.ratio) {
+        let calcwidth = this._minSize.width;
+        if(aspect > this._maxSize.ratio) {
             // locked in at max (2:1)
-            this.scale = this._minsize.ratio/this._maxsize.ratio;
-            calcwidth = this._maxsize.width;
+            this.scale = this._minSize.ratio/this._maxSize.ratio;
+            calcwidth = this._maxSize.width;
             
             // these styles could - probably should - be replaced by media queries in CSS
             this.pixi.view.style.height = '100vh';
-            this.pixi.view.style.width = parseInt((this._maxsize.ratio * 100).toString()) + 'vh';
+            this.pixi.view.style.width = parseInt((this._maxSize.ratio * 100).toString()) + 'vh';
             this.pixi.view.style.margin = '0 auto';
-        } else if (aspect < this._minsize.ratio) {
+        } else if (aspect < this._minSize.ratio) {
             this.scale = 1;
 
-            this.pixi.view.style.height = parseInt((100 / this._minsize.ratio).toString()) + 'vw';
+            this.pixi.view.style.height = parseInt((100 / this._minSize.ratio).toString()) + 'vw';
             this.pixi.view.style.width = '100vw';
-            this.pixi.view.style.margin = 'calc((100vh - ' + (100 / this._minsize.ratio).toString() + 'vw)/2) 0';
+            this.pixi.view.style.margin = 'calc((100vh - ' + (100 / this._minSize.ratio).toString() + 'vw)/2) 0';
         } else {
             // between min and max ratio (wider than min)
-            this.scale = this._minsize.ratio / aspect;
-            calcwidth = this._minsize.width / this.scale; // how much wider is this?
+            this.scale = this._minSize.ratio / aspect;
+            calcwidth = this._minSize.width / this.scale; // how much wider is this?
 
             this.pixi.view.style.height = '100vh';
             this.pixi.view.style.width = '100vw';
             this.pixi.view.style.margin = '0';
         }
-        offset = (calcwidth - this._originsize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 
+        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 
         this.pixi.stage.position.x = offset;
 
-        this.pixi.renderer.resize(calcwidth,this._minsize.height);
+        this.pixi.renderer.resize(calcwidth,this._minSize.height);
         this.offset.x = offset;
         if (this._currentScene) {
-          this._currentScene.resize(calcwidth,this._minsize.height,this.offset);
+          this._currentScene.resize(calcwidth,this._minSize.height,this.offset);
         }
     }
 
