@@ -2,6 +2,8 @@ import Game from '../Game';
 import { AssetList, AssetManager, SoundManager, StageManager } from '..';
 import { AssetCache } from '../assets/AssetManager';
 import Tween, { Ease } from '../tween/Tween';
+import PauseableTimer from '../timer/PauseableTimer';
+import { PointLike } from 'pixi.js';
 
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
@@ -98,10 +100,44 @@ export default class Scene extends PIXI.Container {
     }
 
     /**
+     * 
+     * Replacement for the window.setTimeout, this timeout will pause when the game is paused.
+     * Similar to Tween
+     * 
+     * @param callback 
+     * @param time 
+     */
+    setTimeout(callback: Function, time:number):PauseableTimer {
+        const timer = new PauseableTimer(callback, time);
+        this.stageManager.addTimer(timer);
+        return timer;
+    }
+
+    clearTimeout(timer:PauseableTimer) {
+        timer.destroy(false); // destroy without triggering the callback function
+    }
+
+    setInterval(callback: Function, time:number):PauseableTimer {
+        const timer = new PauseableTimer(callback, time, true);
+        this.stageManager.addTimer(timer);
+        return timer;
+    }
+
+    clearInterval(timer:PauseableTimer) {
+        timer.destroy(false); // destroy without triggering the callback function
+    }
+
+    resize(width:number, height:number, offset:PointLike) {
+        // in case something special needs to happen on resize
+    }
+
+    /**
      * Called when Scene is about to transition out - override to clean up art or other objects in memory
      * @returns {void} return a Promise to resolve when any asynchronous cleanup is complete
      */
     cleanup():void {
         //override this to clean up Scene
     }
+
+
 }

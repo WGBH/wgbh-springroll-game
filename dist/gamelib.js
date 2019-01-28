@@ -1,4 +1,4 @@
-import { Application } from 'springroll';
+import { ScaleManager, Application } from 'springroll';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -276,13 +276,14 @@ var TRANSITION_ID = 'wgbhSpringRollGameTransition';
  * Manages rendering and transitioning between Scenes
  */
 var StageManager = /** @class */ (function () {
-    function StageManager(game, containerID, width, height) {
+    function StageManager(game, containerID, width, height, altwidth) {
         var _this = this;
         this.transitioning = true;
         this.isPaused = false;
         /** Map of Scenes by Scene IDs */
         this.scenes = {};
         this.tweens = [];
+        this.timers = [];
         /**
          * Transition to specified scene
          * @param {string} sceneID ID of Scene to transition to
@@ -332,14 +333,28 @@ var StageManager = /** @class */ (function () {
                 _this._currentScene.start();
             });
         };
+        this.gotResize = function (newsize) {
+            _this.resize(newsize.width, newsize.height);
+        };
         this.game = game;
         this.width = width;
         this.height = height;
-        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, autoResize: true });
-        this.pixi.view.style.height = null;
-        this.pixi.view.style.width = '100%';
+        this.offset = new PIXI.Point(0, 0);
+        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, autoResize: false, resolution: window.devicePixelRatio });
+        this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
+        var basesize = { width: width, height: height };
+        altwidth = altwidth || width;
+        var altsize = { width: altwidth, height: height };
+        var scale = {
+            origin: basesize,
+            min: (altwidth > width) ? basesize : altsize,
+            max: (altwidth > width) ? altsize : basesize
+        };
+        this.setScaling(scale);
         this.pixi.ticker.add(this.update.bind(this));
+        this.scaleManager = new ScaleManager(this.gotResize);
+        console.log(this.scaleManager); // just to quiet the errors... what else should be done with scalemanager instance?
     }
     StageManager.prototype.addScene = function (id, scene) {
         this.scenes[id] = scene;
@@ -386,8 +401,90 @@ var StageManager = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
+    StageManager.prototype.getSize = function (width, height) {
+        if (height === 0) {
+            return null;
+        }
+        return {
+            width: width,
+            height: height,
+            ratio: width / height
+        };
+    };
+    StageManager.prototype.setScaling = function (scaleconfig) {
+        if (scaleconfig.origin) {
+            this._originsize = this.getSize(scaleconfig.origin.width, scaleconfig.origin.height);
+        }
+        if (scaleconfig.min) {
+            this._minsize = this.getSize(scaleconfig.min.width, scaleconfig.min.height);
+        }
+        if (scaleconfig.max) {
+            this._maxsize = this.getSize(scaleconfig.max.width, scaleconfig.max.height);
+        }
+        this.resize(window.innerWidth, window.innerHeight);
+    };
+    StageManager.prototype.resize = function (width, height) {
+        var aspect = width / height;
+        var offset = 0;
+        //let scale;
+        var calcwidth = this._minsize.width;
+        if (aspect > this._maxsize.ratio) {
+            // locked in at max (2:1)
+            this.scale = this._minsize.ratio / this._maxsize.ratio;
+            calcwidth = this._maxsize.width;
+            // these styles could - probably should - be replaced by media queries in CSS
+            this.pixi.view.style.height = '100vh';
+            this.pixi.view.style.width = parseInt((this._maxsize.ratio * 100).toString()) + 'vh';
+            this.pixi.view.style.margin = '0 auto';
+        }
+        else if (aspect < this._minsize.ratio) {
+            this.scale = 1;
+            this.pixi.view.style.height = parseInt((100 / this._minsize.ratio).toString()) + 'vw';
+            this.pixi.view.style.width = '100vw';
+            this.pixi.view.style.margin = 'calc((100vh - ' + (100 / this._minsize.ratio).toString() + 'vw)/2) 0';
+        }
+        else {
+            // between min and max ratio (wider than min)
+            this.scale = this._minsize.ratio / aspect;
+            calcwidth = this._minsize.width / this.scale; // how much wider is this?
+            this.pixi.view.style.height = '100vh';
+            this.pixi.view.style.width = '100vw';
+            this.pixi.view.style.margin = '0';
+        }
+        offset = (calcwidth - this._originsize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 
+        this.pixi.stage.position.x = offset;
+        this.pixi.renderer.resize(calcwidth, this._minsize.height);
+        this.offset.x = offset;
+        if (this._currentScene) {
+            this._currentScene.resize(calcwidth, this._minsize.height, this.offset);
+        }
+    };
+    /**
+     *
+     * globalToScene converts a "global" from PIXI into the scene level, taking into account the offset based on responsive resize
+     *
+     * @param pointin
+     */
+    StageManager.prototype.globalToScene = function (pointin) {
+        return { x: pointin.x - this.offset.x, y: pointin.y - this.offset.y };
+    };
     StageManager.prototype.addTween = function (tween) {
         this.tweens.push(tween);
+    };
+    StageManager.prototype.clearTweens = function () {
+        this.tweens.forEach(function (tween) {
+            tween.destroy(false);
+        });
+        this.tweens = [];
+    };
+    StageManager.prototype.addTimer = function (timer) {
+        this.timers.push(timer);
+    };
+    StageManager.prototype.clearTimers = function () {
+        this.timers.forEach(function (timer) {
+            timer.destroy(false);
+        });
+        this.timers = [];
     };
     StageManager.prototype.update = function () {
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
@@ -402,6 +499,16 @@ var StageManager = /** @class */ (function () {
                 }
                 if (!this.tweens[i].active) {
                     this.tweens.splice(i, 1);
+                }
+            }
+        }
+        if (this.timers.length) {
+            for (var i = this.timers.length - 1; i >= 0; i--) {
+                if (this.timers[i].active) {
+                    this.timers[i].update(elapsed);
+                }
+                if (!this.timers[i].active) {
+                    this.timers.splice(i, 1);
                 }
             }
         }
@@ -606,7 +713,7 @@ var Game = /** @class */ (function () {
         this.sound = new SoundManager();
         this.assetManager = new AssetManager(this.sound);
         this.cache = this.assetManager.cache;
-        this.stageManager = new StageManager(this, options.containerID, options.width, options.height);
+        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altwidth);
         this.app = new Application(options.springRollConfig);
         this.app.state.soundVolume.subscribe(function (volume) {
             _this.sound.volume = volume;
@@ -994,6 +1101,58 @@ var Tween = /** @class */ (function () {
     return Tween;
 }());
 
+var PauseableTimer = /** @class */ (function () {
+    function PauseableTimer(callback, time, loop) {
+        var _this = this;
+        this.active = true;
+        this.paused = true;
+        this.repeat = false;
+        this.targetTime = time;
+        this.currentTime = 0;
+        this.onComplete = callback;
+        this.repeat = loop;
+        this.promise = new Promise(function (resolve, reject) {
+            _this.resolve = resolve;
+            _this.reject = reject;
+        });
+    }
+    PauseableTimer.prototype.pause = function (pause) {
+        this.paused = pause;
+    };
+    PauseableTimer.prototype.reset = function (deltaTime) {
+        // deltaTime shows how far over the end we went = do we care?
+        this.currentTime = deltaTime ? deltaTime : 0;
+    };
+    PauseableTimer.prototype.update = function (deltaTime) {
+        if (this.paused) {
+            return;
+        }
+        this.currentTime += deltaTime;
+        var time = this.currentTime / this.targetTime > 1 ? 1 : this.currentTime / this.targetTime;
+        if (time >= 1) {
+            if (this.onComplete) {
+                this.onComplete();
+            }
+            if (this.repeat) {
+                var delta = this.currentTime - this.targetTime;
+                this.reset(delta);
+            }
+            else {
+                this.destroy(true);
+            }
+        }
+    };
+    PauseableTimer.prototype.destroy = function (isComplete) {
+        if (isComplete === void 0) { isComplete = false; }
+        isComplete ? this.resolve() : this.reject('destroyed');
+        this.promise = null;
+        this.resolve = null;
+        this.reject = null;
+        this.targetTime = null;
+    };
+    return PauseableTimer;
+}());
+
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
  */
@@ -1064,6 +1223,33 @@ var Scene = /** @class */ (function (_super) {
         return tween;
     };
     /**
+     *
+     * Replacement for the window.setTimeout, this timeout will pause when the game is paused.
+     * Similar to Tween
+     *
+     * @param callback
+     * @param time
+     */
+    Scene.prototype.setTimeout = function (callback, time) {
+        var timer = new PauseableTimer(callback, time);
+        this.stageManager.addTimer(timer);
+        return timer;
+    };
+    Scene.prototype.clearTimeout = function (timer) {
+        timer.destroy(false); // destroy without triggering the callback function
+    };
+    Scene.prototype.setInterval = function (callback, time) {
+        var timer = new PauseableTimer(callback, time, true);
+        this.stageManager.addTimer(timer);
+        return timer;
+    };
+    Scene.prototype.clearInterval = function (timer) {
+        timer.destroy(false); // destroy without triggering the callback function
+    };
+    Scene.prototype.resize = function (width, height, offset) {
+        // in case something special needs to happen on resize
+    };
+    /**
      * Called when Scene is about to transition out - override to clean up art or other objects in memory
      * @returns {void} return a Promise to resolve when any asynchronous cleanup is complete
      */
@@ -1075,5 +1261,5 @@ var Scene = /** @class */ (function (_super) {
 
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, Tween };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, Tween };
 //# sourceMappingURL=gamelib.js.map

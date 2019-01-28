@@ -1,9 +1,10 @@
-/// <reference types="pixi.js" />
 /// <reference types="pixi-animate" />
 import Scene from './Scene';
 import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
 import Tween from '../tween/Tween';
+import PauseableTimer from '../timer/PauseableTimer';
+import { PointLike } from 'pixi.js';
 /**
  * Manages rendering and transitioning between Scenes
  */
@@ -11,15 +12,22 @@ export default class StageManager {
     pixi: PIXI.Application;
     width: number;
     height: number;
+    scale: number;
+    offset: PointLike;
     transition: PIXI.animate.MovieClip;
     private _currentScene;
+    private scaleManager;
+    private _minsize;
+    private _maxsize;
+    private _originsize;
     private transitioning;
     private isPaused;
     private game;
     /** Map of Scenes by Scene IDs */
     private scenes;
     private tweens;
-    constructor(game: Game, containerID: string, width: number, height: number);
+    private timers;
+    constructor(game: Game, containerID: string, width: number, height: number, altwidth?: number);
     addScene(id: string, scene: typeof Scene): void;
     addScenes(sceneMap: {
         [key: string]: typeof Scene;
@@ -31,6 +39,37 @@ export default class StageManager {
      */
     changeScene: (newScene: string) => void;
     pause: boolean;
+    getSize(width: number, height: number): ScreenSize;
+    setScaling(scaleconfig: ScaleConfig): void;
+    gotResize: (newsize: ScreenSize) => void;
+    resize(width: number, height: number): void;
+    /**
+     *
+     * globalToScene converts a "global" from PIXI into the scene level, taking into account the offset based on responsive resize
+     *
+     * @param pointin
+     */
+    globalToScene(pointin: PointLike): {
+        x: number;
+        y: number;
+    };
     addTween(tween: Tween): void;
+    clearTweens(): void;
+    addTimer(timer: PauseableTimer): void;
+    clearTimers(): void;
     update(): void;
 }
+export declare type ScreenSize = {
+    width: number;
+    height: number;
+    ratio: number;
+};
+export declare type RectLike = {
+    width: number;
+    height: number;
+};
+export declare type ScaleConfig = {
+    origin?: RectLike;
+    min?: RectLike;
+    max?: RectLike;
+};
