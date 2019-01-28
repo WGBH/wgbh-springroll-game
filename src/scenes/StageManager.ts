@@ -54,6 +54,10 @@ export default class StageManager{
         document.getElementById(containerID).appendChild(this.pixi.view);
 
         const baseSize = {width:width,height:height};
+
+        this.leftEdge = 0;
+        this.rightEdge = width;
+
         altWidth = altWidth || width;
         const altSize = {width:altWidth,height:height};
         const scale = {
@@ -225,6 +229,9 @@ export default class StageManager{
         if (this._currentScene) {
           this._currentScene.resize(calcwidth,this._minSize.height,this.offset);
         }
+
+        this.leftEdge = offset * -1;
+        this.rightEdge = calcwidth - offset;
     }
 
 
