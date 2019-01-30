@@ -162,8 +162,12 @@ export default class StageManager{
     }
     set pause(pause:boolean){
         this.isPaused = pause;
-        this._currentScene.pause(pause);
-        pause ? this.pixi.ticker.stop() : this.pixi.ticker.start();
+        if(this._currentScene){
+            this._currentScene.pause(pause);
+        }
+        if(this.pixi && this.pixi.ticker){
+            pause ? this.pixi.ticker.stop() : this.pixi.ticker.start();
+        }
     }
 
     getSize(width:number,height:number):ScreenSize {

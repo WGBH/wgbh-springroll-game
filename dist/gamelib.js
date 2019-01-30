@@ -397,8 +397,12 @@ var StageManager = /** @class */ (function () {
         },
         set: function (pause) {
             this.isPaused = pause;
-            this._currentScene.pause(pause);
-            pause ? this.pixi.ticker.stop() : this.pixi.ticker.start();
+            if (this._currentScene) {
+                this._currentScene.pause(pause);
+            }
+            if (this.pixi && this.pixi.ticker) {
+                pause ? this.pixi.ticker.stop() : this.pixi.ticker.start();
+            }
         },
         enumerable: true,
         configurable: true
