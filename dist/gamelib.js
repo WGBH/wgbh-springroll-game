@@ -234,6 +234,7 @@ var AssetManager = /** @class */ (function () {
             var request = new XMLHttpRequest();
             request.open('GET', dataDescriptor.path);
             request.onreadystatechange = function () {
+                console.log('READY STATE CHANGE:', request.readyState, request.status, request);
                 if ((request.status === 200 || request.status === 0) && (request.readyState === 4)) {
                     _this.cache.data[dataDescriptor.id] = JSON.parse(request.responseText);
                     if (dataDescriptor.isGlobal) {
