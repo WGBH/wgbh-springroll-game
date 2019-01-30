@@ -74,7 +74,7 @@ export default class Scene extends PIXI.Container {
     clearTimeout(timer: PauseableTimer): void;
     setInterval(callback: Function, time: number): PauseableTimer;
     clearInterval(timer: PauseableTimer): void;
-    resize(width: number, height: number, offset?: PointLike): void;
+    resize(width: number, height: number, offset: PointLike): void;
     /**
      * Called when Scene is about to transition out - override to clean up art or other objects in memory
      * @returns {void} return a Promise to resolve when any asynchronous cleanup is complete

@@ -41,7 +41,7 @@ export interface GameOptions {
     /** target height of game in pixels */
     height: number;
     /** alternate width - wider or narrower than base width  */
-    altwidth?: number;
+    altWidth?: number;
     /** caption configuration */
     captions: CaptionParams;
     /** Class of Animate Stage to use for transitions */

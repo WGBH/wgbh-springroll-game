@@ -15,12 +15,14 @@ export default class StageManager {
     height: number;
     scale: number;
     offset: PointLike;
+    leftEdge: number;
+    rightEdge: number;
     transition: PIXI.animate.MovieClip;
     private _currentScene;
     private scaleManager;
-    private _minsize;
-    private _maxsize;
-    private _originsize;
+    private _minSize;
+    private _maxSize;
+    private _originSize;
     private transitioning;
     private isPaused;
     private game;
