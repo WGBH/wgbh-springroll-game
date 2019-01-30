@@ -241,6 +241,15 @@ export default class AssetManager {
             const request = new XMLHttpRequest();
             request.open('GET', dataDescriptor.path);
             request.onreadystatechange = ()=>{
+                if(!document.getElementById('debugDiv')){
+                    let div = document.createElement('div');
+                    div.id = 'debugDiv';
+                    div.style.position = 'fixed';
+                    div.style.top = '0';
+                    div.style.color = 'yellow';
+                    document.getElementsByTagName('body')[0].appendChild(div);
+                }
+                document.getElementById('debugDiv').append(`READY STATE CHANGE: ${request.readyState}, ${request.status} `);
                 console.log('READY STATE CHANGE:', request.readyState, request.status, request);
                 if ((request.status === 200 || request.status === 0) && (request.readyState === 4))
                 {
