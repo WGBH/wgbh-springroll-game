@@ -1,4 +1,5 @@
 import { ScaleManager, Application } from 'springroll';
+import { Tween, Ease } from '@createjs/tweenjs';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -1053,8 +1054,8 @@ var eases = {
 	'sineOut': sineOut_1
 };
 
-var Tween = /** @class */ (function () {
-    function Tween(target, values, time, ease) {
+var Tween$1 = /** @class */ (function () {
+    function Tween$$1(target, values, time, ease) {
         if (ease === void 0) { ease = 'linear'; }
         var _this = this;
         this.active = true;
@@ -1078,10 +1079,10 @@ var Tween = /** @class */ (function () {
             _this.reject = reject;
         });
     }
-    Tween.prototype.pause = function (pause) {
+    Tween$$1.prototype.pause = function (pause) {
         this.paused = pause;
     };
-    Tween.prototype.update = function (deltaTime) {
+    Tween$$1.prototype.update = function (deltaTime) {
         if (this.paused) {
             return;
         }
@@ -1094,7 +1095,7 @@ var Tween = /** @class */ (function () {
             this.destroy(true);
         }
     };
-    Tween.prototype.destroy = function (isComplete) {
+    Tween$$1.prototype.destroy = function (isComplete) {
         if (isComplete === void 0) { isComplete = false; }
         isComplete ? this.resolve() : this.reject();
         this.promise = null;
@@ -1106,7 +1107,7 @@ var Tween = /** @class */ (function () {
         this.totalTime = null;
         this.ease = null;
     };
-    return Tween;
+    return Tween$$1;
 }());
 
 var PauseableTimer = /** @class */ (function () {
@@ -1226,7 +1227,7 @@ var Scene = /** @class */ (function (_super) {
      * @returns {Tween} instance of Tween, for pausing/cancelling
      */
     Scene.prototype.tween = function (target, values, time, ease) {
-        var tween = new Tween(target, values, time, ease);
+        var tween = new Tween$1(target, values, time, ease);
         this.stageManager.addTween(tween);
         return tween;
     };
@@ -1267,7 +1268,23 @@ var Scene = /** @class */ (function (_super) {
     return Scene;
 }(PIXI.Container));
 
+var TweenJS = /** @class */ (function (_super) {
+    __extends(TweenJS, _super);
+    function TweenJS() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return TweenJS;
+}(Tween));
+Tween._inited = true;
+var EaseJS = /** @class */ (function (_super) {
+    __extends(EaseJS, _super);
+    function EaseJS() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return EaseJS;
+}(Ease));
+
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, Tween };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, Tween$1 as Tween, TweenJS, EaseJS };
 //# sourceMappingURL=gamelib.js.map
