@@ -241,7 +241,7 @@ export default class AssetManager {
             const request = new XMLHttpRequest();
             request.open('GET', dataDescriptor.path);
             request.onreadystatechange = ()=>{
-                if ((request.status === 200) && (request.readyState === 4))
+                if ((request.status === 200 || request.status === 0) && (request.readyState === 4))
                 {
                     this.cache.data[dataDescriptor.id] = JSON.parse(request.responseText);
                     if(dataDescriptor.isGlobal){
