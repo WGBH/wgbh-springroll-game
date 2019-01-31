@@ -240,19 +240,22 @@ var AssetManager = /** @class */ (function () {
             document.getElementsByTagName('body')[0].appendChild(div);
         }
         document.getElementById('debugDiv').append("ATTEMPTING TO LOAD DATA! ");
+        var dataLoader = new PIXI.loaders.Loader();
         return new Promise(function (resolve) {
-            var request = new XMLHttpRequest();
-            request.open('GET', dataDescriptor.path);
-            request.addEventListener('load', function () {
+            dataLoader.add(dataDescriptor.id, dataDescriptor.path);
+            dataLoader.load(function (loader, resources) {
+                for (var _i = 0, _a = Object.keys(resources); _i < _a.length; _i++) {
+                    var key = _a[_i];
+                    _this.cache.images[key] = resources[key].texture;
+                }
                 document.getElementById('debugDiv').append("LOADED!");
-                _this.cache.data[dataDescriptor.id] = JSON.parse(request.responseText);
+                _this.cache.data[dataDescriptor.id] = resources[dataDescriptor.id].data;
                 if (dataDescriptor.isGlobal) {
                     _this.globalCache.data.push(dataDescriptor.id);
                 }
+                dataLoader.destroy();
                 resolve();
             });
-            request.send();
-            document.getElementById('debugDiv').append(" DATA LOAD REQUEST SENT! " + dataDescriptor);
         });
     };
     /**

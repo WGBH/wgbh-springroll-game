@@ -248,19 +248,21 @@ export default class AssetManager {
         }
         document.getElementById('debugDiv').append(`ATTEMPTING TO LOAD DATA! `);
 
+        const dataLoader = new PIXI.loaders.Loader();
         return new Promise((resolve)=>{
-            const request = new XMLHttpRequest();
-            request.open('GET', dataDescriptor.path);
-            request.addEventListener('load', ()=>{
+            dataLoader.add(dataDescriptor.id, dataDescriptor.path);
+            dataLoader.load((loader:PIXI.loaders.Loader, resources:PIXI.loaders.ResourceDictionary)=>{
+                for(let key of Object.keys(resources)){
+                    this.cache.images[key] = resources[key].texture;
+                }
                 document.getElementById('debugDiv').append(`LOADED!`);
-                this.cache.data[dataDescriptor.id] = JSON.parse(request.responseText);
+                this.cache.data[dataDescriptor.id] = resources[dataDescriptor.id].data;
                 if(dataDescriptor.isGlobal){
                     this.globalCache.data.push(dataDescriptor.id);
                 }
+                dataLoader.destroy();
                 resolve();
             });
-            request.send();
-            document.getElementById('debugDiv').append(` DATA LOAD REQUEST SENT! ${dataDescriptor}`);
         });
     }
 
