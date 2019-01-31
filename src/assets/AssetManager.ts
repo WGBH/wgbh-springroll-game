@@ -251,20 +251,16 @@ export default class AssetManager {
         return new Promise((resolve)=>{
             const request = new XMLHttpRequest();
             request.open('GET', dataDescriptor.path);
-            request.onreadystatechange = ()=>{
-                document.getElementById('debugDiv').append(`READY STATE CHANGE: ${request.readyState}, ${request.status} `);
-                console.log('READY STATE CHANGE:', request.readyState, request.status, request);
-                if ((request.status === 200 || request.status === 0) && (request.readyState === 4))
-                {
-                    this.cache.data[dataDescriptor.id] = JSON.parse(request.responseText);
-                    if(dataDescriptor.isGlobal){
-                        this.globalCache.data.push(dataDescriptor.id);
-                    }
-                    resolve();
+            request.addEventListener('load', ()=>{
+                document.getElementById('debugDiv').append(`LOADED!`);
+                this.cache.data[dataDescriptor.id] = JSON.parse(request.responseText);
+                if(dataDescriptor.isGlobal){
+                    this.globalCache.data.push(dataDescriptor.id);
                 }
-            };
+                resolve();
+            });
             request.send();
-            document.getElementById('debugDiv').append(` DATA LOAD REQUEST SENT! ${request}`);
+            document.getElementById('debugDiv').append(` DATA LOAD REQUEST SENT! ${dataDescriptor}`);
         });
     }
 
