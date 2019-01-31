@@ -1268,23 +1268,23 @@ var Scene = /** @class */ (function (_super) {
     return Scene;
 }(PIXI.Container));
 
-var TweenJS = /** @class */ (function (_super) {
-    __extends(TweenJS, _super);
-    function TweenJS() {
+var CJSTween = /** @class */ (function (_super) {
+    __extends(CJSTween, _super);
+    function CJSTween() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    return TweenJS;
+    return CJSTween;
 }(Tween));
 Tween._inited = true;
-var EaseJS = /** @class */ (function (_super) {
-    __extends(EaseJS, _super);
-    function EaseJS() {
+var CJSEase = /** @class */ (function (_super) {
+    __extends(CJSEase, _super);
+    function CJSEase() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    return EaseJS;
+    return CJSEase;
 }(Ease));
 
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, Tween$1 as Tween, TweenJS, EaseJS };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, Tween$1 as Tween, CJSTween, CJSEase };
 //# sourceMappingURL=gamelib.js.map

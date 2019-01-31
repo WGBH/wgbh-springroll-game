@@ -1,12 +1,12 @@
 
 import { Tween, Ease } from '@createjs/tweenjs';
 
-export class TweenJS extends Tween {
+export class CJSTween extends Tween {
     
 }
 
 Tween._inited = true;
 
-export class EaseJS extends Ease {
+export class CJSEase extends Ease {
     
 }

@@ -8,5 +8,5 @@ import SoundContext from './sound/SoundContext';
 import PauseableTimer from './timer/PauseableTimer';
 import { AssetList } from './assets/AssetManager';
 import Tween from './tween/Tween';
-import { TweenJS, EaseJS } from './tween/TweenJS';
-export { Game, GameOptions, Scene, StageManager, AssetManager, AssetList, SoundManager, SoundContext, PauseableTimer, Tween, TweenJS, EaseJS };
+import { CJSTween, CJSEase } from './tween/CJSTween';
+export { Game, GameOptions, Scene, StageManager, AssetManager, AssetList, SoundManager, SoundContext, PauseableTimer, Tween, CJSTween, CJSEase };

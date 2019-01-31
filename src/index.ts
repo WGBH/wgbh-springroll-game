@@ -13,7 +13,7 @@ import SoundContext from './sound/SoundContext';
 import PauseableTimer from './timer/PauseableTimer';
 import {AssetList} from './assets/AssetManager';
 import Tween from './tween/Tween';
-import {TweenJS, EaseJS} from './tween/TweenJS';
+import {CJSTween, CJSEase} from './tween/CJSTween';
 
 
 export {
@@ -27,6 +27,6 @@ export {
     SoundContext,
     PauseableTimer,
     Tween,
-    TweenJS,
-    EaseJS
+    CJSTween,
+    CJSEase
 };
