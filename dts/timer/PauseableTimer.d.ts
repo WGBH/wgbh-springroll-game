@@ -11,6 +11,6 @@ export default class PauseableTimer {
     constructor(callback: Function, time: number, loop?: boolean);
     pause(pause: boolean): void;
     reset(deltaTime: number): void;
-    update(deltaTime: number): void;
+    update: (deltaTime: number) => void;
     destroy(isComplete?: boolean): void;
 }

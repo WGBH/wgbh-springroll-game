@@ -1,3 +1,4 @@
+import GameTime from "./GameTime";
 
 export default class PauseableTimer {
 
@@ -5,7 +6,7 @@ export default class PauseableTimer {
 
     private currentTime:number;
     private targetTime:number;
-    private paused:boolean = true;
+    private paused:boolean = false;
     private onComplete:Function;
     private repeat:boolean = false;
 
@@ -25,6 +26,7 @@ export default class PauseableTimer {
             this.resolve = resolve;
             this.reject = reject;
         });
+        GameTime.singleton.gameTick.subscribe(this.update);
     }
 
     pause(pause:boolean){
@@ -36,7 +38,7 @@ export default class PauseableTimer {
         this.currentTime = deltaTime ? deltaTime : 0;
     }
 
-    update(deltaTime:number){
+    update = (deltaTime:number) => {
         if(this.paused){
             return;
         }
@@ -58,10 +60,17 @@ export default class PauseableTimer {
     }
 
     destroy(isComplete = false){
-        isComplete ? this.resolve() : this.reject('destroyed');
+        if(isComplete) {
+            if(this.resolve) {
+                this.resolve();
+            }
+        } else if(this.reject) {
+            this.reject('destroyed');
+        }
         this.promise = null;
         this.resolve = null;
         this.reject = null;
         this.targetTime = null;
+        GameTime.singleton.gameTick.unsubscribe(this.update);
     }
 }

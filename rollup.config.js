@@ -32,6 +32,6 @@ export default [
       }
     ],
     plugins: plugins,
-    external: ['springroll']
+    external: ['springroll','@createjs/tweenjs']
   }
 ];

@@ -11,8 +11,11 @@ import AssetManager from './assets/AssetManager';
 import SoundManager from './sound/SoundManager';
 import SoundContext from './sound/SoundContext';
 import PauseableTimer from './timer/PauseableTimer';
+import GameTime from './timer/GameTime';
 import {AssetList} from './assets/AssetManager';
 import Tween from './tween/Tween';
+import {CJSTween, CJSEase} from './tween/CJSTween';
+
 
 export {
     Game,
@@ -24,5 +27,8 @@ export {
     SoundManager,
     SoundContext,
     PauseableTimer,
-    Tween
+    GameTime,
+    Tween,
+    CJSTween,
+    CJSEase
 };
