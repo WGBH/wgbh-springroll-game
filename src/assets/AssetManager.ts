@@ -237,20 +237,17 @@ export default class AssetManager {
      * @param {DataDescriptor} dataDescriptor 
      */
     private loadData(dataDescriptor:DataDescriptor):Promise<void>{
+        const dataLoader = new PIXI.loaders.Loader();
         return new Promise((resolve)=>{
-            const request = new XMLHttpRequest();
-            request.open('GET', dataDescriptor.path);
-            request.onreadystatechange = ()=>{
-                if ((request.status === 200) && (request.readyState === 4))
-                {
-                    this.cache.data[dataDescriptor.id] = JSON.parse(request.responseText);
-                    if(dataDescriptor.isGlobal){
-                        this.globalCache.data.push(dataDescriptor.id);
-                    }
-                    resolve();
+            dataLoader.add(dataDescriptor.id, dataDescriptor.path);
+            dataLoader.load((loader:PIXI.loaders.Loader, resources:PIXI.loaders.ResourceDictionary)=>{
+                this.cache.data[dataDescriptor.id] = resources[dataDescriptor.id].data;
+                if(dataDescriptor.isGlobal){
+                    this.globalCache.data.push(dataDescriptor.id);
                 }
-            };
-            request.send();
+                dataLoader.destroy();
+                resolve();
+            });
         });
     }
 
