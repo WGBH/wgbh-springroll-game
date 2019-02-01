@@ -31,7 +31,7 @@ export default class StageManager {
     private scenes;
     private tweens;
     private timers;
-    constructor(game: Game, containerID: string, width: number, height: number, altwidth?: number);
+    constructor(game: Game, containerID: string, width: number, height: number, altWidth?: number);
     addCaptions(captionData: CaptionData, renderer: IRender): void;
     setCaptionRenderer(renderer: IRender): void;
     addScene(id: string, scene: typeof Scene): void;
@@ -63,8 +63,8 @@ export default class StageManager {
     clearTweens(): void;
     addTimer(timer: PauseableTimer): void;
     clearTimers(): void;
-    showcaption(captionid: string, begin?: number, args?: any): void;
-    stopcaption(): void;
+    showCaption(captionid: string, begin?: number, args?: any): void;
+    stopCaption(): void;
     update(): void;
 }
 export declare type ScreenSize = {

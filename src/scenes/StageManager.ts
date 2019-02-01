@@ -281,12 +281,12 @@ export default class StageManager{
         this.timers = [];
     }
 
-    showcaption(captionid:string,begin?:number,args?:any) {
+    showCaption(captionid:string,begin?:number,args?:any) {
         begin = begin || 0;
         this.captions.start(captionid,begin,args);
     }
 
-    stopcaption() {
+    stopCaption() {
         this.captions.stop();
     }
 

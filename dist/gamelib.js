@@ -501,11 +501,11 @@ var StageManager = /** @class */ (function () {
         });
         this.timers = [];
     };
-    StageManager.prototype.showcaption = function (captionid, begin, args) {
+    StageManager.prototype.showCaption = function (captionid, begin, args) {
         begin = begin || 0;
         this.captions.start(captionid, begin, args);
     };
-    StageManager.prototype.stopcaption = function () {
+    StageManager.prototype.stopCaption = function () {
         this.captions.stop();
     };
     StageManager.prototype.update = function () {
@@ -1217,7 +1217,7 @@ var PauseableTimer = /** @class */ (function () {
     function PauseableTimer(callback, time, loop) {
         var _this = this;
         this.active = true;
-        this.paused = true;
+        this.paused = false;
         this.repeat = false;
         this.update = function (deltaTime) {
             if (_this.paused) {
