@@ -121,6 +121,7 @@ export default class StageManager{
         Promise.resolve()
             .then(()=>{
                 this.pixi.stage.addChild(this.transition);
+                this.pixi.stage.addChild(this.game.assetManager.debug);
                 this.transition.stop();
                 if(oldScene){
                     return new Promise((resolve)=>{

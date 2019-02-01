@@ -1,5 +1,5 @@
-/// <reference types="pixi-animate" />
 /// <reference types="pixi.js" />
+/// <reference types="pixi-animate" />
 import SoundManager from "../sound/SoundManager";
 /**
  * Manages loading, caching, and unloading of assets
@@ -13,6 +13,7 @@ export default class AssetManager {
     private soundIDs;
     private soundManager;
     private sceneActive;
+    debug: PIXI.Text;
     constructor(soundManager: SoundManager);
     /**
      * loads assets for a Scene

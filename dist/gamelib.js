@@ -19,6 +19,7 @@ var AssetManager = /** @class */ (function () {
         /** IDs of loaded Sounds */
         this.soundIDs = [];
         this.sceneActive = false;
+        this.debug = new PIXI.Text('debug', { fill: 0xFFFF00, wordWrap: true, wordWrapWidth: 1536 });
         /** Save current state of PIXI Global caches, to prevent unloading global assets */
         this.saveCacheState = function () {
             Object.keys(PIXI.animate.ShapesCache).forEach(function (key) { return _this.globalCache.shapes.push(key); });
@@ -230,16 +231,7 @@ var AssetManager = /** @class */ (function () {
      */
     AssetManager.prototype.loadData = function (dataDescriptor) {
         var _this = this;
-        if (!document.getElementById('debugDiv')) {
-            var div = document.createElement('div');
-            div.id = 'debugDiv';
-            div.style.position = 'fixed';
-            div.style.top = '0';
-            div.style.color = 'yellow';
-            div.style.width = '100%';
-            document.getElementsByTagName('body')[0].appendChild(div);
-        }
-        document.getElementById('debugDiv').append("ATTEMPTING TO LOAD DATA! ");
+        this.debug.text += "ATTEMPTING TO LOAD DATA! ";
         var dataLoader = new PIXI.loaders.Loader();
         return new Promise(function (resolve) {
             dataLoader.add(dataDescriptor.id, dataDescriptor.path);
@@ -248,7 +240,7 @@ var AssetManager = /** @class */ (function () {
                     var key = _a[_i];
                     _this.cache.images[key] = resources[key].texture;
                 }
-                document.getElementById('debugDiv').append("LOADED!");
+                _this.debug.text += "LOADED!";
                 _this.cache.data[dataDescriptor.id] = resources[dataDescriptor.id].data;
                 if (dataDescriptor.isGlobal) {
                     _this.globalCache.data.push(dataDescriptor.id);
@@ -311,6 +303,7 @@ var StageManager = /** @class */ (function () {
             Promise.resolve()
                 .then(function () {
                 _this.pixi.stage.addChild(_this.transition);
+                _this.pixi.stage.addChild(_this.game.assetManager.debug);
                 _this.transition.stop();
                 if (oldScene) {
                     return new Promise(function (resolve) {

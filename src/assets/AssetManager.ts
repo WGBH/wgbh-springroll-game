@@ -23,6 +23,8 @@ export default class AssetManager {
 
     private sceneActive = false;
 
+    public debug:PIXI.Text = new PIXI.Text('debug', {fill:0xFFFF00, wordWrap:true, wordWrapWidth:1536});
+
 
     constructor(soundManager:SoundManager){
         this.soundManager = soundManager;
@@ -237,25 +239,13 @@ export default class AssetManager {
      * @param {DataDescriptor} dataDescriptor 
      */
     private loadData(dataDescriptor:DataDescriptor):Promise<void>{
-        if(!document.getElementById('debugDiv')){
-            let div = document.createElement('div');
-            div.id = 'debugDiv';
-            div.style.position = 'fixed';
-            div.style.top = '0';
-            div.style.color = 'yellow';
-            div.style.width = '100%';
-            document.getElementsByTagName('body')[0].appendChild(div);
-        }
-        document.getElementById('debugDiv').append(`ATTEMPTING TO LOAD DATA! `);
+        this.debug.text += `ATTEMPTING TO LOAD DATA! `;
 
         const dataLoader = new PIXI.loaders.Loader();
         return new Promise((resolve)=>{
             dataLoader.add(dataDescriptor.id, dataDescriptor.path);
             dataLoader.load((loader:PIXI.loaders.Loader, resources:PIXI.loaders.ResourceDictionary)=>{
-                for(let key of Object.keys(resources)){
-                    this.cache.images[key] = resources[key].texture;
-                }
-                document.getElementById('debugDiv').append(`LOADED!`);
+                this.debug.text += `LOADED!`;
                 this.cache.data[dataDescriptor.id] = resources[dataDescriptor.id].data;
                 if(dataDescriptor.isGlobal){
                     this.globalCache.data.push(dataDescriptor.id);
