@@ -48,11 +48,11 @@ export class CJSTween extends Tween {
   static listen(yesorno:boolean) {
     if(yesorno === false) {
       CJSTween._listening = false;      
-      GameTime.singleton.gameTick.unsubscribe(CJSTween.tick);
+      GameTime.gameTick.unsubscribe(CJSTween.tick);
     } else {
       CJSTween._listening = true;
-      GameTime.singleton.gameTick.unsubscribe(CJSTween.tick); // just to be sure
-      GameTime.singleton.gameTick.subscribe(CJSTween.tick);
+      GameTime.gameTick.unsubscribe(CJSTween.tick); // just to be sure
+      GameTime.gameTick.subscribe(CJSTween.tick);
     }
   }
 }

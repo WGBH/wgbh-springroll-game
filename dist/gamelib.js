@@ -1,4 +1,4 @@
-import { ScaleManager, CaptionPlayer, Property, Application } from 'springroll';
+import { Property, ScaleManager, CaptionPlayer, Application } from 'springroll';
 import { Tween, Ease } from '@createjs/tweenjs';
 
 /**
@@ -272,6 +272,28 @@ var AssetManager = /** @class */ (function () {
     return AssetManager;
 }());
 
+/**
+ *
+ *  GameTime is a relay singleton that any object can hook into via its SpringRoll Property to get the next tick (gameTick) of the game clock.
+ *  Its update() should be called on any live tick of the game; determining whether the tick is live (e.g. checking paused) should happen elsewhere.
+ *
+ *  Call in the game's main tick/update function, using the singleton syntax on the class - GameTime.Instance.update(deltaTime);
+ *  Subscribe to changes using singleton syntax on the class - GameTime.Instance.gameTick.subscribe(callbackfunction)
+ *
+ */
+var GameTime = /** @class */ (function () {
+    function GameTime() {
+    }
+    GameTime.update = function (deltaTime) {
+        GameTime.gameTick.value = deltaTime;
+    };
+    GameTime.destroy = function () {
+        GameTime.gameTick.value = null;
+    };
+    GameTime.gameTick = new Property(0);
+    return GameTime;
+}());
+
 var TRANSITION_ID = 'wgbhSpringRollGameTransition';
 /**
  * Manages rendering and transitioning between Scenes
@@ -537,6 +559,7 @@ var StageManager = /** @class */ (function () {
         if (this.captions) {
             this.captions.update(elapsed / 1000); // captions go by seconds, not ms
         }
+        GameTime.gameTick.value = elapsed;
         this._currentScene.update(elapsed);
     };
     return StageManager;
@@ -1180,39 +1203,6 @@ var Tween$1 = /** @class */ (function () {
     return Tween$$1;
 }());
 
-/**
- *
- *  GameTime is a relay singleton that any object can hook into via its SpringRoll Property to get the next tick (gameTick) of the game clock.
- *  Its update() should be called on any live tick of the game; determining whether the tick is live (e.g. checking paused) should happen elsewhere.
- *
- *  Call in the game's main tick/update function, using the singleton syntax on the class - GameTime.singleton.update(deltaTime);
- *  Subscribe to changes using singleton syntax on the class - GameTime.singleton.gameTick.subscribe(callbackfunction)
- *
- */
-var gtInstance;
-var GameTime = /** @class */ (function () {
-    function GameTime() {
-        this.gameTick = new Property(0);
-    }
-    GameTime.prototype.update = function (deltaTime) {
-        this.gameTick.value = deltaTime;
-    };
-    Object.defineProperty(GameTime, "singleton", {
-        get: function () {
-            if (!gtInstance) {
-                gtInstance = new GameTime();
-            }
-            return gtInstance;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    GameTime.prototype.destroy = function () {
-        gtInstance = null;
-    };
-    return GameTime;
-}());
-
 var PauseableTimer = /** @class */ (function () {
     function PauseableTimer(callback, time, loop) {
         var _this = this;
@@ -1421,12 +1411,12 @@ var CJSTween = /** @class */ (function (_super) {
     CJSTween.listen = function (yesorno) {
         if (yesorno === false) {
             CJSTween._listening = false;
-            GameTime.singleton.gameTick.unsubscribe(CJSTween.tick);
+            GameTime.gameTick.unsubscribe(CJSTween.tick);
         }
         else {
             CJSTween._listening = true;
-            GameTime.singleton.gameTick.unsubscribe(CJSTween.tick); // just to be sure
-            GameTime.singleton.gameTick.subscribe(CJSTween.tick);
+            GameTime.gameTick.unsubscribe(CJSTween.tick); // just to be sure
+            GameTime.gameTick.subscribe(CJSTween.tick);
         }
     };
     CJSTween._listening = false;

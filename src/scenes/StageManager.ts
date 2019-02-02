@@ -2,6 +2,7 @@ import Scene from './Scene';
 import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
 import Tween from '../tween/Tween';
+import GameTime from '../timer/GameTime';
 import PauseableTimer from '../timer/PauseableTimer';
 import { PointLike } from 'pixi.js';
 import { ScaleManager, CaptionPlayer, CaptionData, IRender } from 'springroll';
@@ -319,6 +320,7 @@ export default class StageManager{
         if (this.captions) {
             this.captions.update(elapsed/1000); // captions go by seconds, not ms
         }
+        GameTime.gameTick.value = elapsed;
         this._currentScene.update(elapsed);
     }
 
