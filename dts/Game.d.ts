@@ -43,7 +43,7 @@ export interface GameOptions {
     /** alternate width - wider or narrower than base width  */
     altWidth?: number;
     /** caption configuration */
-    captions: CaptionParams;
+    captions?: CaptionParams;
     /** Class of Animate Stage to use for transitions */
     transition: AnimateStage;
     /** ID of HTML element on your page to add this game's Canvas to */
@@ -51,5 +51,5 @@ export interface GameOptions {
 }
 export declare type CaptionParams = {
     config: SpringRoll.CaptionData;
-    display: SpringRoll.IRender;
+    display?: SpringRoll.IRender;
 };
