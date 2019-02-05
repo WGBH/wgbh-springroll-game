@@ -5,7 +5,7 @@ import Tween from '../tween/Tween';
 import GameTime from '../timer/GameTime';
 import PauseableTimer from '../timer/PauseableTimer';
 import { PointLike } from 'pixi.js';
-import { ScaleManager, CaptionPlayer, CaptionData, IRender } from 'springroll';
+import { ScaleManager, CaptionPlayer, CaptionData, IRender, Property } from 'springroll';
 
 
 const TRANSITION_ID = 'wgbhSpringRollGameTransition';
@@ -19,9 +19,8 @@ export default class StageManager{
     public height: number;
     public scale:number;
     public offset:PointLike; // offset for the x,y origin when resizing
-    public leftEdge:number; // shortcut to find the left edge
-    public rightEdge:number; // shortcut to find the right edge
     public transition:PIXI.animate.MovieClip;
+    public viewFrame:Property<ViewFrame>;
 
     private _currentScene:Scene;
 
@@ -58,9 +57,6 @@ export default class StageManager{
         document.getElementById(containerID).appendChild(this.pixi.view);
 
         const baseSize = {width:width,height:height};
-
-        this.leftEdge = 0;
-        this.rightEdge = width;
 
         altWidth = altWidth || width;
         const altSize = {width:altWidth,height:height};
@@ -237,16 +233,34 @@ export default class StageManager{
             this.pixi.view.style.width = '100vw';
             this.pixi.view.style.margin = '0';
         }
-        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 
+        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
         this.pixi.stage.position.x = offset;
 
+        const newframe = {
+            left: offset * -1,
+            right: calcwidth - offset,
+            width: calcwidth,
+            center: calcwidth / 2 - offset,
+            top: 0,
+            bottom: this._minSize.height,
+            height: this._minSize.height,
+            offset: this.offset
+        };
+        if(!this.viewFrame) {
+            this.viewFrame = new Property(newframe);
+        } else {
+            this.viewFrame.value = newframe;
+        }
+
+        this.width = calcwidth;
+        this.height = this._minSize.height;
+        
         this.pixi.renderer.resize(calcwidth,this._minSize.height);
+
         this.offset.x = offset;
         if (this._currentScene) {
-          this._currentScene.resize(calcwidth,this._minSize.height,this.offset);
+          this._currentScene.resize(this.width,this.height,this.offset);
         }
-        this.leftEdge = offset * -1;
-        this.rightEdge = calcwidth - offset;
     }
 
 
@@ -342,4 +356,15 @@ export type ScaleConfig = {
     origin?:RectLike,
     min?:RectLike,
     max?:RectLike
+};
+
+export type ViewFrame = {
+    left:number,
+    right:number,
+    top:number,
+    bottom:number,
+    center:number,
+    width:number,
+    height:number,
+    offset:PointLike
 };

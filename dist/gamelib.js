@@ -367,8 +367,6 @@ var StageManager = /** @class */ (function () {
         this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
         var baseSize = { width: width, height: height };
-        this.leftEdge = 0;
-        this.rightEdge = width;
         altWidth = altWidth || width;
         var altSize = { width: altWidth, height: height };
         var scale = {
@@ -486,15 +484,31 @@ var StageManager = /** @class */ (function () {
             this.pixi.view.style.width = '100vw';
             this.pixi.view.style.margin = '0';
         }
-        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 
+        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
         this.pixi.stage.position.x = offset;
+        var newframe = {
+            left: offset * -1,
+            right: calcwidth - offset,
+            width: calcwidth,
+            center: calcwidth / 2 - offset,
+            top: 0,
+            bottom: this._minSize.height,
+            height: this._minSize.height,
+            offset: this.offset
+        };
+        if (!this.viewFrame) {
+            this.viewFrame = new Property(newframe);
+        }
+        else {
+            this.viewFrame.value = newframe;
+        }
+        this.width = calcwidth;
+        this.height = this._minSize.height;
         this.pixi.renderer.resize(calcwidth, this._minSize.height);
         this.offset.x = offset;
         if (this._currentScene) {
-            this._currentScene.resize(calcwidth, this._minSize.height, this.offset);
+            this._currentScene.resize(this.width, this.height, this.offset);
         }
-        this.leftEdge = offset * -1;
-        this.rightEdge = calcwidth - offset;
     };
     /**
      *
@@ -835,7 +849,9 @@ var Game = /** @class */ (function () {
         this.app.state.ready.subscribe(function () {
             _this.stageManager.setTransition(options.transition, _this.gameReady.bind(_this));
         });
-        this.stageManager.addCaptions(options.captions.config, options.captions.display);
+        if (options.captions) {
+            this.stageManager.addCaptions(options.captions.config, options.captions.display);
+        }
     }
     /** called when game is ready to enter first scene - override this function and set first scene here */
     Game.prototype.gameReady = function () {

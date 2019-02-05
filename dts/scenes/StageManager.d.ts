@@ -5,7 +5,7 @@ import { Game } from '..';
 import Tween from '../tween/Tween';
 import PauseableTimer from '../timer/PauseableTimer';
 import { PointLike } from 'pixi.js';
-import { CaptionData, IRender } from 'springroll';
+import { CaptionData, IRender, Property } from 'springroll';
 /**
  * Manages rendering and transitioning between Scenes
  */
@@ -15,9 +15,8 @@ export default class StageManager {
     height: number;
     scale: number;
     offset: PointLike;
-    leftEdge: number;
-    rightEdge: number;
     transition: PIXI.animate.MovieClip;
+    viewFrame: Property<ViewFrame>;
     private _currentScene;
     private scaleManager;
     private _minSize;
@@ -80,4 +79,14 @@ export declare type ScaleConfig = {
     origin?: RectLike;
     min?: RectLike;
     max?: RectLike;
+};
+export declare type ViewFrame = {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+    center: number;
+    width: number;
+    height: number;
+    offset: PointLike;
 };
