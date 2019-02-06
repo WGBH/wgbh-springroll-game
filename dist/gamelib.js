@@ -785,6 +785,15 @@ var SoundManager = /** @class */ (function () {
         return this.soundMeta[soundID].sounds[soundID];
     };
     /**
+     * Retrieve reference to the SoundContext by ID
+     *
+     * @param soundID ID of sound to look up
+     * @returns {SoundContext}
+     */
+    SoundManager.prototype.getContext = function (soundID) {
+        return this.soundMeta[soundID];
+    };
+    /**
      * Pause specified Sound by ID - if no ID provided, pause all sounds
      * @param {string} [soundID] ID of sound to pause - if undefined, pause all sounds
      */

@@ -41,6 +41,13 @@ export default class SoundManager {
      */
     getSound(soundID: string): PIXI.sound.Sound;
     /**
+     * Retrieve reference to the SoundContext by ID
+     *
+     * @param soundID ID of sound to look up
+     * @returns {SoundContext}
+     */
+    getContext(soundID: string): SoundContext;
+    /**
      * Pause specified Sound by ID - if no ID provided, pause all sounds
      * @param {string} [soundID] ID of sound to pause - if undefined, pause all sounds
      */
