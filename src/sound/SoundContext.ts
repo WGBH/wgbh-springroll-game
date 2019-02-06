@@ -97,8 +97,17 @@ export default class SoundContext {
         if (!soundid) { 
             soundid = this.currentSound;
         }
-        if(!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {return 0;}
-        return this.sounds[soundid].instances[0].progress;
+        if(!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {return -1;}
+        return this.sounds[soundid].instances[0].progress; // NOTE: There seems to be a Safari bug where the progress listener can become detached from a sound...may need a fallback or workaround
+    }
+
+    getPositionSeconds(soundid?:string):number {
+        if (!soundid) { 
+            soundid = this.currentSound;
+        }
+        if(!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {return -1;}
+        return this.sounds[soundid].instances[0].progress * this.sounds[soundid].duration; // NOTE: There seems to be a Safari bug where the progress listener can become detached from a sound...may need a fallback or workaround
+   
     }
 
     isPlaying():boolean {

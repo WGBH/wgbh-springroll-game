@@ -41,6 +41,7 @@ export default class SoundContext {
      * @param soundid ID of sound to get position of - if none, then find position of most recently played sound
      */
     getPosition(soundid?: string): number;
+    getPositionSeconds(soundid?: string): number;
     isPlaying(): boolean;
     /**
      * Destroy sound, remove from context and PIXI Sound cache

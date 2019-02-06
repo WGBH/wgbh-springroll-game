@@ -73,6 +73,16 @@ export default class SoundManager {
     }
 
     /**
+     * Retrieve reference to the SoundContext by ID
+     * 
+     * @param soundID ID of sound to look up
+     * @returns {SoundContext}
+     */
+    getContext(soundID:string):SoundContext {
+        return this.soundMeta[soundID];
+    }
+
+    /**
      * Pause specified Sound by ID - if no ID provided, pause all sounds
      * @param {string} [soundID] ID of sound to pause - if undefined, pause all sounds
      */

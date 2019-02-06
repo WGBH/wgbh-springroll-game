@@ -673,9 +673,18 @@ var SoundContext = /** @class */ (function () {
             soundid = this.currentSound;
         }
         if (!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {
-            return 0;
+            return -1;
         }
-        return this.sounds[soundid].instances[0].progress;
+        return this.sounds[soundid].instances[0].progress; // NOTE: There seems to be a Safari bug where the progress listener can become detached from a sound...may need a fallback or workaround
+    };
+    SoundContext.prototype.getPositionSeconds = function (soundid) {
+        if (!soundid) {
+            soundid = this.currentSound;
+        }
+        if (!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {
+            return -1;
+        }
+        return this.sounds[soundid].instances[0].progress * this.sounds[soundid].duration; // NOTE: There seems to be a Safari bug where the progress listener can become detached from a sound...may need a fallback or workaround
     };
     SoundContext.prototype.isPlaying = function () {
         for (var key in this.sounds) {
