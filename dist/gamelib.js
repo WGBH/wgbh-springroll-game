@@ -1270,7 +1270,7 @@ var PauseableTimer = /** @class */ (function () {
             _this.resolve = resolve;
             _this.reject = reject;
         });
-        GameTime.singleton.gameTick.subscribe(this.update);
+        GameTime.gameTick.subscribe(this.update);
     }
     PauseableTimer.prototype.pause = function (pause) {
         this.paused = pause;
@@ -1293,7 +1293,7 @@ var PauseableTimer = /** @class */ (function () {
         this.resolve = null;
         this.reject = null;
         this.targetTime = null;
-        GameTime.singleton.gameTick.unsubscribe(this.update);
+        GameTime.gameTick.unsubscribe(this.update);
     };
     return PauseableTimer;
 }());

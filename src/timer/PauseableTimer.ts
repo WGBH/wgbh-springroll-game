@@ -26,7 +26,7 @@ export default class PauseableTimer {
             this.resolve = resolve;
             this.reject = reject;
         });
-        GameTime.singleton.gameTick.subscribe(this.update);
+        GameTime.gameTick.subscribe(this.update);
     }
 
     pause(pause:boolean){
@@ -71,6 +71,6 @@ export default class PauseableTimer {
         this.resolve = null;
         this.reject = null;
         this.targetTime = null;
-        GameTime.singleton.gameTick.unsubscribe(this.update);
+        GameTime.gameTick.unsubscribe(this.update);
     }
 }
