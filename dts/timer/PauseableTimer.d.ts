@@ -5,10 +5,11 @@ export default class PauseableTimer {
     private paused;
     private onComplete;
     private repeat;
-    promise: Promise<void>;
+    private _promise;
     private resolve;
     private reject;
     constructor(callback: Function, time: number, loop?: boolean);
+    readonly promise: Promise<void>;
     pause(pause: boolean): void;
     reset(deltaTime: number): void;
     update: (deltaTime: number) => void;

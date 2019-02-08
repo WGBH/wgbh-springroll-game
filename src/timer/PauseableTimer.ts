@@ -10,6 +10,11 @@ export default class PauseableTimer {
     private onComplete:Function;
     private repeat:boolean = false;
 
+
+    private _promise: Promise<void>;
+    private resolve:Function;
+    private reject:Function;
+
     constructor(callback:Function, time:number, loop?:boolean) {
         this.targetTime = time;
         this.currentTime = 0;
@@ -17,6 +22,16 @@ export default class PauseableTimer {
         
         this.repeat = loop;
         GameTime.gameTick.subscribe(this.update);
+    }
+
+    get promise() {
+        if(!this._promise) {
+            this._promise = new Promise((resolve, reject)=>{
+                this.resolve = resolve;
+                this.reject = reject;
+            });
+        }
+        return this._promise;
     }
 
     pause(pause:boolean){
@@ -50,6 +65,16 @@ export default class PauseableTimer {
     }
 
     destroy(isComplete = false){
+        if(isComplete) {
+            if(this.resolve) {
+                this.resolve();
+            }
+        } else if(this.reject) {
+            this.reject('destroyed');
+        }
+        this._promise = null;
+        this.resolve = null;
+        this.reject = null;
         this.targetTime = null;
         GameTime.gameTick.unsubscribe(this.update);
     }

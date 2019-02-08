@@ -1266,12 +1266,22 @@ var PauseableTimer = /** @class */ (function () {
         this.currentTime = 0;
         this.onComplete = callback;
         this.repeat = loop;
-        this.promise = new Promise(function (resolve, reject) {
-            _this.resolve = resolve;
-            _this.reject = reject;
-        });
         GameTime.gameTick.subscribe(this.update);
     }
+    Object.defineProperty(PauseableTimer.prototype, "promise", {
+        get: function () {
+            var _this = this;
+            if (!this._promise) {
+                this._promise = new Promise(function (resolve, reject) {
+                    _this.resolve = resolve;
+                    _this.reject = reject;
+                });
+            }
+            return this._promise;
+        },
+        enumerable: true,
+        configurable: true
+    });
     PauseableTimer.prototype.pause = function (pause) {
         this.paused = pause;
     };
@@ -1289,7 +1299,7 @@ var PauseableTimer = /** @class */ (function () {
         else if (this.reject) {
             this.reject('destroyed');
         }
-        this.promise = null;
+        this._promise = null;
         this.resolve = null;
         this.reject = null;
         this.targetTime = null;
