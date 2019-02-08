@@ -560,16 +560,6 @@ var StageManager = /** @class */ (function () {
                 }
             }
         }
-        if (this.timers.length) {
-            for (var i = this.timers.length - 1; i >= 0; i--) {
-                if (this.timers[i].active) {
-                    this.timers[i].update(elapsed);
-                }
-                if (!this.timers[i].active) {
-                    this.timers.splice(i, 1);
-                }
-            }
-        }
         if (this.captions) {
             this.captions.update(elapsed / 1000); // captions go by seconds, not ms
         }
