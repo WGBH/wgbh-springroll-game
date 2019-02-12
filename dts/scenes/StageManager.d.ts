@@ -17,6 +17,8 @@ export default class StageManager {
     offset: PointLike;
     transition: PIXI.animate.MovieClip;
     viewFrame: Property<ViewFrame>;
+    leftEdge: number;
+    rightEdge: number;
     private _currentScene;
     private scaleManager;
     private _minSize;

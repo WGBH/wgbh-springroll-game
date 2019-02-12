@@ -21,6 +21,8 @@ export default class StageManager{
     public offset:PointLike; // offset for the x,y origin when resizing
     public transition:PIXI.animate.MovieClip;
     public viewFrame:Property<ViewFrame>;
+    public leftEdge:number; // deprecate leftEdge/rightEdge in favor of more comprehensive viewFrame
+    public rightEdge:number;
 
     private _currentScene:Scene;
 
@@ -254,6 +256,10 @@ export default class StageManager{
 
         this.width = calcwidth;
         this.height = this._minSize.height;
+
+        /* legacy -- should remove */
+        this.leftEdge = newframe.left;
+        this.rightEdge = newframe.right;
         
         this.pixi.renderer.resize(calcwidth,this._minSize.height);
 
