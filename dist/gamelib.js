@@ -230,19 +230,17 @@ var AssetManager = /** @class */ (function () {
      */
     AssetManager.prototype.loadData = function (dataDescriptor) {
         var _this = this;
+        var dataLoader = new PIXI.loaders.Loader();
         return new Promise(function (resolve) {
-            var request = new XMLHttpRequest();
-            request.open('GET', dataDescriptor.path);
-            request.onreadystatechange = function () {
-                if ((request.status === 200) && (request.readyState === 4)) {
-                    _this.cache.data[dataDescriptor.id] = JSON.parse(request.responseText);
-                    if (dataDescriptor.isGlobal) {
-                        _this.globalCache.data.push(dataDescriptor.id);
-                    }
-                    resolve();
+            dataLoader.add(dataDescriptor.id, dataDescriptor.path);
+            dataLoader.load(function (loader, resources) {
+                _this.cache.data[dataDescriptor.id] = resources[dataDescriptor.id].data;
+                if (dataDescriptor.isGlobal) {
+                    _this.globalCache.data.push(dataDescriptor.id);
                 }
-            };
-            request.send();
+                dataLoader.destroy();
+                resolve();
+            });
         });
     };
     /**
