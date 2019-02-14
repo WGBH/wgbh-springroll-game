@@ -1,3 +1,4 @@
+/// <reference path="./createjs_tween_type.d.ts" />
 
 import GameTime from '../timer/GameTime';
 import { Tween, Ease, TweenProps } from '@createjs/tweenjs';

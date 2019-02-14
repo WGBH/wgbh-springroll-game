@@ -1382,7 +1382,9 @@ var Scene = /** @class */ (function (_super) {
         return timer;
     };
     Scene.prototype.clearTimeout = function (timer) {
-        timer.destroy(false); // destroy without triggering the callback function
+        if (timer) {
+            timer.destroy(false); // destroy without triggering the callback function
+        }
     };
     Scene.prototype.setInterval = function (callback, time) {
         var timer = new PauseableTimer(callback, time, true);
@@ -1390,7 +1392,9 @@ var Scene = /** @class */ (function (_super) {
         return timer;
     };
     Scene.prototype.clearInterval = function (timer) {
-        timer.destroy(false); // destroy without triggering the callback function
+        if (timer) {
+            timer.destroy(false); // destroy without triggering the callback function
+        }
     };
     Scene.prototype.resize = function (width, height, offset) {
         // in case something special needs to happen on resize
@@ -1405,6 +1409,7 @@ var Scene = /** @class */ (function (_super) {
     return Scene;
 }(PIXI.Container));
 
+/// <reference path="./createjs_tween_type.d.ts" />
 var CJSTween = /** @class */ (function (_super) {
     __extends(CJSTween, _super);
     function CJSTween(target, props) {

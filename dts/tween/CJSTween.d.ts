@@ -1,3 +1,4 @@
+/// <reference path="../../src/tween/createjs_tween_type.d.ts" />
 import { Tween, Ease, TweenProps } from '@createjs/tweenjs';
 export declare class CJSTween extends Tween {
     static _listening: boolean;

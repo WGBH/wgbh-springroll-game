@@ -114,7 +114,9 @@ export default class Scene extends PIXI.Container {
     }
 
     clearTimeout(timer:PauseableTimer) {
-        timer.destroy(false); // destroy without triggering the callback function
+        if(timer) {
+            timer.destroy(false); // destroy without triggering the callback function
+        }
     }
 
     setInterval(callback: Function, time:number):PauseableTimer {
@@ -124,7 +126,9 @@ export default class Scene extends PIXI.Container {
     }
 
     clearInterval(timer:PauseableTimer) {
-        timer.destroy(false); // destroy without triggering the callback function
+        if(timer) {
+            timer.destroy(false); // destroy without triggering the callback function
+        }
     }
 
     resize(width:number, height:number, offset:PointLike) {
