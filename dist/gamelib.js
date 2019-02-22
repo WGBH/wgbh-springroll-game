@@ -1235,7 +1235,7 @@ var PauseableTimer = /** @class */ (function () {
         this.paused = false;
         this.repeat = false;
         this.update = function (deltaTime) {
-            if (_this.paused) {
+            if (_this.paused || !_this.targetTime) {
                 return;
             }
             _this.currentTime += deltaTime;
@@ -1282,6 +1282,7 @@ var PauseableTimer = /** @class */ (function () {
     };
     PauseableTimer.prototype.destroy = function (isComplete) {
         if (isComplete === void 0) { isComplete = false; }
+        this.paused = true; // make sure it doesn't try to do another update.
         if (isComplete) {
             if (this.resolve) {
                 this.resolve();

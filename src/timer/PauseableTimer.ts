@@ -44,7 +44,7 @@ export default class PauseableTimer {
     }
 
     update = (deltaTime:number) => {
-        if(this.paused){
+        if(this.paused || !this.targetTime){
             return;
         }
 
@@ -65,6 +65,7 @@ export default class PauseableTimer {
     }
 
     destroy(isComplete = false){
+        this.paused = true; // make sure it doesn't try to do another update.
         if(isComplete) {
             if(this.resolve) {
                 this.resolve();
