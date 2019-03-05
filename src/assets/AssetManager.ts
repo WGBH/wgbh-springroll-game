@@ -6,15 +6,16 @@ import SoundManager from "../sound/SoundManager";
 export default class AssetManager {
     
     /** object containing references to cached instances of loaded assets */
-    public cache:AssetCache = {data:{}, images:{}, animations:{}};
+    public cache:AssetCache = {data:{}, images:{}, animations:{}, spritesheets:{}};
 
     /** IDs of cached assets that should persist between scenes */
-    private globalCache:{shapes:string[], textures:string[], sounds:string[], data:string[], animations:string[]} = {
+    private globalCache:{shapes:string[], textures:string[], sounds:string[], data:string[], animations:string[], spritesheets:string[]} = {
         shapes: [],
         textures: [],
         sounds: [],
         data: [],
-        animations: []
+        animations: [],
+        spritesheets:[]
     };
 
     /** IDs of loaded Sounds */
@@ -102,6 +103,9 @@ export default class AssetManager {
                         break;
                     case 'data':
                         loads.push(this.loadData(asset));
+                        break;
+                    case 'spritesheet':
+                        loads.push(this.loadSpritesheet(asset));
                         break;
                     case 'sound':
                         loads.push(this.loadSound(asset));
@@ -252,6 +256,25 @@ export default class AssetManager {
     }
 
     /**
+     * Load Spritesheet data
+     * @param {SpritesheetDescriptor} descriptor 
+     */
+    private loadSpritesheet(descriptor:SpritesheetDescriptor):Promise<void>{
+        const dataLoader = new PIXI.loaders.Loader();
+        return new Promise((resolve)=>{
+            dataLoader.add(descriptor.id, descriptor.path);
+            dataLoader.load((loader:PIXI.loaders.Loader, resources:PIXI.loaders.ResourceDictionary)=>{
+                this.cache.spritesheets[descriptor.id] = resources[descriptor.id].spritesheet;
+                if(descriptor.isGlobal){
+                    this.globalCache.spritesheets.push(descriptor.id);
+                }
+                dataLoader.destroy();
+                resolve();
+            });
+        });
+    }
+
+    /**
      * Load JSON file containing an AssetList
      * @param {ManifestDescriptor} manifestDescriptor 
      */
@@ -277,7 +300,7 @@ export default class AssetManager {
 }
 
 /** Array of  */
-export type AssetList = (ManifestDescriptor|AnimateStageDescriptor|DataDescriptor|ImageDescriptor|SoundDescriptor)[];
+export type AssetList = (ManifestDescriptor|AnimateStageDescriptor|DataDescriptor|ImageDescriptor|SoundDescriptor|SpritesheetDescriptor)[];
 
 /** Load instruction base interface */
 export interface AssetDescriptor {
@@ -327,6 +350,15 @@ export interface DataDescriptor extends AssetDescriptor {
     type: 'data';
 }
 
+/** Load instructions for JSON data assets */
+export interface SpritesheetDescriptor extends AssetDescriptor {
+    /** identifier of data object for later retrieval from cache */
+    id: string;
+    /** path to JSON file */
+    path: string;
+    type: 'spritesheet';
+}
+
 /** Load instructions for PixiAnimate stage dependency assets */
 export interface AnimateStageDescriptor extends AssetDescriptor {
     /** identifier of Animate stage for later retrieval from cache */
@@ -348,4 +380,5 @@ export interface AssetCache {
     images: { [key: string]: PIXI.Texture };
     /** instances of loaded PixiAnimate stages - use these first when possible */
     animations: { [key: string]: PIXI.animate.MovieClip };
+    spritesheets:{ [key: string]: PIXI.Spritesheet };
 }

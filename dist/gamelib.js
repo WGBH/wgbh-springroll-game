@@ -7,14 +7,15 @@ var AssetManager = /** @class */ (function () {
     function AssetManager(soundManager) {
         var _this = this;
         /** object containing references to cached instances of loaded assets */
-        this.cache = { data: {}, images: {}, animations: {} };
+        this.cache = { data: {}, images: {}, animations: {}, spritesheets: {} };
         /** IDs of cached assets that should persist between scenes */
         this.globalCache = {
             shapes: [],
             textures: [],
             sounds: [],
             data: [],
-            animations: []
+            animations: [],
+            spritesheets: []
         };
         /** IDs of loaded Sounds */
         this.soundIDs = [];
@@ -101,6 +102,9 @@ var AssetManager = /** @class */ (function () {
                         break;
                     case 'data':
                         loads.push(_this.loadData(asset));
+                        break;
+                    case 'spritesheet':
+                        loads.push(_this.loadSpritesheet(asset));
                         break;
                     case 'sound':
                         loads.push(_this.loadSound(asset));
@@ -237,6 +241,25 @@ var AssetManager = /** @class */ (function () {
                 _this.cache.data[dataDescriptor.id] = resources[dataDescriptor.id].data;
                 if (dataDescriptor.isGlobal) {
                     _this.globalCache.data.push(dataDescriptor.id);
+                }
+                dataLoader.destroy();
+                resolve();
+            });
+        });
+    };
+    /**
+     * Load Spritesheet data
+     * @param {SpritesheetDescriptor} descriptor
+     */
+    AssetManager.prototype.loadSpritesheet = function (descriptor) {
+        var _this = this;
+        var dataLoader = new PIXI.loaders.Loader();
+        return new Promise(function (resolve) {
+            dataLoader.add(descriptor.id, descriptor.path);
+            dataLoader.load(function (loader, resources) {
+                _this.cache.spritesheets[descriptor.id] = resources[descriptor.id].spritesheet;
+                if (descriptor.isGlobal) {
+                    _this.globalCache.spritesheets.push(descriptor.id);
                 }
                 dataLoader.destroy();
                 resolve();
