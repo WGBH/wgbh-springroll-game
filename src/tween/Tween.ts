@@ -61,7 +61,7 @@ export default class Tween{
                 this.resolve();
             }
         } else if (this.reject) {
-            this.reject();
+//            this.reject();
         }
         this.promise = null;
         this.resolve = null;

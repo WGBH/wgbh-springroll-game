@@ -1,5 +1,4 @@
 import { Property, ScaleManager, CaptionPlayer, Application } from 'springroll';
-import { Tween, Ease } from '@createjs/tweenjs';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -1174,8 +1173,8 @@ var eases = {
 	'sineOut': sineOut_1
 };
 
-var Tween$1 = /** @class */ (function () {
-    function Tween$$1(target, values, time, ease) {
+var Tween = /** @class */ (function () {
+    function Tween(target, values, time, ease) {
         if (ease === void 0) { ease = 'linear'; }
         var _this = this;
         this.active = true;
@@ -1199,10 +1198,10 @@ var Tween$1 = /** @class */ (function () {
             _this.reject = reject;
         });
     }
-    Tween$$1.prototype.pause = function (pause) {
+    Tween.prototype.pause = function (pause) {
         this.paused = pause;
     };
-    Tween$$1.prototype.update = function (deltaTime) {
+    Tween.prototype.update = function (deltaTime) {
         if (this.paused) {
             return;
         }
@@ -1215,16 +1214,14 @@ var Tween$1 = /** @class */ (function () {
             this.destroy(true);
         }
     };
-    Tween$$1.prototype.destroy = function (isComplete) {
+    Tween.prototype.destroy = function (isComplete) {
         if (isComplete === void 0) { isComplete = false; }
         if (isComplete) {
             if (this.resolve) {
                 this.resolve();
             }
         }
-        else if (this.reject) {
-            this.reject();
-        }
+        else if (this.reject) ;
         this.promise = null;
         this.resolve = null;
         this.reject = null;
@@ -1234,7 +1231,7 @@ var Tween$1 = /** @class */ (function () {
         this.totalTime = null;
         this.ease = null;
     };
-    return Tween$$1;
+    return Tween;
 }());
 
 var PauseableTimer = /** @class */ (function () {
@@ -1374,7 +1371,7 @@ var Scene = /** @class */ (function (_super) {
      * @returns {Tween} instance of Tween, for pausing/cancelling
      */
     Scene.prototype.tween = function (target, values, time, ease) {
-        var tween = new Tween$1(target, values, time, ease);
+        var tween = new Tween(target, values, time, ease);
         this.stageManager.addTween(tween);
         return tween;
     };
@@ -1419,69 +1416,6 @@ var Scene = /** @class */ (function (_super) {
     return Scene;
 }(PIXI.Container));
 
-/// <reference path="./createjs_tween_type.d.ts" />
-var CJSTween = /** @class */ (function (_super) {
-    __extends(CJSTween, _super);
-    function CJSTween(target, props) {
-        var _this = _super.call(this, target, props) || this;
-        if (!CJSTween._listening && CJSTween.autoTick) {
-            CJSTween.listen(true);
-        }
-        return _this;
-    }
-    /**
-     *
-     * The 'get' method works like the TweenJS Tween.get() method.
-     *
-     * @param target Target object of the tween
-     * @param props Properties of the tween, see documentation for the CreateJS TweenJS
-     */
-    CJSTween.get = function (target, props) {
-        return new CJSTween(target, props);
-    };
-    /**
-     *
-     * This will pass the tick time over to the CreateJS TweenJS tick() function
-     *
-     * @param deltaTime Time in MS
-     */
-    CJSTween.tick = function (deltaTime) {
-        Tween.tick(deltaTime, false);
-    };
-    /**
-     *
-     * If you want all tweens to listen to the GameTime's ticker (this is the default), this should be true.
-     *
-     * If you don't want all tweens hooked up to GameTime, call CJSTween.listen(false) before using any Tweens.
-     *
-     * If it's set to false, you can update your tweens directly with the static CJSTween.tick(deltaTime) method.
-     *
-     * @param yesorno listen or don't
-     */
-    CJSTween.listen = function (yesorno) {
-        if (yesorno === false) {
-            CJSTween._listening = false;
-            GameTime.gameTick.unsubscribe(CJSTween.tick);
-        }
-        else {
-            CJSTween._listening = true;
-            GameTime.gameTick.unsubscribe(CJSTween.tick); // just to be sure
-            GameTime.gameTick.subscribe(CJSTween.tick);
-        }
-    };
-    CJSTween._listening = false;
-    CJSTween.autoTick = true;
-    return CJSTween;
-}(Tween));
-Tween._inited = true;
-var CJSEase = /** @class */ (function (_super) {
-    __extends(CJSEase, _super);
-    function CJSEase() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    return CJSEase;
-}(Ease));
-
 /**
  *
  * This is a Tween that automatically hooks itself to the game ticker
@@ -1511,9 +1445,94 @@ var AutoTween = /** @class */ (function (_super) {
         }
     };
     return AutoTween;
-}(Tween$1));
+}(Tween));
+
+var ChainTween$$1 = /** @class */ (function () {
+    function ChainTween$$1(target) {
+        var _this = this;
+        this.nexttween = function () {
+            if (_this._currenttween) {
+                _this._currenttween.destroy();
+                _this._currenttween = null;
+            }
+            if (_this._tweenlist.length < 1) {
+                return;
+            }
+            console.log("NEXT");
+            var tweenconfig = _this._tweenlist.shift();
+            if (tweenconfig.type === "timer") {
+                _this._currenttween = new PauseableTimer(_this.nexttween, tweenconfig.time);
+            }
+            else if (tweenconfig.type === "function") {
+                tweenconfig.function(tweenconfig.values);
+                _this.nexttween();
+            }
+            else {
+                _this._currenttween = new Tween(_this._target, tweenconfig.values, tweenconfig.time, tweenconfig.ease);
+                _this._currenttween.promise.then(_this.nexttween, function () { });
+            }
+        };
+        this.update = function (time) {
+            if (_this._currenttween) {
+                _this._currenttween.update(time);
+            }
+        };
+        this._target = target;
+        this._tweenlist = [];
+        this.listen(true);
+    }
+    ChainTween$$1.get = function (target) {
+        return new ChainTween$$1(target);
+    };
+    ChainTween$$1.prototype.to = function (values, time, ease) {
+        if (time === void 0) { time = 0; }
+        if (ease === void 0) { ease = 'linear'; }
+        var tween = { values: values, time: time, ease: ease, type: 'tween' };
+        this._tweenlist.push(tween);
+        if (!this._currenttween) {
+            this.nexttween();
+        }
+        return this;
+    };
+    ChainTween$$1.prototype.call = function (callback, values) {
+        //this._tweenlist.push(callback);
+        // not empty
+        var tween = { function: callback, values: values, type: 'function' };
+        this._tweenlist.push(tween);
+        if (!this._currenttween) {
+            this.nexttween();
+        }
+        return this;
+    };
+    ChainTween$$1.prototype.wait = function (time) {
+        // not empty
+        var tween = { values: null, time: time, ease: null, type: 'timer' };
+        this._tweenlist.push(tween);
+        if (!this._currenttween) {
+            this.nexttween();
+        }
+        return this;
+    };
+    ChainTween$$1.prototype.destroy = function (isComplete) {
+        if (isComplete === void 0) { isComplete = false; }
+        GameTime.gameTick.unsubscribe(this.update);
+        if (this._currenttween) {
+            this._currenttween.destroy(false);
+        }
+    };
+    ChainTween$$1.prototype.listen = function (yesorno) {
+        if (yesorno === false) {
+            GameTime.gameTick.unsubscribe(this.update);
+        }
+        else {
+            GameTime.gameTick.unsubscribe(this.update); // just to be sure
+            GameTime.gameTick.subscribe(this.update);
+        }
+    };
+    return ChainTween$$1;
+}());
 
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween$1 as Tween, CJSTween, CJSEase, AutoTween };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween, AutoTween, ChainTween$$1 as ChainTween };
 //# sourceMappingURL=gamelib.js.map

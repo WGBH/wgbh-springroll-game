@@ -18,8 +18,6 @@
   "devDependencies": {
     "@types/eases": "^1.0.0",
     "@types/pixi.js": "^4.8.4",
-    "@createjs/tweenjs": "^2.0.0-beta.4",
-    "@types/tweenjs": "^1.0.0",
     "pixi-animate": "git+https://github.com/ericente/pixi-animate.git#publish",
     "pixi-sound": "^2.0.3",
     "pixi.js": "^4.8.3",
@@ -37,7 +35,6 @@
     "pixi-animate": "git+https://github.com/ericente/pixi-animate.git#publish",
     "pixi-sound": "^2.0.3",
     "pixi.js": "^4.8.3",
-    "@createjs/tweenjs": "^2.0.0-beta.4",
     "springroll": "git+https://github.com/SpringRoll/SpringRoll.git#v2"
   },
   "dependencies": {
