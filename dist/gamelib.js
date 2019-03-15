@@ -1191,9 +1191,8 @@ var Tween = /** @class */ (function () {
             console.error("No ease found with name " + ease);
             this.ease = Eases.linear;
         }
-        this.promise = new Promise(function (resolve, reject) {
+        this.promise = new Promise(function (resolve) {
             _this.resolve = resolve;
-            _this.reject = reject;
         });
     }
     Tween.prototype.pause = function (pause) {
@@ -1214,10 +1213,11 @@ var Tween = /** @class */ (function () {
     };
     Tween.prototype.destroy = function (isComplete) {
         if (isComplete === void 0) { isComplete = false; }
-        isComplete ? this.resolve() : this.reject();
+        if (isComplete) {
+            this.resolve();
+        }
         this.promise = null;
         this.resolve = null;
-        this.reject = null;
         this.active = null;
         this.target = null;
         this.targetValues = null;

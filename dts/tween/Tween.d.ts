@@ -9,7 +9,6 @@ export default class Tween {
     private ease;
     private paused;
     private resolve;
-    private reject;
     constructor(target: any, values: any, time: number, ease?: Ease);
     pause(pause: boolean): void;
     update(deltaTime: number): void;

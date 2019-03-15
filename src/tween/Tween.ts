@@ -14,7 +14,6 @@ export default class Tween{
     private paused = false;
 
     private resolve:Function;
-    private reject:Function;
 
     constructor(target:any, values:any, time:number, ease:Ease = 'linear'){
         this.target = target;
@@ -30,9 +29,8 @@ export default class Tween{
             this.ease = Eases.linear;
         }
 
-        this.promise = new Promise((resolve, reject)=>{
+        this.promise = new Promise((resolve)=>{
             this.resolve = resolve;
-            this.reject = reject;
         });
     }
 
@@ -56,10 +54,11 @@ export default class Tween{
     }
 
     destroy(isComplete = false){
-        isComplete ? this.resolve() : this.reject();
+        if(isComplete){
+            this.resolve();
+        }
         this.promise = null;
         this.resolve = null;
-        this.reject = null;
         this.active = null;
         this.target = null;
         this.targetValues = null;
