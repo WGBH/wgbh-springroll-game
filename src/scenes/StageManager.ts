@@ -80,7 +80,9 @@ export default class StageManager{
     }
 
     setCaptionRenderer(renderer:IRender) {
-        this.captions.renderer = renderer;
+        if (this.captions) {
+            this.captions.renderer = renderer;
+        }
     }
 
     addScene(id:string, scene:typeof Scene){

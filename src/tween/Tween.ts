@@ -56,7 +56,13 @@ export default class Tween{
     }
 
     destroy(isComplete = false){
-        isComplete ? this.resolve() : this.reject();
+        if(isComplete) {
+            if (this.resolve) {
+                this.resolve();
+            }
+        } else if (this.reject) {
+            this.reject();
+        }
         this.promise = null;
         this.resolve = null;
         this.reject = null;

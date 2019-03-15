@@ -15,6 +15,7 @@ import GameTime from './timer/GameTime';
 import {AssetList} from './assets/AssetManager';
 import Tween from './tween/Tween';
 import {CJSTween, CJSEase} from './tween/CJSTween';
+import AutoTween from './tween/AutoTween';
 
 
 export {
@@ -30,5 +31,6 @@ export {
     GameTime,
     Tween,
     CJSTween,
-    CJSEase
+    CJSEase,
+    AutoTween
 };

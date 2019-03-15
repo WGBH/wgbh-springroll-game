@@ -381,7 +381,9 @@ var StageManager = /** @class */ (function () {
         this.captions = new CaptionPlayer(captionData, renderer);
     };
     StageManager.prototype.setCaptionRenderer = function (renderer) {
-        this.captions.renderer = renderer;
+        if (this.captions) {
+            this.captions.renderer = renderer;
+        }
     };
     StageManager.prototype.addScene = function (id, scene) {
         this.scenes[id] = scene;
@@ -1215,7 +1217,14 @@ var Tween$1 = /** @class */ (function () {
     };
     Tween$$1.prototype.destroy = function (isComplete) {
         if (isComplete === void 0) { isComplete = false; }
-        isComplete ? this.resolve() : this.reject();
+        if (isComplete) {
+            if (this.resolve) {
+                this.resolve();
+            }
+        }
+        else if (this.reject) {
+            this.reject();
+        }
         this.promise = null;
         this.resolve = null;
         this.reject = null;
@@ -1473,7 +1482,38 @@ var CJSEase = /** @class */ (function (_super) {
     return CJSEase;
 }(Ease));
 
+/**
+ *
+ * This is a Tween that automatically hooks itself to the game ticker
+ *
+ *
+ */
+var AutoTween = /** @class */ (function (_super) {
+    __extends(AutoTween, _super);
+    function AutoTween(target, values, time, ease) {
+        if (ease === void 0) { ease = 'linear'; }
+        var _this = _super.call(this, target, values, time, ease) || this;
+        _this.update = _this.update.bind(_this);
+        _this.listen(true);
+        return _this;
+    }
+    AutoTween.prototype.destroy = function () {
+        GameTime.gameTick.unsubscribe(this.update);
+        _super.prototype.destroy.call(this);
+    };
+    AutoTween.prototype.listen = function (yesorno) {
+        if (yesorno === false) {
+            GameTime.gameTick.unsubscribe(this.update);
+        }
+        else {
+            GameTime.gameTick.unsubscribe(this.update); // just to be sure
+            GameTime.gameTick.subscribe(this.update);
+        }
+    };
+    return AutoTween;
+}(Tween$1));
+
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween$1 as Tween, CJSTween, CJSEase };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween$1 as Tween, CJSTween, CJSEase, AutoTween };
 //# sourceMappingURL=gamelib.js.map

@@ -10,4 +10,5 @@ import GameTime from './timer/GameTime';
 import { AssetList } from './assets/AssetManager';
 import Tween from './tween/Tween';
 import { CJSTween, CJSEase } from './tween/CJSTween';
-export { Game, GameOptions, Scene, StageManager, AssetManager, AssetList, SoundManager, SoundContext, PauseableTimer, GameTime, Tween, CJSTween, CJSEase };
+import AutoTween from './tween/AutoTween';
+export { Game, GameOptions, Scene, StageManager, AssetManager, AssetList, SoundManager, SoundContext, PauseableTimer, GameTime, Tween, CJSTween, CJSEase, AutoTween };
