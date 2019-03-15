@@ -1447,8 +1447,8 @@ var AutoTween = /** @class */ (function (_super) {
     return AutoTween;
 }(Tween));
 
-var ChainTween$$1 = /** @class */ (function () {
-    function ChainTween$$1(target) {
+var ChainTween = /** @class */ (function () {
+    function ChainTween(target) {
         var _this = this;
         this.nexttween = function () {
             if (_this._currenttween) {
@@ -1458,7 +1458,6 @@ var ChainTween$$1 = /** @class */ (function () {
             if (_this._tweenlist.length < 1) {
                 return;
             }
-            console.log("NEXT");
             var tweenconfig = _this._tweenlist.shift();
             if (tweenconfig.type === "timer") {
                 _this._currenttween = new PauseableTimer(_this.nexttween, tweenconfig.time);
@@ -1475,16 +1474,22 @@ var ChainTween$$1 = /** @class */ (function () {
         this.update = function (time) {
             if (_this._currenttween) {
                 _this._currenttween.update(time);
+                for (var l in _this._listeners) {
+                    for (var ll in _this._listeners[l]) {
+                        _this._listeners[l][ll]();
+                    }
+                }
             }
         };
         this._target = target;
         this._tweenlist = [];
+        this._listeners = {};
         this.listen(true);
     }
-    ChainTween$$1.get = function (target) {
-        return new ChainTween$$1(target);
+    ChainTween.get = function (target) {
+        return new ChainTween(target);
     };
-    ChainTween$$1.prototype.to = function (values, time, ease) {
+    ChainTween.prototype.to = function (values, time, ease) {
         if (time === void 0) { time = 0; }
         if (ease === void 0) { ease = 'linear'; }
         var tween = { values: values, time: time, ease: ease, type: 'tween' };
@@ -1494,7 +1499,7 @@ var ChainTween$$1 = /** @class */ (function () {
         }
         return this;
     };
-    ChainTween$$1.prototype.call = function (callback, values) {
+    ChainTween.prototype.call = function (callback, values) {
         //this._tweenlist.push(callback);
         // not empty
         var tween = { function: callback, values: values, type: 'function' };
@@ -1504,7 +1509,7 @@ var ChainTween$$1 = /** @class */ (function () {
         }
         return this;
     };
-    ChainTween$$1.prototype.wait = function (time) {
+    ChainTween.prototype.wait = function (time) {
         // not empty
         var tween = { values: null, time: time, ease: null, type: 'timer' };
         this._tweenlist.push(tween);
@@ -1513,14 +1518,24 @@ var ChainTween$$1 = /** @class */ (function () {
         }
         return this;
     };
-    ChainTween$$1.prototype.destroy = function (isComplete) {
+    ChainTween.prototype.on = function (listentype, callback) {
+        if (listentype !== 'change') {
+            return this;
+        }
+        if (!this._listeners[listentype]) {
+            this._listeners[listentype] = [];
+        }
+        this._listeners[listentype].push(callback);
+        return this;
+    };
+    ChainTween.prototype.destroy = function (isComplete) {
         if (isComplete === void 0) { isComplete = false; }
         GameTime.gameTick.unsubscribe(this.update);
         if (this._currenttween) {
             this._currenttween.destroy(false);
         }
     };
-    ChainTween$$1.prototype.listen = function (yesorno) {
+    ChainTween.prototype.listen = function (yesorno) {
         if (yesorno === false) {
             GameTime.gameTick.unsubscribe(this.update);
         }
@@ -1529,10 +1544,10 @@ var ChainTween$$1 = /** @class */ (function () {
             GameTime.gameTick.subscribe(this.update);
         }
     };
-    return ChainTween$$1;
+    return ChainTween;
 }());
 
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween, AutoTween, ChainTween$$1 as ChainTween };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween, AutoTween, ChainTween };
 //# sourceMappingURL=gamelib.js.map

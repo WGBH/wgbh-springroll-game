@@ -1,8 +1,7 @@
 
-import Tween from './Tween';
-import {Ease} from './Tween';
+import Tween, { Ease } from './Tween';
 import GameTime from '../timer/GameTime';
-import { PauseableTimer } from '..';
+import PauseableTimer from '../timer/PauseableTimer';
 
 /**
  * 
@@ -25,10 +24,12 @@ export default class ChainTween {
   private _target:any;
   private _currenttween:Tween|PauseableTimer;
   private _tweenlist:Array<TweenConfig>;
+  private _listeners:any;
 
   constructor(target:any) {
     this._target = target;
     this._tweenlist = [];
+    this._listeners = {};
     this.listen(true);
   }
 
@@ -84,9 +85,23 @@ export default class ChainTween {
     return this;
   }
 
+  on(listentype:string,callback:Function) {
+    if(listentype !== 'change') {return this;}
+    if(!this._listeners[listentype]) {
+      this._listeners[listentype] = [];
+    }
+    this._listeners[listentype].push(callback);
+    return this;
+  }
+
   update = (time:number) => {
     if(this._currenttween) {
       this._currenttween.update(time);
+      for(let l in this._listeners) {
+        for(let ll in this._listeners[l]) {
+          this._listeners[l][ll]();
+        }
+      }
     }
   }
 
