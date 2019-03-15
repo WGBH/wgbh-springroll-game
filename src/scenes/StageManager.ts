@@ -52,7 +52,7 @@ export default class StageManager{
         this.offset = new PIXI.Point(0,0);
 
 
-        this.pixi = new PIXI.Application({ width, height, antialias:true});
+        this.pixi = new PIXI.Application({ width, height, antialias:true, preserveDrawingBuffer:true});
         this.pixi.view.style.display = 'block';
 
 

@@ -1,5 +1,4 @@
 import { Property, ScaleManager, CaptionPlayer, Application } from 'springroll';
-import { Tween, Ease } from '@createjs/tweenjs';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -361,7 +360,7 @@ var StageManager = /** @class */ (function () {
         this.width = width;
         this.height = height;
         this.offset = new PIXI.Point(0, 0);
-        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true });
+        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, preserveDrawingBuffer: true });
         this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
         var baseSize = { width: width, height: height };
@@ -1172,8 +1171,8 @@ var eases = {
 	'sineOut': sineOut_1
 };
 
-var Tween$1 = /** @class */ (function () {
-    function Tween$$1(target, values, time, ease) {
+var Tween = /** @class */ (function () {
+    function Tween(target, values, time, ease) {
         if (ease === void 0) { ease = 'linear'; }
         var _this = this;
         this.active = true;
@@ -1197,10 +1196,10 @@ var Tween$1 = /** @class */ (function () {
             _this.reject = reject;
         });
     }
-    Tween$$1.prototype.pause = function (pause) {
+    Tween.prototype.pause = function (pause) {
         this.paused = pause;
     };
-    Tween$$1.prototype.update = function (deltaTime) {
+    Tween.prototype.update = function (deltaTime) {
         if (this.paused) {
             return;
         }
@@ -1213,7 +1212,7 @@ var Tween$1 = /** @class */ (function () {
             this.destroy(true);
         }
     };
-    Tween$$1.prototype.destroy = function (isComplete) {
+    Tween.prototype.destroy = function (isComplete) {
         if (isComplete === void 0) { isComplete = false; }
         isComplete ? this.resolve() : this.reject();
         this.promise = null;
@@ -1225,7 +1224,7 @@ var Tween$1 = /** @class */ (function () {
         this.totalTime = null;
         this.ease = null;
     };
-    return Tween$$1;
+    return Tween;
 }());
 
 var PauseableTimer = /** @class */ (function () {
@@ -1365,7 +1364,7 @@ var Scene = /** @class */ (function (_super) {
      * @returns {Tween} instance of Tween, for pausing/cancelling
      */
     Scene.prototype.tween = function (target, values, time, ease) {
-        var tween = new Tween$1(target, values, time, ease);
+        var tween = new Tween(target, values, time, ease);
         this.stageManager.addTween(tween);
         return tween;
     };
@@ -1410,70 +1409,7 @@ var Scene = /** @class */ (function (_super) {
     return Scene;
 }(PIXI.Container));
 
-/// <reference path="./createjs_tween_type.d.ts" />
-var CJSTween = /** @class */ (function (_super) {
-    __extends(CJSTween, _super);
-    function CJSTween(target, props) {
-        var _this = _super.call(this, target, props) || this;
-        if (!CJSTween._listening && CJSTween.autoTick) {
-            CJSTween.listen(true);
-        }
-        return _this;
-    }
-    /**
-     *
-     * The 'get' method works like the TweenJS Tween.get() method.
-     *
-     * @param target Target object of the tween
-     * @param props Properties of the tween, see documentation for the CreateJS TweenJS
-     */
-    CJSTween.get = function (target, props) {
-        return new CJSTween(target, props);
-    };
-    /**
-     *
-     * This will pass the tick time over to the CreateJS TweenJS tick() function
-     *
-     * @param deltaTime Time in MS
-     */
-    CJSTween.tick = function (deltaTime) {
-        Tween.tick(deltaTime, false);
-    };
-    /**
-     *
-     * If you want all tweens to listen to the GameTime's ticker (this is the default), this should be true.
-     *
-     * If you don't want all tweens hooked up to GameTime, call CJSTween.listen(false) before using any Tweens.
-     *
-     * If it's set to false, you can update your tweens directly with the static CJSTween.tick(deltaTime) method.
-     *
-     * @param yesorno listen or don't
-     */
-    CJSTween.listen = function (yesorno) {
-        if (yesorno === false) {
-            CJSTween._listening = false;
-            GameTime.gameTick.unsubscribe(CJSTween.tick);
-        }
-        else {
-            CJSTween._listening = true;
-            GameTime.gameTick.unsubscribe(CJSTween.tick); // just to be sure
-            GameTime.gameTick.subscribe(CJSTween.tick);
-        }
-    };
-    CJSTween._listening = false;
-    CJSTween.autoTick = true;
-    return CJSTween;
-}(Tween));
-Tween._inited = true;
-var CJSEase = /** @class */ (function (_super) {
-    __extends(CJSEase, _super);
-    function CJSEase() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    return CJSEase;
-}(Ease));
-
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween$1 as Tween, CJSTween, CJSEase };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween };
 //# sourceMappingURL=gamelib.js.map
