@@ -176,7 +176,13 @@ export default class StageManager{
             this._currentScene.pause(pause);
         }
         if(this.pixi && this.pixi.ticker){
-            pause ? this.pixi.ticker.stop() : this.pixi.ticker.start();
+            if(pause){
+                this.pixi.ticker.stop();
+            }
+            else{
+                this.pixi.ticker.update(0);
+                this.pixi.ticker.start();
+            }
         }
     }
 
