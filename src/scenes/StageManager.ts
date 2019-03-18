@@ -23,10 +23,10 @@ export default class StageManager{
     public viewFrame:Property<ViewFrame>;
     public leftEdge:number; // deprecate leftEdge/rightEdge in favor of more comprehensive viewFrame
     public rightEdge:number;
+    public scaleManager:ScaleManager;
 
     private _currentScene:Scene;
 
-    private scaleManager:ScaleManager;
     private _minSize:ScreenSize;
     private _maxSize:ScreenSize;
     private _originSize:ScreenSize;
@@ -50,7 +50,8 @@ export default class StageManager{
 
         this.offset = new PIXI.Point(0,0);
 
-
+        // preserveDrawingBuffer is bad for overall performance, but necessary in order to support 
+        // some Android devices such as Galaxy Tab A and Kindle Fire
         this.pixi = new PIXI.Application({ width, height, antialias:true, preserveDrawingBuffer:true});
         this.pixi.view.style.display = 'block';
 
@@ -71,7 +72,6 @@ export default class StageManager{
         this.pixi.ticker.add(this.update.bind(this));
 
         this.scaleManager = new ScaleManager(this.gotResize);
-        console.log(this.scaleManager); // just to quiet the errors... what else should be done with scalemanager instance?
     }
 
     addCaptions(captionData:CaptionData, renderer:IRender) {

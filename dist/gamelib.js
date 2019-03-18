@@ -748,6 +748,8 @@ var StageManager = /** @class */ (function () {
         this.width = width;
         this.height = height;
         this.offset = new PIXI.Point(0, 0);
+        // preserveDrawingBuffer is bad for overall performance, but necessary in order to support 
+        // some Android devices such as Galaxy Tab A and Kindle Fire
         this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, preserveDrawingBuffer: true });
         this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
@@ -762,7 +764,6 @@ var StageManager = /** @class */ (function () {
         this.setScaling(scale);
         this.pixi.ticker.add(this.update.bind(this));
         this.scaleManager = new ScaleManager(this.gotResize);
-        console.log(this.scaleManager); // just to quiet the errors... what else should be done with scalemanager instance?
     }
     StageManager.prototype.addCaptions = function (captionData, renderer) {
         this.captions = new CaptionPlayer(captionData, renderer);
@@ -1010,9 +1011,9 @@ var SoundContext = /** @class */ (function () {
      * @param {CompleteCallback} onComplete
      */
     SoundContext.prototype.play = function (id, onComplete) {
-        if (this.single) {
-            // stop anything currently playing
-            this.stopAll();
+        if (this.single && this.currentSound) {
+            // stop currently playing sound
+            this.stop(this.currentSound);
         }
         this.currentSound = id;
         return this.sounds[id].play(onComplete);

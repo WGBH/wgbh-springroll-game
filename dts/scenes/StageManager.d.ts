@@ -4,7 +4,7 @@ import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
 import PauseableTimer from '../timer/PauseableTimer';
 import { PointLike } from 'pixi.js';
-import { CaptionData, IRender, Property } from 'springroll';
+import { ScaleManager, CaptionData, IRender, Property } from 'springroll';
 /**
  * Manages rendering and transitioning between Scenes
  */
@@ -18,8 +18,8 @@ export default class StageManager {
     viewFrame: Property<ViewFrame>;
     leftEdge: number;
     rightEdge: number;
+    scaleManager: ScaleManager;
     private _currentScene;
-    private scaleManager;
     private _minSize;
     private _maxSize;
     private _originSize;
