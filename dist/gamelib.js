@@ -1,5 +1,4 @@
 import { Property, ScaleManager, CaptionPlayer, Application } from 'springroll';
-import { Tween, Ease } from '@createjs/tweenjs';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -270,6 +269,395 @@ var AssetManager = /** @class */ (function () {
     return AssetManager;
 }());
 
+function backInOut(t) {
+  var s = 1.70158 * 1.525;
+  if ((t *= 2) < 1)
+    return 0.5 * (t * t * ((s + 1) * t - s))
+  return 0.5 * ((t -= 2) * t * ((s + 1) * t + s) + 2)
+}
+
+var backInOut_1 = backInOut;
+
+function backIn(t) {
+  var s = 1.70158;
+  return t * t * ((s + 1) * t - s)
+}
+
+var backIn_1 = backIn;
+
+function backOut(t) {
+  var s = 1.70158;
+  return --t * t * ((s + 1) * t + s) + 1
+}
+
+var backOut_1 = backOut;
+
+function bounceOut(t) {
+  var a = 4.0 / 11.0;
+  var b = 8.0 / 11.0;
+  var c = 9.0 / 10.0;
+
+  var ca = 4356.0 / 361.0;
+  var cb = 35442.0 / 1805.0;
+  var cc = 16061.0 / 1805.0;
+
+  var t2 = t * t;
+
+  return t < a
+    ? 7.5625 * t2
+    : t < b
+      ? 9.075 * t2 - 9.9 * t + 3.4
+      : t < c
+        ? ca * t2 - cb * t + cc
+        : 10.8 * t * t - 20.52 * t + 10.72
+}
+
+var bounceOut_1 = bounceOut;
+
+function bounceInOut(t) {
+  return t < 0.5
+    ? 0.5 * (1.0 - bounceOut_1(1.0 - t * 2.0))
+    : 0.5 * bounceOut_1(t * 2.0 - 1.0) + 0.5
+}
+
+var bounceInOut_1 = bounceInOut;
+
+function bounceIn(t) {
+  return 1.0 - bounceOut_1(1.0 - t)
+}
+
+var bounceIn_1 = bounceIn;
+
+function circInOut(t) {
+  if ((t *= 2) < 1) return -0.5 * (Math.sqrt(1 - t * t) - 1)
+  return 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1)
+}
+
+var circInOut_1 = circInOut;
+
+function circIn(t) {
+  return 1.0 - Math.sqrt(1.0 - t * t)
+}
+
+var circIn_1 = circIn;
+
+function circOut(t) {
+  return Math.sqrt(1 - ( --t * t ))
+}
+
+var circOut_1 = circOut;
+
+function cubicInOut(t) {
+  return t < 0.5
+    ? 4.0 * t * t * t
+    : 0.5 * Math.pow(2.0 * t - 2.0, 3.0) + 1.0
+}
+
+var cubicInOut_1 = cubicInOut;
+
+function cubicIn(t) {
+  return t * t * t
+}
+
+var cubicIn_1 = cubicIn;
+
+function cubicOut(t) {
+  var f = t - 1.0;
+  return f * f * f + 1.0
+}
+
+var cubicOut_1 = cubicOut;
+
+function elasticInOut(t) {
+  return t < 0.5
+    ? 0.5 * Math.sin(+13.0 * Math.PI/2 * 2.0 * t) * Math.pow(2.0, 10.0 * (2.0 * t - 1.0))
+    : 0.5 * Math.sin(-13.0 * Math.PI/2 * ((2.0 * t - 1.0) + 1.0)) * Math.pow(2.0, -10.0 * (2.0 * t - 1.0)) + 1.0
+}
+
+var elasticInOut_1 = elasticInOut;
+
+function elasticIn(t) {
+  return Math.sin(13.0 * t * Math.PI/2) * Math.pow(2.0, 10.0 * (t - 1.0))
+}
+
+var elasticIn_1 = elasticIn;
+
+function elasticOut(t) {
+  return Math.sin(-13.0 * (t + 1.0) * Math.PI/2) * Math.pow(2.0, -10.0 * t) + 1.0
+}
+
+var elasticOut_1 = elasticOut;
+
+function expoInOut(t) {
+  return (t === 0.0 || t === 1.0)
+    ? t
+    : t < 0.5
+      ? +0.5 * Math.pow(2.0, (20.0 * t) - 10.0)
+      : -0.5 * Math.pow(2.0, 10.0 - (t * 20.0)) + 1.0
+}
+
+var expoInOut_1 = expoInOut;
+
+function expoIn(t) {
+  return t === 0.0 ? t : Math.pow(2.0, 10.0 * (t - 1.0))
+}
+
+var expoIn_1 = expoIn;
+
+function expoOut(t) {
+  return t === 1.0 ? t : 1.0 - Math.pow(2.0, -10.0 * t)
+}
+
+var expoOut_1 = expoOut;
+
+function linear(t) {
+  return t
+}
+
+var linear_1 = linear;
+
+function quadInOut(t) {
+    t /= 0.5;
+    if (t < 1) return 0.5*t*t
+    t--;
+    return -0.5 * (t*(t-2) - 1)
+}
+
+var quadInOut_1 = quadInOut;
+
+function quadIn(t) {
+  return t * t
+}
+
+var quadIn_1 = quadIn;
+
+function quadOut(t) {
+  return -t * (t - 2.0)
+}
+
+var quadOut_1 = quadOut;
+
+function quarticInOut(t) {
+  return t < 0.5
+    ? +8.0 * Math.pow(t, 4.0)
+    : -8.0 * Math.pow(t - 1.0, 4.0) + 1.0
+}
+
+var quartInOut = quarticInOut;
+
+function quarticIn(t) {
+  return Math.pow(t, 4.0)
+}
+
+var quartIn = quarticIn;
+
+function quarticOut(t) {
+  return Math.pow(t - 1.0, 3.0) * (1.0 - t) + 1.0
+}
+
+var quartOut = quarticOut;
+
+function qinticInOut(t) {
+    if ( ( t *= 2 ) < 1 ) return 0.5 * t * t * t * t * t
+    return 0.5 * ( ( t -= 2 ) * t * t * t * t + 2 )
+}
+
+var quintInOut = qinticInOut;
+
+function qinticIn(t) {
+  return t * t * t * t * t
+}
+
+var quintIn = qinticIn;
+
+function qinticOut(t) {
+  return --t * t * t * t * t + 1
+}
+
+var quintOut = qinticOut;
+
+function sineInOut(t) {
+  return -0.5 * (Math.cos(Math.PI*t) - 1)
+}
+
+var sineInOut_1 = sineInOut;
+
+function sineIn (t) {
+  var v = Math.cos(t * Math.PI * 0.5);
+  if (Math.abs(v) < 1e-14) return 1
+  else return 1 - v
+}
+
+var sineIn_1 = sineIn;
+
+function sineOut(t) {
+  return Math.sin(t * Math.PI/2)
+}
+
+var sineOut_1 = sineOut;
+
+var eases = {
+	'backInOut': backInOut_1,
+	'backIn': backIn_1,
+	'backOut': backOut_1,
+	'bounceInOut': bounceInOut_1,
+	'bounceIn': bounceIn_1,
+	'bounceOut': bounceOut_1,
+	'circInOut': circInOut_1,
+	'circIn': circIn_1,
+	'circOut': circOut_1,
+	'cubicInOut': cubicInOut_1,
+	'cubicIn': cubicIn_1,
+	'cubicOut': cubicOut_1,
+	'elasticInOut': elasticInOut_1,
+	'elasticIn': elasticIn_1,
+	'elasticOut': elasticOut_1,
+	'expoInOut': expoInOut_1,
+	'expoIn': expoIn_1,
+	'expoOut': expoOut_1,
+	'linear': linear_1,
+	'quadInOut': quadInOut_1,
+	'quadIn': quadIn_1,
+	'quadOut': quadOut_1,
+	'quartInOut': quartInOut,
+	'quartIn': quartIn,
+	'quartOut': quartOut,
+	'quintInOut': quintInOut,
+	'quintIn': quintIn,
+	'quintOut': quintOut,
+	'sineInOut': sineInOut_1,
+	'sineIn': sineIn_1,
+	'sineOut': sineOut_1
+};
+
+var Eases = eases;
+var Tween = /** @class */ (function () {
+    function Tween(target) {
+        var _this = this;
+        this.paused = false;
+        this.steps = [];
+        this.currentStep = 0;
+        this.loop = 0;
+        this.to = function (targetValues, totalTime, ease) {
+            if (ease === void 0) { ease = 'linear'; }
+            _this.steps.push({ targetValues: targetValues, totalTime: totalTime, ease: Eases[ease] });
+            return _this;
+        };
+        this.wait = function (totalTime) {
+            _this.steps.push({ totalTime: totalTime });
+            return _this;
+        };
+        this.call = function (call) {
+            _this.steps.push({ call: call });
+            return _this;
+        };
+        this.doComplete = function () {
+            if (_this.onComplete) {
+                _this.onComplete();
+            }
+            if (_this._resolve) {
+                _this._resolve();
+            }
+            _this.destroy();
+        };
+        this.update = function (elapsed) {
+            if (_this.paused) {
+                return;
+            }
+            if (_this.steps.length <= _this.currentStep) {
+                if (_this.loop) {
+                    if (_this.loop > 0) {
+                        _this.loop--;
+                    }
+                    _this.currentStep = 0;
+                }
+                else {
+                    return _this.doComplete();
+                }
+            }
+            var step = _this.steps[_this.currentStep];
+            if (step.call) {
+                _this.currentStep++;
+                return step.call();
+            }
+            if (!step.currentTime) {
+                step.currentTime = 0;
+                if (step.targetValues) {
+                    step.initialValues = {};
+                    for (var key in step.targetValues) {
+                        step.initialValues[key] = _this.target[key];
+                    }
+                }
+            }
+            step.currentTime += elapsed;
+            var time = step.currentTime / step.totalTime > 1 ? 1 : step.currentTime / step.totalTime;
+            if (step.targetValues) {
+                for (var key in step.targetValues) {
+                    _this.target[key] = step.initialValues[key] + step.ease(time) * (step.targetValues[key] - step.initialValues[key]);
+                }
+            }
+            if (time >= 1) {
+                _this.currentStep++;
+            }
+        };
+        this.target = target;
+    }
+    Tween.get = function (target, options) {
+        if (options.override) {
+            this.removeTweens(target);
+        }
+        var tween = new Tween(target);
+        if (options.loop) {
+            if (options.loop % 1) {
+                console.error('Tween options.loop must be an integer. Got: ', options.loop);
+            }
+            tween.loop = options.loop;
+        }
+        if (options.onComplete) {
+            tween.onComplete = options.onComplete;
+        }
+        Tween.tweens.push(tween);
+        return tween;
+    };
+    Tween.removeTweens = function (target) {
+        for (var _i = 0, _a = Tween.tweens; _i < _a.length; _i++) {
+            var tween = _a[_i];
+            if (tween.target === target) {
+                tween.destroy();
+            }
+        }
+    };
+    Object.defineProperty(Tween.prototype, "promise", {
+        get: function () {
+            var _this = this;
+            if (!this._promise) {
+                this._promise = new Promise(function (resolve) { _this._resolve = resolve; });
+            }
+            return this._promise;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Tween.update = function (elapsed) {
+        if (Tween.tweens.length) {
+            for (var _i = 0, _a = Tween.tweens; _i < _a.length; _i++) {
+                var tween = _a[_i];
+                tween.update(elapsed);
+            }
+        }
+    };
+    Tween.prototype.destroy = function () {
+        Tween.tweens.splice(Tween.tweens.indexOf(this), 1);
+        this.target = null;
+        this.steps = null;
+        this.currentStep = null;
+        this._promise = null;
+        this._resolve = null;
+    };
+    Tween.tweens = [];
+    return Tween;
+}());
+
 /**
  *
  *  GameTime is a relay singleton that any object can hook into via its SpringRoll Property to get the next tick (gameTick) of the game clock.
@@ -303,7 +691,6 @@ var StageManager = /** @class */ (function () {
         this.isPaused = false;
         /** Map of Scenes by Scene IDs */
         this.scenes = {};
-        this.tweens = [];
         this.timers = [];
         /**
          * Transition to specified scene
@@ -361,7 +748,9 @@ var StageManager = /** @class */ (function () {
         this.width = width;
         this.height = height;
         this.offset = new PIXI.Point(0, 0);
-        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true });
+        // preserveDrawingBuffer is bad for overall performance, but necessary in order to support 
+        // some Android devices such as Galaxy Tab A and Kindle Fire
+        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, preserveDrawingBuffer: true });
         this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
         var baseSize = { width: width, height: height };
@@ -375,7 +764,6 @@ var StageManager = /** @class */ (function () {
         this.setScaling(scale);
         this.pixi.ticker.add(this.update.bind(this));
         this.scaleManager = new ScaleManager(this.gotResize);
-        console.log(this.scaleManager); // just to quiet the errors... what else should be done with scalemanager instance?
     }
     StageManager.prototype.addCaptions = function (captionData, renderer) {
         this.captions = new CaptionPlayer(captionData, renderer);
@@ -426,7 +814,12 @@ var StageManager = /** @class */ (function () {
                 this._currentScene.pause(pause);
             }
             if (this.pixi && this.pixi.ticker) {
-                pause ? this.pixi.ticker.stop() : this.pixi.ticker.start();
+                if (pause) {
+                    PIXI.ticker.shared.stop();
+                }
+                else {
+                    PIXI.ticker.shared.start();
+                }
             }
         },
         enumerable: true,
@@ -520,15 +913,6 @@ var StageManager = /** @class */ (function () {
     StageManager.prototype.globalToScene = function (pointin) {
         return { x: pointin.x - this.offset.x, y: pointin.y - this.offset.y };
     };
-    StageManager.prototype.addTween = function (tween) {
-        this.tweens.push(tween);
-    };
-    StageManager.prototype.clearTweens = function () {
-        this.tweens.forEach(function (tween) {
-            tween.destroy(false);
-        });
-        this.tweens = [];
-    };
     StageManager.prototype.addTimer = function (timer) {
         this.timers.push(timer);
     };
@@ -551,16 +935,7 @@ var StageManager = /** @class */ (function () {
             return;
         }
         var elapsed = PIXI.ticker.shared.elapsedMS;
-        if (this.tweens.length) {
-            for (var i = this.tweens.length - 1; i >= 0; i--) {
-                if (this.tweens[i].active) {
-                    this.tweens[i].update(elapsed);
-                }
-                if (!this.tweens[i].active) {
-                    this.tweens.splice(i, 1);
-                }
-            }
-        }
+        Tween.update(elapsed);
         if (this.captions) {
             this.captions.update(elapsed / 1000); // captions go by seconds, not ms
         }
@@ -636,9 +1011,9 @@ var SoundContext = /** @class */ (function () {
      * @param {CompleteCallback} onComplete
      */
     SoundContext.prototype.play = function (id, onComplete) {
-        if (this.single) {
-            // stop anything currently playing
-            this.stopAll();
+        if (this.single && this.currentSound) {
+            // stop currently playing sound
+            this.stop(this.currentSound);
         }
         this.currentSound = id;
         return this.sounds[id].play(onComplete);
@@ -911,323 +1286,6 @@ function __extends(d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 }
 
-function backInOut(t) {
-  var s = 1.70158 * 1.525;
-  if ((t *= 2) < 1)
-    return 0.5 * (t * t * ((s + 1) * t - s))
-  return 0.5 * ((t -= 2) * t * ((s + 1) * t + s) + 2)
-}
-
-var backInOut_1 = backInOut;
-
-function backIn(t) {
-  var s = 1.70158;
-  return t * t * ((s + 1) * t - s)
-}
-
-var backIn_1 = backIn;
-
-function backOut(t) {
-  var s = 1.70158;
-  return --t * t * ((s + 1) * t + s) + 1
-}
-
-var backOut_1 = backOut;
-
-function bounceOut(t) {
-  var a = 4.0 / 11.0;
-  var b = 8.0 / 11.0;
-  var c = 9.0 / 10.0;
-
-  var ca = 4356.0 / 361.0;
-  var cb = 35442.0 / 1805.0;
-  var cc = 16061.0 / 1805.0;
-
-  var t2 = t * t;
-
-  return t < a
-    ? 7.5625 * t2
-    : t < b
-      ? 9.075 * t2 - 9.9 * t + 3.4
-      : t < c
-        ? ca * t2 - cb * t + cc
-        : 10.8 * t * t - 20.52 * t + 10.72
-}
-
-var bounceOut_1 = bounceOut;
-
-function bounceInOut(t) {
-  return t < 0.5
-    ? 0.5 * (1.0 - bounceOut_1(1.0 - t * 2.0))
-    : 0.5 * bounceOut_1(t * 2.0 - 1.0) + 0.5
-}
-
-var bounceInOut_1 = bounceInOut;
-
-function bounceIn(t) {
-  return 1.0 - bounceOut_1(1.0 - t)
-}
-
-var bounceIn_1 = bounceIn;
-
-function circInOut(t) {
-  if ((t *= 2) < 1) return -0.5 * (Math.sqrt(1 - t * t) - 1)
-  return 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1)
-}
-
-var circInOut_1 = circInOut;
-
-function circIn(t) {
-  return 1.0 - Math.sqrt(1.0 - t * t)
-}
-
-var circIn_1 = circIn;
-
-function circOut(t) {
-  return Math.sqrt(1 - ( --t * t ))
-}
-
-var circOut_1 = circOut;
-
-function cubicInOut(t) {
-  return t < 0.5
-    ? 4.0 * t * t * t
-    : 0.5 * Math.pow(2.0 * t - 2.0, 3.0) + 1.0
-}
-
-var cubicInOut_1 = cubicInOut;
-
-function cubicIn(t) {
-  return t * t * t
-}
-
-var cubicIn_1 = cubicIn;
-
-function cubicOut(t) {
-  var f = t - 1.0;
-  return f * f * f + 1.0
-}
-
-var cubicOut_1 = cubicOut;
-
-function elasticInOut(t) {
-  return t < 0.5
-    ? 0.5 * Math.sin(+13.0 * Math.PI/2 * 2.0 * t) * Math.pow(2.0, 10.0 * (2.0 * t - 1.0))
-    : 0.5 * Math.sin(-13.0 * Math.PI/2 * ((2.0 * t - 1.0) + 1.0)) * Math.pow(2.0, -10.0 * (2.0 * t - 1.0)) + 1.0
-}
-
-var elasticInOut_1 = elasticInOut;
-
-function elasticIn(t) {
-  return Math.sin(13.0 * t * Math.PI/2) * Math.pow(2.0, 10.0 * (t - 1.0))
-}
-
-var elasticIn_1 = elasticIn;
-
-function elasticOut(t) {
-  return Math.sin(-13.0 * (t + 1.0) * Math.PI/2) * Math.pow(2.0, -10.0 * t) + 1.0
-}
-
-var elasticOut_1 = elasticOut;
-
-function expoInOut(t) {
-  return (t === 0.0 || t === 1.0)
-    ? t
-    : t < 0.5
-      ? +0.5 * Math.pow(2.0, (20.0 * t) - 10.0)
-      : -0.5 * Math.pow(2.0, 10.0 - (t * 20.0)) + 1.0
-}
-
-var expoInOut_1 = expoInOut;
-
-function expoIn(t) {
-  return t === 0.0 ? t : Math.pow(2.0, 10.0 * (t - 1.0))
-}
-
-var expoIn_1 = expoIn;
-
-function expoOut(t) {
-  return t === 1.0 ? t : 1.0 - Math.pow(2.0, -10.0 * t)
-}
-
-var expoOut_1 = expoOut;
-
-function linear(t) {
-  return t
-}
-
-var linear_1 = linear;
-
-function quadInOut(t) {
-    t /= 0.5;
-    if (t < 1) return 0.5*t*t
-    t--;
-    return -0.5 * (t*(t-2) - 1)
-}
-
-var quadInOut_1 = quadInOut;
-
-function quadIn(t) {
-  return t * t
-}
-
-var quadIn_1 = quadIn;
-
-function quadOut(t) {
-  return -t * (t - 2.0)
-}
-
-var quadOut_1 = quadOut;
-
-function quarticInOut(t) {
-  return t < 0.5
-    ? +8.0 * Math.pow(t, 4.0)
-    : -8.0 * Math.pow(t - 1.0, 4.0) + 1.0
-}
-
-var quartInOut = quarticInOut;
-
-function quarticIn(t) {
-  return Math.pow(t, 4.0)
-}
-
-var quartIn = quarticIn;
-
-function quarticOut(t) {
-  return Math.pow(t - 1.0, 3.0) * (1.0 - t) + 1.0
-}
-
-var quartOut = quarticOut;
-
-function qinticInOut(t) {
-    if ( ( t *= 2 ) < 1 ) return 0.5 * t * t * t * t * t
-    return 0.5 * ( ( t -= 2 ) * t * t * t * t + 2 )
-}
-
-var quintInOut = qinticInOut;
-
-function qinticIn(t) {
-  return t * t * t * t * t
-}
-
-var quintIn = qinticIn;
-
-function qinticOut(t) {
-  return --t * t * t * t * t + 1
-}
-
-var quintOut = qinticOut;
-
-function sineInOut(t) {
-  return -0.5 * (Math.cos(Math.PI*t) - 1)
-}
-
-var sineInOut_1 = sineInOut;
-
-function sineIn (t) {
-  var v = Math.cos(t * Math.PI * 0.5);
-  if (Math.abs(v) < 1e-14) return 1
-  else return 1 - v
-}
-
-var sineIn_1 = sineIn;
-
-function sineOut(t) {
-  return Math.sin(t * Math.PI/2)
-}
-
-var sineOut_1 = sineOut;
-
-var eases = {
-	'backInOut': backInOut_1,
-	'backIn': backIn_1,
-	'backOut': backOut_1,
-	'bounceInOut': bounceInOut_1,
-	'bounceIn': bounceIn_1,
-	'bounceOut': bounceOut_1,
-	'circInOut': circInOut_1,
-	'circIn': circIn_1,
-	'circOut': circOut_1,
-	'cubicInOut': cubicInOut_1,
-	'cubicIn': cubicIn_1,
-	'cubicOut': cubicOut_1,
-	'elasticInOut': elasticInOut_1,
-	'elasticIn': elasticIn_1,
-	'elasticOut': elasticOut_1,
-	'expoInOut': expoInOut_1,
-	'expoIn': expoIn_1,
-	'expoOut': expoOut_1,
-	'linear': linear_1,
-	'quadInOut': quadInOut_1,
-	'quadIn': quadIn_1,
-	'quadOut': quadOut_1,
-	'quartInOut': quartInOut,
-	'quartIn': quartIn,
-	'quartOut': quartOut,
-	'quintInOut': quintInOut,
-	'quintIn': quintIn,
-	'quintOut': quintOut,
-	'sineInOut': sineInOut_1,
-	'sineIn': sineIn_1,
-	'sineOut': sineOut_1
-};
-
-var Tween$1 = /** @class */ (function () {
-    function Tween$$1(target, values, time, ease) {
-        if (ease === void 0) { ease = 'linear'; }
-        var _this = this;
-        this.active = true;
-        this.currentTime = 0;
-        this.initialValues = {};
-        this.paused = false;
-        this.target = target;
-        this.targetValues = values;
-        for (var key in this.targetValues) {
-            this.initialValues[key] = this.target[key];
-        }
-        this.totalTime = time;
-        var Eases = eases;
-        this.ease = Eases[ease];
-        if (!this.ease) {
-            console.error("No ease found with name " + ease);
-            this.ease = Eases.linear;
-        }
-        this.promise = new Promise(function (resolve, reject) {
-            _this.resolve = resolve;
-            _this.reject = reject;
-        });
-    }
-    Tween$$1.prototype.pause = function (pause) {
-        this.paused = pause;
-    };
-    Tween$$1.prototype.update = function (deltaTime) {
-        if (this.paused) {
-            return;
-        }
-        this.currentTime += deltaTime;
-        var time = this.currentTime / this.totalTime > 1 ? 1 : this.currentTime / this.totalTime;
-        for (var key in this.targetValues) {
-            this.target[key] = this.initialValues[key] + this.ease(time) * (this.targetValues[key] - this.initialValues[key]);
-        }
-        if (time >= 1) {
-            this.destroy(true);
-        }
-    };
-    Tween$$1.prototype.destroy = function (isComplete) {
-        if (isComplete === void 0) { isComplete = false; }
-        isComplete ? this.resolve() : this.reject();
-        this.promise = null;
-        this.resolve = null;
-        this.reject = null;
-        this.active = null;
-        this.target = null;
-        this.targetValues = null;
-        this.totalTime = null;
-        this.ease = null;
-    };
-    return Tween$$1;
-}());
-
 var PauseableTimer = /** @class */ (function () {
     function PauseableTimer(callback, time, loop) {
         var _this = this;
@@ -1365,9 +1423,8 @@ var Scene = /** @class */ (function (_super) {
      * @returns {Tween} instance of Tween, for pausing/cancelling
      */
     Scene.prototype.tween = function (target, values, time, ease) {
-        var tween = new Tween$1(target, values, time, ease);
-        this.stageManager.addTween(tween);
-        return tween;
+        console.warn('Scene.tween() is deprecated, please use Tween.get()');
+        return Tween.get(target).to(values, time, ease);
     };
     /**
      *
@@ -1410,70 +1467,7 @@ var Scene = /** @class */ (function (_super) {
     return Scene;
 }(PIXI.Container));
 
-/// <reference path="./createjs_tween_type.d.ts" />
-var CJSTween = /** @class */ (function (_super) {
-    __extends(CJSTween, _super);
-    function CJSTween(target, props) {
-        var _this = _super.call(this, target, props) || this;
-        if (!CJSTween._listening && CJSTween.autoTick) {
-            CJSTween.listen(true);
-        }
-        return _this;
-    }
-    /**
-     *
-     * The 'get' method works like the TweenJS Tween.get() method.
-     *
-     * @param target Target object of the tween
-     * @param props Properties of the tween, see documentation for the CreateJS TweenJS
-     */
-    CJSTween.get = function (target, props) {
-        return new CJSTween(target, props);
-    };
-    /**
-     *
-     * This will pass the tick time over to the CreateJS TweenJS tick() function
-     *
-     * @param deltaTime Time in MS
-     */
-    CJSTween.tick = function (deltaTime) {
-        Tween.tick(deltaTime, false);
-    };
-    /**
-     *
-     * If you want all tweens to listen to the GameTime's ticker (this is the default), this should be true.
-     *
-     * If you don't want all tweens hooked up to GameTime, call CJSTween.listen(false) before using any Tweens.
-     *
-     * If it's set to false, you can update your tweens directly with the static CJSTween.tick(deltaTime) method.
-     *
-     * @param yesorno listen or don't
-     */
-    CJSTween.listen = function (yesorno) {
-        if (yesorno === false) {
-            CJSTween._listening = false;
-            GameTime.gameTick.unsubscribe(CJSTween.tick);
-        }
-        else {
-            CJSTween._listening = true;
-            GameTime.gameTick.unsubscribe(CJSTween.tick); // just to be sure
-            GameTime.gameTick.subscribe(CJSTween.tick);
-        }
-    };
-    CJSTween._listening = false;
-    CJSTween.autoTick = true;
-    return CJSTween;
-}(Tween));
-Tween._inited = true;
-var CJSEase = /** @class */ (function (_super) {
-    __extends(CJSEase, _super);
-    function CJSEase() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    return CJSEase;
-}(Ease));
-
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween$1 as Tween, CJSTween, CJSEase };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween };
 //# sourceMappingURL=gamelib.js.map

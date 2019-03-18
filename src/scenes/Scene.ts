@@ -93,10 +93,9 @@ export default class Scene extends PIXI.Container {
      * @param [ease] name of easing curve to apply to tween
      * @returns {Tween} instance of Tween, for pausing/cancelling
      */
-    tween(target:any, values:any, time:number, ease?:Ease){
-        const tween = new Tween(target, values, time, ease);
-        this.stageManager.addTween(tween);
-        return tween;
+    tween(target:any, values:any, time:number, ease?:Ease):Tween{
+        console.warn('Scene.tween() is deprecated, please use Tween.get()');
+        return Tween.get(target).to(values, time, ease);
     }
 
     /**

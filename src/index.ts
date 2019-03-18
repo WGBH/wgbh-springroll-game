@@ -14,7 +14,6 @@ import PauseableTimer from './timer/PauseableTimer';
 import GameTime from './timer/GameTime';
 import {AssetList} from './assets/AssetManager';
 import Tween from './tween/Tween';
-import {CJSTween, CJSEase} from './tween/CJSTween';
 
 
 export {
@@ -29,6 +28,4 @@ export {
     PauseableTimer,
     GameTime,
     Tween,
-    CJSTween,
-    CJSEase
 };
