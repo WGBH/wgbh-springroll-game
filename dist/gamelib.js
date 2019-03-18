@@ -544,7 +544,7 @@ var Tween = /** @class */ (function () {
             return _this;
         };
         this.wait = function (totalTime) {
-            _this.steps.push({ totalTime: totalTime, currentTime: 0 });
+            _this.steps.push({ totalTime: totalTime });
             return _this;
         };
         this.call = function (call) {
