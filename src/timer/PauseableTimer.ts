@@ -1,3 +1,4 @@
+import GameTime from "./GameTime";
 
 export default class PauseableTimer {
 
@@ -5,12 +6,12 @@ export default class PauseableTimer {
 
     private currentTime:number;
     private targetTime:number;
-    private paused:boolean = true;
+    private paused:boolean = false;
     private onComplete:Function;
     private repeat:boolean = false;
 
 
-    public promise: Promise<void>;
+    private _promise: Promise<void>;
     private resolve:Function;
     private reject:Function;
 
@@ -20,11 +21,17 @@ export default class PauseableTimer {
         this.onComplete = callback;
         
         this.repeat = loop;
+        GameTime.gameTick.subscribe(this.update);
+    }
 
-        this.promise = new Promise((resolve, reject)=>{
-            this.resolve = resolve;
-            this.reject = reject;
-        });
+    get promise() {
+        if(!this._promise) {
+            this._promise = new Promise((resolve, reject)=>{
+                this.resolve = resolve;
+                this.reject = reject;
+            });
+        }
+        return this._promise;
     }
 
     pause(pause:boolean){
@@ -36,8 +43,8 @@ export default class PauseableTimer {
         this.currentTime = deltaTime ? deltaTime : 0;
     }
 
-    update(deltaTime:number){
-        if(this.paused){
+    update = (deltaTime:number) => {
+        if(this.paused || !this.targetTime){
             return;
         }
 
@@ -58,10 +65,18 @@ export default class PauseableTimer {
     }
 
     destroy(isComplete = false){
-        isComplete ? this.resolve() : this.reject('destroyed');
-        this.promise = null;
+        this.paused = true; // make sure it doesn't try to do another update.
+        if(isComplete) {
+            if(this.resolve) {
+                this.resolve();
+            }
+        } else if(this.reject) {
+            this.reject('destroyed');
+        }
+        this._promise = null;
         this.resolve = null;
         this.reject = null;
         this.targetTime = null;
+        GameTime.gameTick.unsubscribe(this.update);
     }
 }

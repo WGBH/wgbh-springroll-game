@@ -2,9 +2,9 @@
 import Scene from './Scene';
 import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
-import Tween from '../tween/Tween';
 import PauseableTimer from '../timer/PauseableTimer';
 import { PointLike } from 'pixi.js';
+import { ScaleManager, CaptionData, IRender, Property } from 'springroll';
 /**
  * Manages rendering and transitioning between Scenes
  */
@@ -14,22 +14,25 @@ export default class StageManager {
     height: number;
     scale: number;
     offset: PointLike;
+    transition: PIXI.animate.MovieClip;
+    viewFrame: Property<ViewFrame>;
     leftEdge: number;
     rightEdge: number;
-    transition: PIXI.animate.MovieClip;
+    scaleManager: ScaleManager;
     private _currentScene;
-    private scaleManager;
     private _minSize;
     private _maxSize;
     private _originSize;
     private transitioning;
     private isPaused;
     private game;
+    private captions;
     /** Map of Scenes by Scene IDs */
     private scenes;
-    private tweens;
     private timers;
     constructor(game: Game, containerID: string, width: number, height: number, altWidth?: number);
+    addCaptions(captionData: CaptionData, renderer: IRender): void;
+    setCaptionRenderer(renderer: IRender): void;
     addScene(id: string, scene: typeof Scene): void;
     addScenes(sceneMap: {
         [key: string]: typeof Scene;
@@ -55,10 +58,10 @@ export default class StageManager {
         x: number;
         y: number;
     };
-    addTween(tween: Tween): void;
-    clearTweens(): void;
     addTimer(timer: PauseableTimer): void;
     clearTimers(): void;
+    showCaption(captionid: string, begin?: number, args?: any): void;
+    stopCaption(): void;
     update(): void;
 }
 export declare type ScreenSize = {
@@ -74,4 +77,14 @@ export declare type ScaleConfig = {
     origin?: RectLike;
     min?: RectLike;
     max?: RectLike;
+};
+export declare type ViewFrame = {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+    center: number;
+    width: number;
+    height: number;
+    offset: PointLike;
 };

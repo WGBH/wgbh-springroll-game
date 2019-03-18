@@ -1,3 +1,5 @@
+import { CompleteCallback } from "pixi-sound";
+
 export default class SoundContext {
 
     /** Map of Sounds by ID */
@@ -7,6 +9,14 @@ export default class SoundContext {
 
     private _globalVolume:number = 1;
     private _volume:number = 1;
+
+    public currentSound:string;
+    public single:boolean = false;
+
+    constructor(issingle?:boolean) {
+        this.single = (issingle === true);
+        this.currentSound = null;
+    }
 
     /** Context-specific volume */
     set volume(volume:number){
@@ -50,6 +60,65 @@ export default class SoundContext {
         }
         this.sounds[id].volume = this.volumes[id] * this._globalVolume * this._volume;
     }
+
+    /**
+     * 
+     * @param {string} id 
+     * @param {CompleteCallback} onComplete 
+     */
+    play(id:string,onComplete?:CompleteCallback) {
+        if (this.single && this.currentSound) {
+            // stop currently playing sound
+            this.stop(this.currentSound);
+        }
+        this.currentSound = id;
+        return this.sounds[id].play(onComplete);
+    }
+
+    stop(id:string) {
+        if (id === this.currentSound) {
+            this.currentSound = null;
+        }
+        this.sounds[id].stop();
+    }
+
+    stopAll() {
+        this.currentSound = null;
+        for (let key in this.sounds) {
+            this.sounds[key].stop();
+        }
+    }
+
+    /**
+     * 
+     * @param soundid ID of sound to get position of - if none, then find position of most recently played sound
+     */
+    getPosition(soundid?:string):number {
+        if (!soundid) { 
+            soundid = this.currentSound;
+        }
+        if(!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {return -1;}
+        return this.sounds[soundid].instances[0].progress; // NOTE: There seems to be a Safari bug where the progress listener can become detached from a sound...may need a fallback or workaround
+    }
+
+    getPositionSeconds(soundid?:string):number {
+        if (!soundid) { 
+            soundid = this.currentSound;
+        }
+        if(!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {return -1;}
+        return this.sounds[soundid].instances[0].progress * this.sounds[soundid].duration; // NOTE: There seems to be a Safari bug where the progress listener can become detached from a sound...may need a fallback or workaround
+   
+    }
+
+    isPlaying():boolean {
+        for (let key in this.sounds) {
+            if (this.sounds[key].isPlaying) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Destroy sound, remove from context and PIXI Sound cache

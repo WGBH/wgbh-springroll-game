@@ -93,10 +93,9 @@ export default class Scene extends PIXI.Container {
      * @param [ease] name of easing curve to apply to tween
      * @returns {Tween} instance of Tween, for pausing/cancelling
      */
-    tween(target:any, values:any, time:number, ease?:Ease){
-        const tween = new Tween(target, values, time, ease);
-        this.stageManager.addTween(tween);
-        return tween;
+    tween(target:any, values:any, time:number, ease?:Ease):Tween{
+        console.warn('Scene.tween() is deprecated, please use Tween.get()');
+        return Tween.get(target).to(values, time, ease);
     }
 
     /**
@@ -114,7 +113,9 @@ export default class Scene extends PIXI.Container {
     }
 
     clearTimeout(timer:PauseableTimer) {
-        timer.destroy(false); // destroy without triggering the callback function
+        if(timer) {
+            timer.destroy(false); // destroy without triggering the callback function
+        }
     }
 
     setInterval(callback: Function, time:number):PauseableTimer {
@@ -124,7 +125,9 @@ export default class Scene extends PIXI.Container {
     }
 
     clearInterval(timer:PauseableTimer) {
-        timer.destroy(false); // destroy without triggering the callback function
+        if(timer) {
+            timer.destroy(false); // destroy without triggering the callback function
+        }
     }
 
     resize(width:number, height:number, offset:PointLike) {
