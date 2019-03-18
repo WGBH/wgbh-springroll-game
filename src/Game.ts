@@ -62,6 +62,7 @@ export default class Game {
                 //Game-level assets are always global
                 asset.isGlobal = true;
             }
+            this.assetManager.unloadAssets();//Prep for fresh loading
             this.assetManager.loadAssets(assets, this.gameReady.bind(this));
         }
         else{

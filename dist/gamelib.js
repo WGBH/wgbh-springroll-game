@@ -1237,6 +1237,7 @@ var Game = /** @class */ (function () {
                     //Game-level assets are always global
                     asset.isGlobal = true;
                 }
+                _this.assetManager.unloadAssets(); //Prep for fresh loading
                 _this.assetManager.loadAssets(assets, _this.gameReady.bind(_this));
             }
             else {
