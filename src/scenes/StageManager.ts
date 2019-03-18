@@ -177,11 +177,10 @@ export default class StageManager{
         }
         if(this.pixi && this.pixi.ticker){
             if(pause){
-                this.pixi.ticker.stop();
+                PIXI.ticker.shared.stop();
             }
             else{
-                this.pixi.ticker.update(0);
-                this.pixi.ticker.start();
+                PIXI.ticker.shared.start();
             }
         }
     }
