@@ -152,6 +152,7 @@ export default class AssetManager {
             if(!this.globalCache.textures.includes(id)){
                 (PIXI.utils.TextureCache[id] as PIXI.Texture).destroy(true);
                 delete this.cache.images[id];
+                delete this.cache.spritesheets[id];
             }
         }
         for(let id in PIXI.animate.ShapesCache){
