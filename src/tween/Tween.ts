@@ -56,7 +56,7 @@ export default class Tween{
     }
 
     wait = (totalTime:number) => {
-        this.steps.push({totalTime, currentTime:0});
+        this.steps.push({totalTime});
         return this;
     }
 
