@@ -105,11 +105,11 @@ export interface DataDescriptor extends AssetDescriptor {
     path: string;
     type: 'data';
 }
-/** Load instructions for JSON data assets */
+/** Load instructions for spritesheet assets */
 export interface SpritesheetDescriptor extends AssetDescriptor {
-    /** identifier of data object for later retrieval from cache */
+    /** identifier of spritesheet for later retrieval from cache */
     id: string;
-    /** path to JSON file */
+    /** path to JSON spritesheet atlas file */
     path: string;
     type: 'spritesheet';
 }

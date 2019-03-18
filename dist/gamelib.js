@@ -14,8 +14,7 @@ var AssetManager = /** @class */ (function () {
             textures: [],
             sounds: [],
             data: [],
-            animations: [],
-            spritesheets: []
+            animations: []
         };
         /** IDs of loaded Sounds */
         this.soundIDs = [];
@@ -258,9 +257,6 @@ var AssetManager = /** @class */ (function () {
             dataLoader.add(descriptor.id, descriptor.path);
             dataLoader.load(function (loader, resources) {
                 _this.cache.spritesheets[descriptor.id] = resources[descriptor.id].spritesheet;
-                if (descriptor.isGlobal) {
-                    _this.globalCache.spritesheets.push(descriptor.id);
-                }
                 dataLoader.destroy();
                 resolve();
             });
