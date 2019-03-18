@@ -107,11 +107,13 @@ export default class Tween{
         }
         const step = this.steps[this.currentStep];
         if(step.call){
+            this.currentStep++;
             return step.call();
         }
         if(!step.currentTime){
             step.currentTime = 0;
             if(step.targetValues){
+                step.initialValues = {};
                 for(let key in step.targetValues){
                     step.initialValues[key] = this.target[key];
                 }

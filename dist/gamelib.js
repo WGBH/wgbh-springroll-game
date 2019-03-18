@@ -577,11 +577,13 @@ var Tween = /** @class */ (function () {
             }
             var step = _this.steps[_this.currentStep];
             if (step.call) {
+                _this.currentStep++;
                 return step.call();
             }
             if (!step.currentTime) {
                 step.currentTime = 0;
                 if (step.targetValues) {
+                    step.initialValues = {};
                     for (var key in step.targetValues) {
                         step.initialValues[key] = _this.target[key];
                     }
