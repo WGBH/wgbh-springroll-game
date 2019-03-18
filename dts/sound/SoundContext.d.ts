@@ -1,4 +1,4 @@
-/// <reference types="pixi-sound" />
+import { CompleteCallback } from "pixi-sound";
 export default class SoundContext {
     /** Map of Sounds by ID */
     sounds: {
@@ -8,6 +8,9 @@ export default class SoundContext {
     private volumes;
     private _globalVolume;
     private _volume;
+    currentSound: string;
+    single: boolean;
+    constructor(issingle?: boolean);
     /** Context-specific volume */
     volume: number;
     /** Volume applied to all contexts */
@@ -25,6 +28,21 @@ export default class SoundContext {
      * @param {number} volume Number 0-1 to set volume of specified sound
      */
     applyVolume(id: string, volume?: number): void;
+    /**
+     *
+     * @param {string} id
+     * @param {CompleteCallback} onComplete
+     */
+    play(id: string, onComplete?: CompleteCallback): PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>;
+    stop(id: string): void;
+    stopAll(): void;
+    /**
+     *
+     * @param soundid ID of sound to get position of - if none, then find position of most recently played sound
+     */
+    getPosition(soundid?: string): number;
+    getPositionSeconds(soundid?: string): number;
+    isPlaying(): boolean;
     /**
      * Destroy sound, remove from context and PIXI Sound cache
      * @param id ID of sound to remove

@@ -2,9 +2,10 @@ import Scene from './Scene';
 import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
 import Tween from '../tween/Tween';
+import GameTime from '../timer/GameTime';
 import PauseableTimer from '../timer/PauseableTimer';
 import { PointLike } from 'pixi.js';
-import { ScaleManager } from 'springroll';
+import { ScaleManager, CaptionPlayer, CaptionData, IRender, Property } from 'springroll';
 
 
 const TRANSITION_ID = 'wgbhSpringRollGameTransition';
@@ -18,13 +19,14 @@ export default class StageManager{
     public height: number;
     public scale:number;
     public offset:PointLike; // offset for the x,y origin when resizing
-    public leftEdge:number; // shortcut to find the left edge
-    public rightEdge:number; // shortcut to find the right edge
     public transition:PIXI.animate.MovieClip;
+    public viewFrame:Property<ViewFrame>;
+    public leftEdge:number; // deprecate leftEdge/rightEdge in favor of more comprehensive viewFrame
+    public rightEdge:number;
+    public scaleManager:ScaleManager;
 
     private _currentScene:Scene;
 
-    private scaleManager:ScaleManager;
     private _minSize:ScreenSize;
     private _maxSize:ScreenSize;
     private _originSize:ScreenSize;
@@ -33,10 +35,11 @@ export default class StageManager{
     private isPaused = false;
     private game:Game;
 
+    private captions:CaptionPlayer;
+
     /** Map of Scenes by Scene IDs */
     private scenes: {[key:string]:typeof Scene} = {};
 
-    private tweens:Tween[] = [];
     private timers:PauseableTimer[] = [];
 
     constructor(game:Game, containerID:string, width:number, height:number, altWidth?:number){
@@ -47,16 +50,15 @@ export default class StageManager{
 
         this.offset = new PIXI.Point(0,0);
 
-
-        this.pixi = new PIXI.Application({ width, height, antialias:true});
+        // preserveDrawingBuffer is bad for overall performance, but necessary in order to support 
+        // some Android devices such as Galaxy Tab A and Kindle Fire
+        this.pixi = new PIXI.Application({ width, height, antialias:true, preserveDrawingBuffer:true});
         this.pixi.view.style.display = 'block';
+
 
         document.getElementById(containerID).appendChild(this.pixi.view);
 
         const baseSize = {width:width,height:height};
-
-        this.leftEdge = 0;
-        this.rightEdge = width;
 
         altWidth = altWidth || width;
         const altSize = {width:altWidth,height:height};
@@ -70,7 +72,14 @@ export default class StageManager{
         this.pixi.ticker.add(this.update.bind(this));
 
         this.scaleManager = new ScaleManager(this.gotResize);
-        console.log(this.scaleManager); // just to quiet the errors... what else should be done with scalemanager instance?
+    }
+
+    addCaptions(captionData:CaptionData, renderer:IRender) {
+        this.captions = new CaptionPlayer(captionData, renderer);
+    }
+
+    setCaptionRenderer(renderer:IRender) {
+        this.captions.renderer = renderer;
     }
 
     addScene(id:string, scene:typeof Scene){
@@ -166,7 +175,12 @@ export default class StageManager{
             this._currentScene.pause(pause);
         }
         if(this.pixi && this.pixi.ticker){
-            pause ? this.pixi.ticker.stop() : this.pixi.ticker.start();
+            if(pause){
+                PIXI.ticker.shared.stop();
+            }
+            else{
+                PIXI.ticker.shared.start();
+            }
         }
     }
 
@@ -225,17 +239,38 @@ export default class StageManager{
             this.pixi.view.style.width = '100vw';
             this.pixi.view.style.margin = '0';
         }
-        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 
+        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
         this.pixi.stage.position.x = offset;
 
-        this.pixi.renderer.resize(calcwidth,this._minSize.height);
-        this.offset.x = offset;
-        if (this._currentScene) {
-          this._currentScene.resize(calcwidth,this._minSize.height,this.offset);
+        const newframe = {
+            left: offset * -1,
+            right: calcwidth - offset,
+            width: calcwidth,
+            center: calcwidth / 2 - offset,
+            top: 0,
+            bottom: this._minSize.height,
+            height: this._minSize.height,
+            offset: this.offset
+        };
+        if(!this.viewFrame) {
+            this.viewFrame = new Property(newframe);
+        } else {
+            this.viewFrame.value = newframe;
         }
 
-        this.leftEdge = offset * -1;
-        this.rightEdge = calcwidth - offset;
+        this.width = calcwidth;
+        this.height = this._minSize.height;
+
+        /* legacy -- should remove */
+        this.leftEdge = newframe.left;
+        this.rightEdge = newframe.right;
+        
+        this.pixi.renderer.resize(calcwidth,this._minSize.height);
+
+        this.offset.x = offset;
+        if (this._currentScene) {
+          this._currentScene.resize(this.width,this.height,this.offset);
+        }
     }
 
 
@@ -249,17 +284,6 @@ export default class StageManager{
         return {x:pointin.x - this.offset.x, y:pointin.y - this.offset.y};
     }
 
-    addTween(tween:Tween){
-        this.tweens.push(tween);
-    }
-    
-    clearTweens() {
-        this.tweens.forEach(function(tween:Tween) {
-            tween.destroy(false);
-        });
-        this.tweens = [];
-    }
-
     addTimer(timer:PauseableTimer){
         this.timers.push(timer);
     }
@@ -271,6 +295,14 @@ export default class StageManager{
         this.timers = [];
     }
 
+    showCaption(captionid:string,begin?:number,args?:any) {
+        begin = begin || 0;
+        this.captions.start(captionid,begin,args);
+    }
+
+    stopCaption() {
+        this.captions.stop();
+    }
 
     update(){
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
@@ -278,26 +310,11 @@ export default class StageManager{
             return;
         }
         const elapsed = PIXI.ticker.shared.elapsedMS;
-        if(this.tweens.length){
-            for(let i = this.tweens.length - 1; i >= 0; i--){
-                if(this.tweens[i].active){
-                    this.tweens[i].update(elapsed);
-                }
-                if(!this.tweens[i].active){
-                    this.tweens.splice(i, 1);
-                }
-            }
+        Tween.update(elapsed);
+        if (this.captions) {
+            this.captions.update(elapsed/1000); // captions go by seconds, not ms
         }
-        if(this.timers.length){
-            for(let i = this.timers.length - 1; i >= 0; i--){
-                if(this.timers[i].active){
-                    this.timers[i].update(elapsed);
-                }
-                if(!this.timers[i].active){
-                    this.timers.splice(i, 1);
-                }
-            }
-        }
+        GameTime.gameTick.value = elapsed;
         this._currentScene.update(elapsed);
     }
 
@@ -319,4 +336,15 @@ export type ScaleConfig = {
     origin?:RectLike,
     min?:RectLike,
     max?:RectLike
+};
+
+export type ViewFrame = {
+    left:number,
+    right:number,
+    top:number,
+    bottom:number,
+    center:number,
+    width:number,
+    height:number,
+    offset:PointLike
 };
