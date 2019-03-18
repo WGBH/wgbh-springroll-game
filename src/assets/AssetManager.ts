@@ -9,13 +9,12 @@ export default class AssetManager {
     public cache:AssetCache = {data:{}, images:{}, animations:{}, spritesheets:{}};
 
     /** IDs of cached assets that should persist between scenes */
-    private globalCache:{shapes:string[], textures:string[], sounds:string[], data:string[], animations:string[], spritesheets:string[]} = {
+    private globalCache:{shapes:string[], textures:string[], sounds:string[], data:string[], animations:string[]} = {
         shapes: [],
         textures: [],
         sounds: [],
         data: [],
-        animations: [],
-        spritesheets:[]
+        animations: []
     };
 
     /** IDs of loaded Sounds */
@@ -265,9 +264,6 @@ export default class AssetManager {
             dataLoader.add(descriptor.id, descriptor.path);
             dataLoader.load((loader:PIXI.loaders.Loader, resources:PIXI.loaders.ResourceDictionary)=>{
                 this.cache.spritesheets[descriptor.id] = resources[descriptor.id].spritesheet;
-                if(descriptor.isGlobal){
-                    this.globalCache.spritesheets.push(descriptor.id);
-                }
                 dataLoader.destroy();
                 resolve();
             });
@@ -350,11 +346,11 @@ export interface DataDescriptor extends AssetDescriptor {
     type: 'data';
 }
 
-/** Load instructions for JSON data assets */
+/** Load instructions for spritesheet assets */
 export interface SpritesheetDescriptor extends AssetDescriptor {
-    /** identifier of data object for later retrieval from cache */
+    /** identifier of spritesheet for later retrieval from cache */
     id: string;
-    /** path to JSON file */
+    /** path to JSON spritesheet atlas file */
     path: string;
     type: 'spritesheet';
 }
