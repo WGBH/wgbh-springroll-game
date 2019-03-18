@@ -40,7 +40,6 @@ export default class StageManager{
     /** Map of Scenes by Scene IDs */
     private scenes: {[key:string]:typeof Scene} = {};
 
-    private tweens:Tween[] = [];
     private timers:PauseableTimer[] = [];
 
     constructor(game:Game, containerID:string, width:number, height:number, altWidth?:number){
@@ -285,17 +284,6 @@ export default class StageManager{
         return {x:pointin.x - this.offset.x, y:pointin.y - this.offset.y};
     }
 
-    addTween(tween:Tween){
-        this.tweens.push(tween);
-    }
-    
-    clearTweens() {
-        this.tweens.forEach(function(tween:Tween) {
-            tween.destroy(false);
-        });
-        this.tweens = [];
-    }
-
     addTimer(timer:PauseableTimer){
         this.timers.push(timer);
     }
@@ -322,16 +310,7 @@ export default class StageManager{
             return;
         }
         const elapsed = PIXI.ticker.shared.elapsedMS;
-        if(this.tweens.length){
-            for(let i = this.tweens.length - 1; i >= 0; i--){
-                if(this.tweens[i].active){
-                    this.tweens[i].update(elapsed);
-                }
-                if(!this.tweens[i].active){
-                    this.tweens.splice(i, 1);
-                }
-            }
-        }
+        Tween.update(elapsed);
         if (this.captions) {
             this.captions.update(elapsed/1000); // captions go by seconds, not ms
         }
