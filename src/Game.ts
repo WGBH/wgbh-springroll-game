@@ -1,6 +1,6 @@
 import * as SpringRoll from 'springroll';
 
-import AssetManager, { AnimateStage, AssetCache } from "./assets/AssetManager";
+import AssetManager, { AnimateStage, AssetCache, AssetList } from "./assets/AssetManager";
 import StageManager from "./scenes/StageManager";
 import SoundManager from './sound/SoundManager';
 import { Scene } from '.';
@@ -47,12 +47,31 @@ export default class Game {
         });
 
         this.app.state.ready.subscribe(() => {
-                this.stageManager.setTransition(options.transition, this.gameReady.bind(this));
+                this.stageManager.setTransition(options.transition, this.preloadGlobal);
             });
 
         if(options.captions) {
             this.stageManager.addCaptions(options.captions.config,options.captions.display);
         }
+    }
+
+    private preloadGlobal = ()=>{
+        const assets = this.preload();
+        if(assets && assets.length){
+            for(let asset of assets){
+                //Game-level assets are always global
+                asset.isGlobal = true;
+            }
+            this.assetManager.loadAssets(assets, this.gameReady.bind(this));
+        }
+        else{
+            this.gameReady();
+        }
+    }
+
+    /** overrride and return list of global assets */
+    protected preload():AssetList{
+        return null;
     }
 
     /** called when game is ready to enter first scene - override this function and set first scene here */

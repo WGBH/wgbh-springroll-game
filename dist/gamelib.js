@@ -1229,6 +1229,20 @@ var Game = /** @class */ (function () {
         var _this = this;
         /** object for storing global data - accessible from all Scenes */
         this.dataStore = {};
+        this.preloadGlobal = function () {
+            var assets = _this.preload();
+            if (assets && assets.length) {
+                for (var _i = 0, assets_1 = assets; _i < assets_1.length; _i++) {
+                    var asset = assets_1[_i];
+                    //Game-level assets are always global
+                    asset.isGlobal = true;
+                }
+                _this.assetManager.loadAssets(assets, _this.gameReady.bind(_this));
+            }
+            else {
+                _this.gameReady();
+            }
+        };
         this.sound = new SoundManager();
         this.assetManager = new AssetManager(this.sound);
         this.cache = this.assetManager.cache;
@@ -1251,12 +1265,16 @@ var Game = /** @class */ (function () {
             _this.stageManager.pause = pause;
         });
         this.app.state.ready.subscribe(function () {
-            _this.stageManager.setTransition(options.transition, _this.gameReady.bind(_this));
+            _this.stageManager.setTransition(options.transition, _this.preloadGlobal);
         });
         if (options.captions) {
             this.stageManager.addCaptions(options.captions.config, options.captions.display);
         }
     }
+    /** overrride and return list of global assets */
+    Game.prototype.preload = function () {
+        return null;
+    };
     /** called when game is ready to enter first scene - override this function and set first scene here */
     Game.prototype.gameReady = function () {
         //override and set first scene in this function

@@ -1,5 +1,5 @@
 import * as SpringRoll from 'springroll';
-import AssetManager, { AnimateStage, AssetCache } from "./assets/AssetManager";
+import AssetManager, { AnimateStage, AssetCache, AssetList } from "./assets/AssetManager";
 import StageManager from "./scenes/StageManager";
 import SoundManager from './sound/SoundManager';
 import { Scene } from '.';
@@ -20,6 +20,9 @@ export default class Game {
         [key: string]: any;
     };
     constructor(options: GameOptions);
+    private preloadGlobal;
+    /** overrride and return list of global assets */
+    protected preload(): AssetList;
     /** called when game is ready to enter first scene - override this function and set first scene here */
     protected gameReady(): void;
     addScene(id: string, scene: typeof Scene): void;
