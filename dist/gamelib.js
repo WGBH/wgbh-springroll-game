@@ -144,6 +144,7 @@ var AssetManager = /** @class */ (function () {
             if (!this.globalCache.textures.includes(id)) {
                 PIXI.utils.TextureCache[id].destroy(true);
                 delete this.cache.images[id];
+                delete this.cache.spritesheets[id];
             }
         }
         for (var id in PIXI.animate.ShapesCache) {
