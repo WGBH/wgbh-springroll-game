@@ -50,13 +50,18 @@ export default class AssetManager {
      */
     private loadData;
     /**
+     * Load Spritesheet data
+     * @param {SpritesheetDescriptor} descriptor
+     */
+    private loadSpritesheet;
+    /**
      * Load JSON file containing an AssetList
      * @param {ManifestDescriptor} manifestDescriptor
      */
     private loadManifest;
 }
 /** Array of  */
-export declare type AssetList = (ManifestDescriptor | AnimateStageDescriptor | DataDescriptor | ImageDescriptor | SoundDescriptor)[];
+export declare type AssetList = (ManifestDescriptor | AnimateStageDescriptor | DataDescriptor | ImageDescriptor | SoundDescriptor | SpritesheetDescriptor)[];
 /** Load instruction base interface */
 export interface AssetDescriptor {
     /** Should asset stay in cache after current Scene is exited? */
@@ -100,6 +105,14 @@ export interface DataDescriptor extends AssetDescriptor {
     path: string;
     type: 'data';
 }
+/** Load instructions for spritesheet assets */
+export interface SpritesheetDescriptor extends AssetDescriptor {
+    /** identifier of spritesheet for later retrieval from cache */
+    id: string;
+    /** path to JSON spritesheet atlas file */
+    path: string;
+    type: 'spritesheet';
+}
 /** Load instructions for PixiAnimate stage dependency assets */
 export interface AnimateStageDescriptor extends AssetDescriptor {
     /** identifier of Animate stage for later retrieval from cache */
@@ -128,5 +141,8 @@ export interface AssetCache {
     /** instances of loaded PixiAnimate stages - use these first when possible */
     animations: {
         [key: string]: PIXI.animate.MovieClip;
+    };
+    spritesheets: {
+        [key: string]: PIXI.Spritesheet;
     };
 }

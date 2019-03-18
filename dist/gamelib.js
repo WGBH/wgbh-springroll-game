@@ -7,7 +7,7 @@ var AssetManager = /** @class */ (function () {
     function AssetManager(soundManager) {
         var _this = this;
         /** object containing references to cached instances of loaded assets */
-        this.cache = { data: {}, images: {}, animations: {} };
+        this.cache = { data: {}, images: {}, animations: {}, spritesheets: {} };
         /** IDs of cached assets that should persist between scenes */
         this.globalCache = {
             shapes: [],
@@ -102,6 +102,9 @@ var AssetManager = /** @class */ (function () {
                     case 'data':
                         loads.push(_this.loadData(asset));
                         break;
+                    case 'spritesheet':
+                        loads.push(_this.loadSpritesheet(asset));
+                        break;
                     case 'sound':
                         loads.push(_this.loadSound(asset));
                         break;
@@ -141,6 +144,7 @@ var AssetManager = /** @class */ (function () {
             if (!this.globalCache.textures.includes(id)) {
                 PIXI.utils.TextureCache[id].destroy(true);
                 delete this.cache.images[id];
+                delete this.cache.spritesheets[id];
             }
         }
         for (var id in PIXI.animate.ShapesCache) {
@@ -238,6 +242,22 @@ var AssetManager = /** @class */ (function () {
                 if (dataDescriptor.isGlobal) {
                     _this.globalCache.data.push(dataDescriptor.id);
                 }
+                dataLoader.destroy();
+                resolve();
+            });
+        });
+    };
+    /**
+     * Load Spritesheet data
+     * @param {SpritesheetDescriptor} descriptor
+     */
+    AssetManager.prototype.loadSpritesheet = function (descriptor) {
+        var _this = this;
+        var dataLoader = new PIXI.loaders.Loader();
+        return new Promise(function (resolve) {
+            dataLoader.add(descriptor.id, descriptor.path);
+            dataLoader.load(function (loader, resources) {
+                _this.cache.spritesheets[descriptor.id] = resources[descriptor.id].spritesheet;
                 dataLoader.destroy();
                 resolve();
             });
@@ -603,6 +623,7 @@ var Tween = /** @class */ (function () {
         this.target = target;
     }
     Tween.get = function (target, options) {
+        if (options === void 0) { options = {}; }
         if (options.override) {
             this.removeTweens(target);
         }
