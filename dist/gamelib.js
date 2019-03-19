@@ -952,7 +952,7 @@ var StageManager = /** @class */ (function () {
     };
     StageManager.prototype.update = function () {
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
-        if (this.transitioning || this.isPaused || !this._currentScene) {
+        if (this.isPaused) {
             return;
         }
         var elapsed = PIXI.ticker.shared.elapsedMS;
@@ -961,6 +961,9 @@ var StageManager = /** @class */ (function () {
             this.captions.update(elapsed / 1000); // captions go by seconds, not ms
         }
         GameTime.gameTick.value = elapsed;
+        if (this.transitioning || !this._currentScene) {
+            return;
+        }
         this._currentScene.update(elapsed);
     };
     return StageManager;

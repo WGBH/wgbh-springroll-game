@@ -305,7 +305,7 @@ export default class StageManager{
 
     update(){
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
-        if (this.transitioning || this.isPaused || !this._currentScene){
+        if (this.isPaused){
             return;
         }
         const elapsed = PIXI.ticker.shared.elapsedMS;
@@ -314,6 +314,9 @@ export default class StageManager{
             this.captions.update(elapsed/1000); // captions go by seconds, not ms
         }
         GameTime.gameTick.value = elapsed;
+        if (this.transitioning || !this._currentScene){
+            return;
+        }
         this._currentScene.update(elapsed);
     }
 
