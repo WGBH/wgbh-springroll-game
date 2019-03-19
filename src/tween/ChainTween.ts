@@ -51,7 +51,9 @@ export default class ChainTween {
       this._currenttween.destroy();
       this._currenttween = null;
     }
-    if(this._tweenlist.length < 1) {return;}
+    if(this._tweenlist.length < 1) {
+      this.destroy();
+      return;}
     const tweenconfig = this._tweenlist.shift();
     if(tweenconfig.type === "timer") {
       this._currenttween  = new PauseableTimer(this.nexttween,tweenconfig.time);
@@ -107,6 +109,13 @@ export default class ChainTween {
 
   destroy(isComplete = false) {
     GameTime.gameTick.unsubscribe(this.update);
+    for(let l in this._listeners) {
+      for(let ll in this._listeners[l]) {
+        this._listeners[l][ll] = null;
+      }
+      delete(this._listeners[l]);
+    }
+    this._listeners = null;
     if(this._currenttween) {
       this._currenttween.destroy(false);
     }

@@ -1531,6 +1531,13 @@ var ChainTween = /** @class */ (function () {
     ChainTween.prototype.destroy = function (isComplete) {
         if (isComplete === void 0) { isComplete = false; }
         GameTime.gameTick.unsubscribe(this.update);
+        for (var l in this._listeners) {
+            for (var ll in this._listeners[l]) {
+                this._listeners[l][ll] = null;
+            }
+            delete (this._listeners[l]);
+        }
+        this._listeners = null;
         if (this._currenttween) {
             this._currenttween.destroy(false);
         }
