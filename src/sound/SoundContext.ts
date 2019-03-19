@@ -67,9 +67,9 @@ export default class SoundContext {
      * @param {CompleteCallback} onComplete 
      */
     play(id:string,onComplete?:CompleteCallback) {
-        if (this.single) {
-            // stop anything currently playing
-            this.stopAll();
+        if (this.single && this.currentSound) {
+            // stop currently playing sound
+            this.stop(this.currentSound);
         }
         this.currentSound = id;
         return this.sounds[id].play(onComplete);

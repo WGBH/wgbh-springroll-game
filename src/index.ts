@@ -14,8 +14,6 @@ import PauseableTimer from './timer/PauseableTimer';
 import GameTime from './timer/GameTime';
 import {AssetList} from './assets/AssetManager';
 import Tween from './tween/Tween';
-import AutoTween from './tween/AutoTween';
-import ChainTween from './tween/ChainTween';
 
 
 export {
@@ -30,6 +28,4 @@ export {
     PauseableTimer,
     GameTime,
     Tween,
-    AutoTween,
-    ChainTween
 };

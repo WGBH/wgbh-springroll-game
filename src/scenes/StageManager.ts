@@ -23,10 +23,10 @@ export default class StageManager{
     public viewFrame:Property<ViewFrame>;
     public leftEdge:number; // deprecate leftEdge/rightEdge in favor of more comprehensive viewFrame
     public rightEdge:number;
+    public scaleManager:ScaleManager;
 
     private _currentScene:Scene;
 
-    private scaleManager:ScaleManager;
     private _minSize:ScreenSize;
     private _maxSize:ScreenSize;
     private _originSize:ScreenSize;
@@ -40,7 +40,6 @@ export default class StageManager{
     /** Map of Scenes by Scene IDs */
     private scenes: {[key:string]:typeof Scene} = {};
 
-    private tweens:Tween[] = [];
     private timers:PauseableTimer[] = [];
 
     constructor(game:Game, containerID:string, width:number, height:number, altWidth?:number){
@@ -51,8 +50,9 @@ export default class StageManager{
 
         this.offset = new PIXI.Point(0,0);
 
-
-        this.pixi = new PIXI.Application({ width, height, antialias:true});
+        // preserveDrawingBuffer is bad for overall performance, but necessary in order to support 
+        // some Android devices such as Galaxy Tab A and Kindle Fire
+        this.pixi = new PIXI.Application({ width, height, antialias:true, preserveDrawingBuffer:true});
         this.pixi.view.style.display = 'block';
 
 
@@ -72,7 +72,6 @@ export default class StageManager{
         this.pixi.ticker.add(this.update.bind(this));
 
         this.scaleManager = new ScaleManager(this.gotResize);
-        console.log(this.scaleManager); // just to quiet the errors... what else should be done with scalemanager instance?
     }
 
     addCaptions(captionData:CaptionData, renderer:IRender) {
@@ -178,7 +177,12 @@ export default class StageManager{
             this._currentScene.pause(pause);
         }
         if(this.pixi && this.pixi.ticker){
-            pause ? this.pixi.ticker.stop() : this.pixi.ticker.start();
+            if(pause){
+                PIXI.ticker.shared.stop();
+            }
+            else{
+                PIXI.ticker.shared.start();
+            }
         }
     }
 
@@ -282,17 +286,6 @@ export default class StageManager{
         return {x:pointin.x - this.offset.x, y:pointin.y - this.offset.y};
     }
 
-    addTween(tween:Tween){
-        this.tweens.push(tween);
-    }
-    
-    clearTweens() {
-        this.tweens.forEach(function(tween:Tween) {
-            tween.destroy(false);
-        });
-        this.tweens = [];
-    }
-
     addTimer(timer:PauseableTimer){
         this.timers.push(timer);
     }
@@ -319,16 +312,7 @@ export default class StageManager{
             return;
         }
         const elapsed = PIXI.ticker.shared.elapsedMS;
-        if(this.tweens.length){
-            for(let i = this.tweens.length - 1; i >= 0; i--){
-                if(this.tweens[i].active){
-                    this.tweens[i].update(elapsed);
-                }
-                if(!this.tweens[i].active){
-                    this.tweens.splice(i, 1);
-                }
-            }
-        }
+        Tween.update(elapsed);
         if (this.captions) {
             this.captions.update(elapsed/1000); // captions go by seconds, not ms
         }

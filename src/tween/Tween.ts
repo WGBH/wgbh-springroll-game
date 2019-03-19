@@ -1,78 +1,161 @@
 import * as eases from 'eases';
+
+const Eases:typeof eases = (eases as any).default;
+
 export default class Tween{
-    public promise: Promise<void>;
-    public active = true;
-    private currentTime = 0;
-    private totalTime:number;
+
+    static tweens:Tween[] = [];
+
+
+    public paused = false;
 
     private target:any;
-    private initialValues:any = {};
-    private targetValues:any;
-    private ease: (t:number) => number;
+    private steps:TweenStep[] = [];
+    private currentStep:number = 0;
+    private loop:number = 0;
+    private onComplete:Function;
     
 
-    private paused = false;
+    private _promise:Promise<void>;
+    private _resolve:Function;
 
-    private resolve:Function;
-    private reject:Function;
 
-    constructor(target:any, values:any, time:number, ease:Ease = 'linear'){
+    constructor(target:any){
         this.target = target;
-        this.targetValues = values;
-        for(let key in this.targetValues){
-            this.initialValues[key] = this.target[key];
-        }
-        this.totalTime = time;
-        const Eases:typeof eases = (eases as any).default;
-        this.ease = Eases[ease];
-        if(!this.ease){
-            console.error(`No ease found with name ${ease}`);
-            this.ease = Eases.linear;
-        }
-
-        this.promise = new Promise((resolve, reject)=>{
-            this.resolve = resolve;
-            this.reject = reject;
-        });
     }
 
-    pause(pause:boolean){
-        this.paused = pause;
+    static get(target:any, options:TweenOptions = {}):Tween{
+        if(options.override){
+            this.removeTweens(target);
+        }
+        const tween = new Tween(target);
+        if(options.loop){
+            if(options.loop % 1){
+                console.error('Tween options.loop must be an integer. Got: ', options.loop);
+            }
+            tween.loop = options.loop;
+        }
+        if(options.onComplete){
+            tween.onComplete = options.onComplete;
+        }
+        Tween.tweens.push(tween);
+        return tween;
     }
 
-    update(deltaTime:number){
+    static removeTweens(target:any){
+        for(let tween of Tween.tweens){
+            if(tween.target === target){
+                tween.destroy();
+            }
+        }
+    }
+
+    to = (targetValues:any, totalTime:number, ease:Ease = 'linear') => {
+        this.steps.push({targetValues, totalTime, ease:Eases[ease]});
+        return this;
+    }
+
+    wait = (totalTime:number) => {
+        this.steps.push({totalTime});
+        return this;
+    }
+
+    call = (call:Function) => {
+        this.steps.push({call});
+        return this;
+    }
+
+    get promise():Promise<void>{
+        if(!this._promise){
+            this._promise = new Promise((resolve)=>{this._resolve = resolve;});
+        }
+        return this._promise;
+    }
+
+    private doComplete = () => {
+        if(this.onComplete){
+            this.onComplete();
+        }
+        if(this._resolve){
+            this._resolve();
+        }
+        this.destroy();
+    }
+
+    static update(elapsed:number){
+        if(Tween.tweens.length){
+            for(let tween of Tween.tweens){
+                tween.update(elapsed);
+            }
+        }
+    }
+
+    update = (elapsed:number) => {
         if(this.paused){
             return;
         }
-        this.currentTime += deltaTime;
-        const time = this.currentTime / this.totalTime > 1 ? 1 : this.currentTime / this.totalTime;
-        for(let key in this.targetValues){
-            this.target[key] = this.initialValues[key] + this.ease(time) * (this.targetValues[key] - this.initialValues[key]);
+        if(this.steps.length <= this.currentStep){
+            if(this.loop){
+                if(this.loop > 0){
+                    this.loop--;
+                }
+                this.currentStep = 0;
+            }
+            else{
+                return this.doComplete();
+            }
+        }
+        const step = this.steps[this.currentStep];
+        if(step.call){
+            this.currentStep++;
+            return step.call();
+        }
+        if(!step.currentTime){
+            step.currentTime = 0;
+            if(step.targetValues){
+                step.initialValues = {};
+                for(let key in step.targetValues){
+                    step.initialValues[key] = this.target[key];
+                }
+            }
+        }
+        step.currentTime += elapsed;
+        const time = step.currentTime / step.totalTime > 1 ? 1 : step.currentTime / step.totalTime;
+        if(step.targetValues){
+            for(let key in step.targetValues){
+                this.target[key] = step.initialValues[key] + step.ease(time) * (step.targetValues[key] - step.initialValues[key]);
+            }
         }
 
         if(time >= 1){
-            this.destroy(true);
+            this.currentStep++;
         }
     }
 
-    destroy(isComplete = false){
-        if(isComplete) {
-            if (this.resolve) {
-                this.resolve();
-            }
-        } else if (this.reject) {
-//            this.reject();
-        }
-        this.promise = null;
-        this.resolve = null;
-        this.reject = null;
-        this.active = null;
+    destroy(){
+        Tween.tweens.splice(Tween.tweens.indexOf(this), 1);
         this.target = null;
-        this.targetValues = null;
-        this.totalTime = null;
-        this.ease = null;
+        this.steps = null;
+        this.currentStep = null;
+        this._promise = null;
+        this._resolve = null;
     }
 }
+
+export type TweenStep  = {
+    targetValues?:any;
+    initialValues?:any;
+    currentTime?:number;
+    totalTime?:number;
+    ease?:(t:number) => number;
+    call?:Function;
+};
+
+export type TweenOptions = {
+    override?:boolean;
+    loop?:number;
+    onComplete?:Function;
+};
 
 export type Ease = 
     'backInOut' |

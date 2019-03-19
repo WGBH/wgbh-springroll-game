@@ -1,4 +1,4 @@
-import { Property, ScaleManager, CaptionPlayer, Application } from 'springroll';
+import { ScaleManager, Application } from 'springroll';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -230,17 +230,19 @@ var AssetManager = /** @class */ (function () {
      */
     AssetManager.prototype.loadData = function (dataDescriptor) {
         var _this = this;
-        var dataLoader = new PIXI.loaders.Loader();
         return new Promise(function (resolve) {
-            dataLoader.add(dataDescriptor.id, dataDescriptor.path);
-            dataLoader.load(function (loader, resources) {
-                _this.cache.data[dataDescriptor.id] = resources[dataDescriptor.id].data;
-                if (dataDescriptor.isGlobal) {
-                    _this.globalCache.data.push(dataDescriptor.id);
+            var request = new XMLHttpRequest();
+            request.open('GET', dataDescriptor.path);
+            request.onreadystatechange = function () {
+                if ((request.status === 200) && (request.readyState === 4)) {
+                    _this.cache.data[dataDescriptor.id] = JSON.parse(request.responseText);
+                    if (dataDescriptor.isGlobal) {
+                        _this.globalCache.data.push(dataDescriptor.id);
+                    }
+                    resolve();
                 }
-                dataLoader.destroy();
-                resolve();
-            });
+            };
+            request.send();
         });
     };
     /**
@@ -267,28 +269,6 @@ var AssetManager = /** @class */ (function () {
         });
     };
     return AssetManager;
-}());
-
-/**
- *
- *  GameTime is a relay singleton that any object can hook into via its SpringRoll Property to get the next tick (gameTick) of the game clock.
- *  Its update() should be called on any live tick of the game; determining whether the tick is live (e.g. checking paused) should happen elsewhere.
- *
- *  Call in the game's main tick/update function, using the singleton syntax on the class - GameTime.Instance.update(deltaTime);
- *  Subscribe to changes using singleton syntax on the class - GameTime.Instance.gameTick.subscribe(callbackfunction)
- *
- */
-var GameTime = /** @class */ (function () {
-    function GameTime() {
-    }
-    GameTime.update = function (deltaTime) {
-        GameTime.gameTick.value = deltaTime;
-    };
-    GameTime.destroy = function () {
-        GameTime.gameTick.value = null;
-    };
-    GameTime.gameTick = new Property(0);
-    return GameTime;
 }());
 
 var TRANSITION_ID = 'wgbhSpringRollGameTransition';
@@ -364,6 +344,8 @@ var StageManager = /** @class */ (function () {
         this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
         var baseSize = { width: width, height: height };
+        this.leftEdge = 0;
+        this.rightEdge = width;
         altWidth = altWidth || width;
         var altSize = { width: altWidth, height: height };
         var scale = {
@@ -376,14 +358,6 @@ var StageManager = /** @class */ (function () {
         this.scaleManager = new ScaleManager(this.gotResize);
         console.log(this.scaleManager); // just to quiet the errors... what else should be done with scalemanager instance?
     }
-    StageManager.prototype.addCaptions = function (captionData, renderer) {
-        this.captions = new CaptionPlayer(captionData, renderer);
-    };
-    StageManager.prototype.setCaptionRenderer = function (renderer) {
-        if (this.captions) {
-            this.captions.renderer = renderer;
-        }
-    };
     StageManager.prototype.addScene = function (id, scene) {
         this.scenes[id] = scene;
     };
@@ -483,34 +457,15 @@ var StageManager = /** @class */ (function () {
             this.pixi.view.style.width = '100vw';
             this.pixi.view.style.margin = '0';
         }
-        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
+        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 
         this.pixi.stage.position.x = offset;
-        var newframe = {
-            left: offset * -1,
-            right: calcwidth - offset,
-            width: calcwidth,
-            center: calcwidth / 2 - offset,
-            top: 0,
-            bottom: this._minSize.height,
-            height: this._minSize.height,
-            offset: this.offset
-        };
-        if (!this.viewFrame) {
-            this.viewFrame = new Property(newframe);
-        }
-        else {
-            this.viewFrame.value = newframe;
-        }
-        this.width = calcwidth;
-        this.height = this._minSize.height;
-        /* legacy -- should remove */
-        this.leftEdge = newframe.left;
-        this.rightEdge = newframe.right;
         this.pixi.renderer.resize(calcwidth, this._minSize.height);
         this.offset.x = offset;
         if (this._currentScene) {
-            this._currentScene.resize(this.width, this.height, this.offset);
+            this._currentScene.resize(calcwidth, this._minSize.height, this.offset);
         }
+        this.leftEdge = offset * -1;
+        this.rightEdge = calcwidth - offset;
     };
     /**
      *
@@ -539,13 +494,6 @@ var StageManager = /** @class */ (function () {
         });
         this.timers = [];
     };
-    StageManager.prototype.showCaption = function (captionid, begin, args) {
-        begin = begin || 0;
-        this.captions.start(captionid, begin, args);
-    };
-    StageManager.prototype.stopCaption = function () {
-        this.captions.stop();
-    };
     StageManager.prototype.update = function () {
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
         if (this.transitioning || this.isPaused || !this._currentScene) {
@@ -562,26 +510,29 @@ var StageManager = /** @class */ (function () {
                 }
             }
         }
-        if (this.captions) {
-            this.captions.update(elapsed / 1000); // captions go by seconds, not ms
+        if (this.timers.length) {
+            for (var i = this.timers.length - 1; i >= 0; i--) {
+                if (this.timers[i].active) {
+                    this.timers[i].update(elapsed);
+                }
+                if (!this.timers[i].active) {
+                    this.timers.splice(i, 1);
+                }
+            }
         }
-        GameTime.gameTick.value = elapsed;
         this._currentScene.update(elapsed);
     };
     return StageManager;
 }());
 
 var SoundContext = /** @class */ (function () {
-    function SoundContext(issingle) {
+    function SoundContext() {
         /** Map of Sounds by ID */
         this.sounds = {};
         /** Map of individual Sound volumes by ID */
         this.volumes = {};
         this._globalVolume = 1;
         this._volume = 1;
-        this.single = false;
-        this.single = (issingle === true);
-        this.currentSound = null;
     }
     Object.defineProperty(SoundContext.prototype, "volume", {
         /** Context-specific volume */
@@ -632,61 +583,6 @@ var SoundContext = /** @class */ (function () {
         this.sounds[id].volume = this.volumes[id] * this._globalVolume * this._volume;
     };
     /**
-     *
-     * @param {string} id
-     * @param {CompleteCallback} onComplete
-     */
-    SoundContext.prototype.play = function (id, onComplete) {
-        if (this.single) {
-            // stop anything currently playing
-            this.stopAll();
-        }
-        this.currentSound = id;
-        return this.sounds[id].play(onComplete);
-    };
-    SoundContext.prototype.stop = function (id) {
-        if (id === this.currentSound) {
-            this.currentSound = null;
-        }
-        this.sounds[id].stop();
-    };
-    SoundContext.prototype.stopAll = function () {
-        this.currentSound = null;
-        for (var key in this.sounds) {
-            this.sounds[key].stop();
-        }
-    };
-    /**
-     *
-     * @param soundid ID of sound to get position of - if none, then find position of most recently played sound
-     */
-    SoundContext.prototype.getPosition = function (soundid) {
-        if (!soundid) {
-            soundid = this.currentSound;
-        }
-        if (!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {
-            return -1;
-        }
-        return this.sounds[soundid].instances[0].progress; // NOTE: There seems to be a Safari bug where the progress listener can become detached from a sound...may need a fallback or workaround
-    };
-    SoundContext.prototype.getPositionSeconds = function (soundid) {
-        if (!soundid) {
-            soundid = this.currentSound;
-        }
-        if (!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {
-            return -1;
-        }
-        return this.sounds[soundid].instances[0].progress * this.sounds[soundid].duration; // NOTE: There seems to be a Safari bug where the progress listener can become detached from a sound...may need a fallback or workaround
-    };
-    SoundContext.prototype.isPlaying = function () {
-        for (var key in this.sounds) {
-            if (this.sounds[key].isPlaying) {
-                return true;
-            }
-        }
-        return false;
-    };
-    /**
      * Destroy sound, remove from context and PIXI Sound cache
      * @param id ID of sound to remove
      */
@@ -706,7 +602,7 @@ var SoundManager = /** @class */ (function () {
         /** Context for managing SFX sounds */
         this.sfx = new SoundContext();
         /** Context for managing VO sounds */
-        this.vo = new SoundContext(true);
+        this.vo = new SoundContext();
         /** Context for managing music sounds */
         this.music = new SoundContext();
         /** Mapping of which SoundContexts each Sound belongs to, by ID */
@@ -763,11 +659,7 @@ var SoundManager = /** @class */ (function () {
      * @returns {PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>} instace of playing sound (or promise of to-be-played sound if not preloaded)
      */
     SoundManager.prototype.play = function (soundID, onComplete) {
-        return this.soundMeta[soundID].play(soundID, onComplete);
-        // return this.soundMeta[soundID].sounds[soundID].play(onComplete);
-    };
-    SoundManager.prototype.stop = function (soundID) {
-        this.soundMeta[soundID].stop(soundID);
+        return this.soundMeta[soundID].sounds[soundID].play(onComplete);
     };
     /** Retrieve reference to Sound instance by ID
      * @param {string} soundID ID of sound to retrieve
@@ -775,15 +667,6 @@ var SoundManager = /** @class */ (function () {
      */
     SoundManager.prototype.getSound = function (soundID) {
         return this.soundMeta[soundID].sounds[soundID];
-    };
-    /**
-     * Retrieve reference to the SoundContext by ID
-     *
-     * @param soundID ID of sound to look up
-     * @returns {SoundContext}
-     */
-    SoundManager.prototype.getContext = function (soundID) {
-        return this.soundMeta[soundID];
     };
     /**
      * Pause specified Sound by ID - if no ID provided, pause all sounds
@@ -859,9 +742,6 @@ var Game = /** @class */ (function () {
         this.app.state.ready.subscribe(function () {
             _this.stageManager.setTransition(options.transition, _this.gameReady.bind(_this));
         });
-        if (options.captions) {
-            this.stageManager.addCaptions(options.captions.config, options.captions.display);
-        }
     }
     /** called when game is ready to enter first scene - override this function and set first scene here */
     Game.prototype.gameReady = function () {
@@ -1216,12 +1096,7 @@ var Tween = /** @class */ (function () {
     };
     Tween.prototype.destroy = function (isComplete) {
         if (isComplete === void 0) { isComplete = false; }
-        if (isComplete) {
-            if (this.resolve) {
-                this.resolve();
-            }
-        }
-        else if (this.reject) ;
+        isComplete ? this.resolve() : this.reject();
         this.promise = null;
         this.resolve = null;
         this.reject = null;
@@ -1238,47 +1113,17 @@ var PauseableTimer = /** @class */ (function () {
     function PauseableTimer(callback, time, loop) {
         var _this = this;
         this.active = true;
-        this.paused = false;
+        this.paused = true;
         this.repeat = false;
-        this.update = function (deltaTime) {
-            if (_this.paused || !_this.targetTime) {
-                return;
-            }
-            _this.currentTime += deltaTime;
-            var time = _this.currentTime / _this.targetTime > 1 ? 1 : _this.currentTime / _this.targetTime;
-            if (time >= 1) {
-                if (_this.onComplete) {
-                    _this.onComplete();
-                }
-                if (_this.repeat) {
-                    var delta = _this.currentTime - _this.targetTime;
-                    _this.reset(delta);
-                }
-                else {
-                    _this.destroy(true);
-                }
-            }
-        };
         this.targetTime = time;
         this.currentTime = 0;
         this.onComplete = callback;
         this.repeat = loop;
-        GameTime.gameTick.subscribe(this.update);
+        this.promise = new Promise(function (resolve, reject) {
+            _this.resolve = resolve;
+            _this.reject = reject;
+        });
     }
-    Object.defineProperty(PauseableTimer.prototype, "promise", {
-        get: function () {
-            var _this = this;
-            if (!this._promise) {
-                this._promise = new Promise(function (resolve, reject) {
-                    _this.resolve = resolve;
-                    _this.reject = reject;
-                });
-            }
-            return this._promise;
-        },
-        enumerable: true,
-        configurable: true
-    });
     PauseableTimer.prototype.pause = function (pause) {
         this.paused = pause;
     };
@@ -1286,22 +1131,32 @@ var PauseableTimer = /** @class */ (function () {
         // deltaTime shows how far over the end we went = do we care?
         this.currentTime = deltaTime ? deltaTime : 0;
     };
-    PauseableTimer.prototype.destroy = function (isComplete) {
-        if (isComplete === void 0) { isComplete = false; }
-        this.paused = true; // make sure it doesn't try to do another update.
-        if (isComplete) {
-            if (this.resolve) {
-                this.resolve();
+    PauseableTimer.prototype.update = function (deltaTime) {
+        if (this.paused) {
+            return;
+        }
+        this.currentTime += deltaTime;
+        var time = this.currentTime / this.targetTime > 1 ? 1 : this.currentTime / this.targetTime;
+        if (time >= 1) {
+            if (this.onComplete) {
+                this.onComplete();
+            }
+            if (this.repeat) {
+                var delta = this.currentTime - this.targetTime;
+                this.reset(delta);
+            }
+            else {
+                this.destroy(true);
             }
         }
-        else if (this.reject) {
-            this.reject('destroyed');
-        }
-        this._promise = null;
+    };
+    PauseableTimer.prototype.destroy = function (isComplete) {
+        if (isComplete === void 0) { isComplete = false; }
+        isComplete ? this.resolve() : this.reject('destroyed');
+        this.promise = null;
         this.resolve = null;
         this.reject = null;
         this.targetTime = null;
-        GameTime.gameTick.unsubscribe(this.update);
     };
     return PauseableTimer;
 }());
@@ -1389,9 +1244,7 @@ var Scene = /** @class */ (function (_super) {
         return timer;
     };
     Scene.prototype.clearTimeout = function (timer) {
-        if (timer) {
-            timer.destroy(false); // destroy without triggering the callback function
-        }
+        timer.destroy(false); // destroy without triggering the callback function
     };
     Scene.prototype.setInterval = function (callback, time) {
         var timer = new PauseableTimer(callback, time, true);
@@ -1399,9 +1252,7 @@ var Scene = /** @class */ (function (_super) {
         return timer;
     };
     Scene.prototype.clearInterval = function (timer) {
-        if (timer) {
-            timer.destroy(false); // destroy without triggering the callback function
-        }
+        timer.destroy(false); // destroy without triggering the callback function
     };
     Scene.prototype.resize = function (width, height, offset) {
         // in case something special needs to happen on resize
@@ -1416,145 +1267,7 @@ var Scene = /** @class */ (function (_super) {
     return Scene;
 }(PIXI.Container));
 
-/**
- *
- * This is a Tween that automatically hooks itself to the game ticker
- *
- *
- */
-var AutoTween = /** @class */ (function (_super) {
-    __extends(AutoTween, _super);
-    function AutoTween(target, values, time, ease) {
-        if (ease === void 0) { ease = 'linear'; }
-        var _this = _super.call(this, target, values, time, ease) || this;
-        _this.update = _this.update.bind(_this);
-        _this.listen(true);
-        return _this;
-    }
-    AutoTween.prototype.destroy = function () {
-        GameTime.gameTick.unsubscribe(this.update);
-        _super.prototype.destroy.call(this);
-    };
-    AutoTween.prototype.listen = function (yesorno) {
-        if (yesorno === false) {
-            GameTime.gameTick.unsubscribe(this.update);
-        }
-        else {
-            GameTime.gameTick.unsubscribe(this.update); // just to be sure
-            GameTime.gameTick.subscribe(this.update);
-        }
-    };
-    return AutoTween;
-}(Tween));
-
-var ChainTween = /** @class */ (function () {
-    function ChainTween(target) {
-        var _this = this;
-        this.nexttween = function () {
-            if (_this._currenttween) {
-                _this._currenttween.destroy();
-                _this._currenttween = null;
-            }
-            if (_this._tweenlist.length < 1) {
-                return;
-            }
-            var tweenconfig = _this._tweenlist.shift();
-            if (tweenconfig.type === "timer") {
-                _this._currenttween = new PauseableTimer(_this.nexttween, tweenconfig.time);
-            }
-            else if (tweenconfig.type === "function") {
-                tweenconfig.function(tweenconfig.values);
-                _this.nexttween();
-            }
-            else {
-                _this._currenttween = new Tween(_this._target, tweenconfig.values, tweenconfig.time, tweenconfig.ease);
-                _this._currenttween.promise.then(_this.nexttween, function () { });
-            }
-        };
-        this.update = function (time) {
-            if (_this._currenttween) {
-                _this._currenttween.update(time);
-                for (var l in _this._listeners) {
-                    for (var ll in _this._listeners[l]) {
-                        _this._listeners[l][ll]();
-                    }
-                }
-            }
-        };
-        this._target = target;
-        this._tweenlist = [];
-        this._listeners = {};
-        this.listen(true);
-    }
-    ChainTween.get = function (target) {
-        return new ChainTween(target);
-    };
-    ChainTween.prototype.to = function (values, time, ease) {
-        if (time === void 0) { time = 0; }
-        if (ease === void 0) { ease = 'linear'; }
-        var tween = { values: values, time: time, ease: ease, type: 'tween' };
-        this._tweenlist.push(tween);
-        if (!this._currenttween) {
-            this.nexttween();
-        }
-        return this;
-    };
-    ChainTween.prototype.call = function (callback, values) {
-        //this._tweenlist.push(callback);
-        // not empty
-        var tween = { function: callback, values: values, type: 'function' };
-        this._tweenlist.push(tween);
-        if (!this._currenttween) {
-            this.nexttween();
-        }
-        return this;
-    };
-    ChainTween.prototype.wait = function (time) {
-        // not empty
-        var tween = { values: null, time: time, ease: null, type: 'timer' };
-        this._tweenlist.push(tween);
-        if (!this._currenttween) {
-            this.nexttween();
-        }
-        return this;
-    };
-    ChainTween.prototype.on = function (listentype, callback) {
-        if (listentype !== 'change') {
-            return this;
-        }
-        if (!this._listeners[listentype]) {
-            this._listeners[listentype] = [];
-        }
-        this._listeners[listentype].push(callback);
-        return this;
-    };
-    ChainTween.prototype.destroy = function (isComplete) {
-        if (isComplete === void 0) { isComplete = false; }
-        GameTime.gameTick.unsubscribe(this.update);
-        for (var l in this._listeners) {
-            for (var ll in this._listeners[l]) {
-                this._listeners[l][ll] = null;
-            }
-            delete (this._listeners[l]);
-        }
-        this._listeners = null;
-        if (this._currenttween) {
-            this._currenttween.destroy(false);
-        }
-    };
-    ChainTween.prototype.listen = function (yesorno) {
-        if (yesorno === false) {
-            GameTime.gameTick.unsubscribe(this.update);
-        }
-        else {
-            GameTime.gameTick.unsubscribe(this.update); // just to be sure
-            GameTime.gameTick.subscribe(this.update);
-        }
-    };
-    return ChainTween;
-}());
-
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween, AutoTween, ChainTween };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, Tween };
 //# sourceMappingURL=gamelib.js.map
