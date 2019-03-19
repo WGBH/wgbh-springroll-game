@@ -24,7 +24,7 @@ export default class Tween{
         this.target = target;
     }
 
-    static get(target:any, options?:TweenOptions):Tween{
+    static get(target:any, options:TweenOptions = {}):Tween{
         if(options.override){
             this.removeTweens(target);
         }

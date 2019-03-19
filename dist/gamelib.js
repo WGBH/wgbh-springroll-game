@@ -623,6 +623,7 @@ var Tween = /** @class */ (function () {
         this.target = target;
     }
     Tween.get = function (target, options) {
+        if (options === void 0) { options = {}; }
         if (options.override) {
             this.removeTweens(target);
         }
