@@ -879,15 +879,15 @@ var StageManager = /** @class */ (function () {
             calcwidth = this._maxSize.width;
             // these styles could - probably should - be replaced by media queries in CSS
             this.pixi.view.style.height = height + "px";
-            this.pixi.view.style.width = Math.round(this._maxSize.ratio * height) + "px";
+            this.pixi.view.style.width = Math.floor(this._maxSize.ratio * height) + "px";
             this.pixi.view.style.margin = '0 auto';
         }
         else if (aspect < this._minSize.ratio) {
             this.scale = 1;
-            var viewHeight = width / this._minSize.ratio;
-            this.pixi.view.style.height = Math.round(viewHeight) + "px";
+            var viewHeight = Math.floor(width / this._minSize.ratio);
+            this.pixi.view.style.height = viewHeight + "px";
             this.pixi.view.style.width = width + "px";
-            this.pixi.view.style.margin = Math.round((height - viewHeight) / 2) + "px 0";
+            this.pixi.view.style.margin = Math.floor((height - viewHeight) / 2) + "px 0";
         }
         else {
             // between min and max ratio (wider than min)
@@ -1044,7 +1044,9 @@ var SoundContext = /** @class */ (function () {
         if (id === this.currentSound) {
             this.currentSound = null;
         }
-        this.sounds[id].stop();
+        if (this.sounds[id]) {
+            this.sounds[id].stop();
+        }
     };
     SoundContext.prototype.stopAll = function () {
         this.currentSound = null;
@@ -1090,6 +1092,9 @@ var SoundContext = /** @class */ (function () {
         PIXI.sound.remove(id);
         delete this.sounds[id];
         delete this.volumes[id];
+        if (id === this.currentSound) {
+            this.currentSound = null;
+        }
     };
     return SoundContext;
 }());

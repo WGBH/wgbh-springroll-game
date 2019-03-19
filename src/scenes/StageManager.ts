@@ -222,14 +222,14 @@ export default class StageManager{
             
             // these styles could - probably should - be replaced by media queries in CSS
             this.pixi.view.style.height = `${height}px`;
-            this.pixi.view.style.width = `${Math.round(this._maxSize.ratio * height)}px`;
+            this.pixi.view.style.width = `${Math.floor(this._maxSize.ratio * height)}px`;
             this.pixi.view.style.margin = '0 auto';
         } else if (aspect < this._minSize.ratio) {
             this.scale = 1;
-            let viewHeight = width / this._minSize.ratio;
-            this.pixi.view.style.height = `${Math.round(viewHeight)}px`;
+            let viewHeight = Math.floor(width / this._minSize.ratio);
+            this.pixi.view.style.height = `${viewHeight}px`;
             this.pixi.view.style.width = `${width}px`;
-            this.pixi.view.style.margin = `${Math.round((height - viewHeight)/2)}px 0`;
+            this.pixi.view.style.margin = `${Math.floor((height - viewHeight)/2)}px 0`;
         } else {
             // between min and max ratio (wider than min)
             this.scale = this._minSize.ratio / aspect;
