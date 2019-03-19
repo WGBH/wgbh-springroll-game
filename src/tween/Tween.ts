@@ -15,6 +15,7 @@ export default class Tween{
     private loop:number = 0;
     private onComplete:Function;
     
+    private _listeners:any;
 
     private _promise:Promise<void>;
     private _resolve:Function;
@@ -64,6 +65,15 @@ export default class Tween{
         this.steps.push({call});
         return this;
     }
+
+    on = (listentype:string, callback:Function) => {
+    if(listentype !== 'change') {return this;}
+        if(!this._listeners[listentype]) {
+            this._listeners[listentype] = [];
+        }
+        this._listeners[listentype].push(callback);
+        return this;
+      }
 
     get promise():Promise<void>{
         if(!this._promise){
@@ -126,10 +136,15 @@ export default class Tween{
                 this.target[key] = step.initialValues[key] + step.ease(time) * (step.targetValues[key] - step.initialValues[key]);
             }
         }
+        for(let l of this._listeners.change) {
+            this._listeners.change[l]();
+        }
 
         if(time >= 1){
             this.currentStep++;
         }
+
+
     }
 
     destroy(){
@@ -139,6 +154,13 @@ export default class Tween{
         this.currentStep = null;
         this._promise = null;
         this._resolve = null;
+        for(let l in this._listeners) {
+            for(let ll in this._listeners[l]) {
+                this._listeners[l][ll] = null;
+            }
+        delete(this._listeners[l]);
+        }
+        this._listeners = null;
     }
 }
 
