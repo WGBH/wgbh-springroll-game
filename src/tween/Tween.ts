@@ -43,16 +43,16 @@ export default class Tween{
     }
 
     static removeTweens(target:any){
-        for(let tween of Tween.tweens){
-            if(tween.target === target){
-                tween.destroy();
+        for(let i = Tween.tweens.length - 1; i >= 0; i--){
+            if(Tween.tweens[i].target === target){
+                Tween.tweens[i].destroy();
             }
         }
     }
 
     static removeAllTweens(){
-        for(let tween of Tween.tweens){
-            tween.destroy();
+        for(let i = Tween.tweens.length - 1; i >= 0; i--){
+            Tween.tweens[i].destroy();
         }
     }
 
