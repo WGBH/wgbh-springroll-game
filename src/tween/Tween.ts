@@ -50,6 +50,13 @@ export default class Tween{
         }
     }
 
+    static removeAllTweens(){
+        for(let tween of Tween.tweens){
+            tween.destroy();
+        }
+        Tween.tweens.length = 0;
+    }
+
     to = (targetValues:any, totalTime:number, ease:Ease = 'linear') => {
         this.steps.push({targetValues, totalTime, ease:Eases[ease]});
         return this;
