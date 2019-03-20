@@ -54,7 +54,6 @@ export default class Tween{
         for(let tween of Tween.tweens){
             tween.destroy();
         }
-        Tween.tweens.length = 0;
     }
 
     to = (targetValues:any, totalTime:number, ease:Ease = 'linear') => {
