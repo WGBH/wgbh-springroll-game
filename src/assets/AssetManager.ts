@@ -123,8 +123,16 @@ export default class AssetManager {
 
     /** Save current state of PIXI Global caches, to prevent unloading global assets */
     private saveCacheState = () => {
-        Object.keys(PIXI.animate.ShapesCache).forEach((key) => this.globalCache.shapes.push(key));
-        Object.keys(PIXI.utils.TextureCache).forEach((key) => this.globalCache.textures.push(key));
+        Object.keys(PIXI.animate.ShapesCache).forEach((key) => {
+            if(!this.globalCache.shapes.includes(key)){
+                this.globalCache.shapes.push(key)
+            }
+        });
+        Object.keys(PIXI.utils.TextureCache).forEach((key) => {
+            if(!this.globalCache.textures.includes(key)){
+                this.globalCache.textures.push(key)
+            }
+        });
     }
 
     /**
