@@ -4,7 +4,6 @@ import { Game } from '..';
 import Tween from '../tween/Tween';
 import GameTime from '../timer/GameTime';
 import PauseableTimer from '../timer/PauseableTimer';
-import { PointLike } from 'pixi.js';
 import { ScaleManager, CaptionPlayer, CaptionData, IRender, Property } from 'springroll';
 
 
@@ -18,7 +17,7 @@ export default class StageManager{
     public width: number;
     public height: number;
     public scale:number;
-    public offset:PointLike; // offset for the x,y origin when resizing
+    public offset:PIXI.PointLike; // offset for the x,y origin when resizing
     public transition:PIXI.animate.MovieClip;
     public viewFrame:Property<ViewFrame>;
     public leftEdge:number; // deprecate leftEdge/rightEdge in favor of more comprehensive viewFrame
@@ -280,7 +279,7 @@ export default class StageManager{
      * 
      * @param pointin 
      */
-    globalToScene(pointin:PointLike) {
+    globalToScene(pointin:PIXI.PointLike) {
         return {x:pointin.x - this.offset.x, y:pointin.y - this.offset.y};
     }
 
@@ -306,7 +305,7 @@ export default class StageManager{
 
     update(){
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
-        if (this.transitioning || this.isPaused || !this._currentScene){
+        if (this.isPaused){
             return;
         }
         const elapsed = PIXI.ticker.shared.elapsedMS;
@@ -315,6 +314,9 @@ export default class StageManager{
             this.captions.update(elapsed/1000); // captions go by seconds, not ms
         }
         GameTime.gameTick.value = elapsed;
+        if (this.transitioning || !this._currentScene){
+            return;
+        }
         this._currentScene.update(elapsed);
     }
 
@@ -346,5 +348,5 @@ export type ViewFrame = {
     center:number,
     width:number,
     height:number,
-    offset:PointLike
+    offset:PIXI.PointLike
 };

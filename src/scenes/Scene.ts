@@ -3,7 +3,6 @@ import { AssetList, AssetManager, SoundManager, StageManager } from '..';
 import { AssetCache } from '../assets/AssetManager';
 import Tween, { Ease } from '../tween/Tween';
 import PauseableTimer from '../timer/PauseableTimer';
-import { PointLike } from 'pixi.js';
 
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
@@ -130,7 +129,7 @@ export default class Scene extends PIXI.Container {
         }
     }
 
-    resize(width:number, height:number, offset:PointLike) {
+    resize(width:number, height:number, offset:PIXI.PointLike) {
         // in case something special needs to happen on resize
     }
 

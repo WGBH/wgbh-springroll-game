@@ -21,8 +21,16 @@ var AssetManager = /** @class */ (function () {
         this.sceneActive = false;
         /** Save current state of PIXI Global caches, to prevent unloading global assets */
         this.saveCacheState = function () {
-            Object.keys(PIXI.animate.ShapesCache).forEach(function (key) { return _this.globalCache.shapes.push(key); });
-            Object.keys(PIXI.utils.TextureCache).forEach(function (key) { return _this.globalCache.textures.push(key); });
+            Object.keys(PIXI.animate.ShapesCache).forEach(function (key) {
+                if (!_this.globalCache.shapes.includes(key)) {
+                    _this.globalCache.shapes.push(key);
+                }
+            });
+            Object.keys(PIXI.utils.TextureCache).forEach(function (key) {
+                if (!_this.globalCache.textures.includes(key)) {
+                    _this.globalCache.textures.push(key);
+                }
+            });
         };
         this.soundManager = soundManager;
     }
@@ -953,7 +961,7 @@ var StageManager = /** @class */ (function () {
     };
     StageManager.prototype.update = function () {
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
-        if (this.transitioning || this.isPaused || !this._currentScene) {
+        if (this.isPaused) {
             return;
         }
         var elapsed = PIXI.ticker.shared.elapsedMS;
@@ -962,6 +970,9 @@ var StageManager = /** @class */ (function () {
             this.captions.update(elapsed / 1000); // captions go by seconds, not ms
         }
         GameTime.gameTick.value = elapsed;
+        if (this.transitioning || !this._currentScene) {
+            return;
+        }
         this._currentScene.update(elapsed);
     };
     return StageManager;
@@ -1236,6 +1247,21 @@ var Game = /** @class */ (function () {
         var _this = this;
         /** object for storing global data - accessible from all Scenes */
         this.dataStore = {};
+        this.preloadGlobal = function () {
+            var assets = _this.preload();
+            if (assets && assets.length) {
+                for (var _i = 0, assets_1 = assets; _i < assets_1.length; _i++) {
+                    var asset = assets_1[_i];
+                    //Game-level assets are always global
+                    asset.isGlobal = true;
+                }
+                _this.assetManager.unloadAssets(); //Prep for fresh loading
+                _this.assetManager.loadAssets(assets, _this.gameReady.bind(_this));
+            }
+            else {
+                _this.gameReady();
+            }
+        };
         this.sound = new SoundManager();
         this.assetManager = new AssetManager(this.sound);
         this.cache = this.assetManager.cache;
@@ -1258,12 +1284,16 @@ var Game = /** @class */ (function () {
             _this.stageManager.pause = pause;
         });
         this.app.state.ready.subscribe(function () {
-            _this.stageManager.setTransition(options.transition, _this.gameReady.bind(_this));
+            _this.stageManager.setTransition(options.transition, _this.preloadGlobal);
         });
         if (options.captions) {
             this.stageManager.addCaptions(options.captions.config, options.captions.display);
         }
     }
+    /** overrride and return list of global assets */
+    Game.prototype.preload = function () {
+        return null;
+    };
     /** called when game is ready to enter first scene - override this function and set first scene here */
     Game.prototype.gameReady = function () {
         //override and set first scene in this function
