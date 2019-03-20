@@ -11,6 +11,7 @@ export default class Tween {
     constructor(target: any);
     static get(target: any, options?: TweenOptions): Tween;
     static removeTweens(target: any): void;
+    static removeAllTweens(): void;
     to: (targetValues: any, totalTime: number, ease?: Ease) => this;
     wait: (totalTime: number) => this;
     call: (call: Function) => this;

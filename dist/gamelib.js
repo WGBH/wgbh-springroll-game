@@ -641,11 +641,15 @@ var Tween = /** @class */ (function () {
         return tween;
     };
     Tween.removeTweens = function (target) {
-        for (var _i = 0, _a = Tween.tweens; _i < _a.length; _i++) {
-            var tween = _a[_i];
-            if (tween.target === target) {
-                tween.destroy();
+        for (var i = Tween.tweens.length - 1; i >= 0; i--) {
+            if (Tween.tweens[i].target === target) {
+                Tween.tweens[i].destroy();
             }
+        }
+    };
+    Tween.removeAllTweens = function () {
+        for (var i = Tween.tweens.length - 1; i >= 0; i--) {
+            Tween.tweens[i].destroy();
         }
     };
     Object.defineProperty(Tween.prototype, "promise", {
