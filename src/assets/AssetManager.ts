@@ -125,12 +125,12 @@ export default class AssetManager {
     private saveCacheState = () => {
         Object.keys(PIXI.animate.ShapesCache).forEach((key) => {
             if(!this.globalCache.shapes.includes(key)){
-                this.globalCache.shapes.push(key)
+                this.globalCache.shapes.push(key);
             }
         });
         Object.keys(PIXI.utils.TextureCache).forEach((key) => {
             if(!this.globalCache.textures.includes(key)){
-                this.globalCache.textures.push(key)
+                this.globalCache.textures.push(key);
             }
         });
     }

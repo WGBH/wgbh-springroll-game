@@ -21,8 +21,16 @@ var AssetManager = /** @class */ (function () {
         this.sceneActive = false;
         /** Save current state of PIXI Global caches, to prevent unloading global assets */
         this.saveCacheState = function () {
-            Object.keys(PIXI.animate.ShapesCache).forEach(function (key) { return _this.globalCache.shapes.push(key); });
-            Object.keys(PIXI.utils.TextureCache).forEach(function (key) { return _this.globalCache.textures.push(key); });
+            Object.keys(PIXI.animate.ShapesCache).forEach(function (key) {
+                if (!_this.globalCache.shapes.includes(key)) {
+                    _this.globalCache.shapes.push(key);
+                }
+            });
+            Object.keys(PIXI.utils.TextureCache).forEach(function (key) {
+                if (!_this.globalCache.textures.includes(key)) {
+                    _this.globalCache.textures.push(key);
+                }
+            });
         };
         this.soundManager = soundManager;
     }
