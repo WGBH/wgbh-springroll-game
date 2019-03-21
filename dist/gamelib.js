@@ -21,8 +21,16 @@ var AssetManager = /** @class */ (function () {
         this.sceneActive = false;
         /** Save current state of PIXI Global caches, to prevent unloading global assets */
         this.saveCacheState = function () {
-            Object.keys(PIXI.animate.ShapesCache).forEach(function (key) { return _this.globalCache.shapes.push(key); });
-            Object.keys(PIXI.utils.TextureCache).forEach(function (key) { return _this.globalCache.textures.push(key); });
+            Object.keys(PIXI.animate.ShapesCache).forEach(function (key) {
+                if (!_this.globalCache.shapes.includes(key)) {
+                    _this.globalCache.shapes.push(key);
+                }
+            });
+            Object.keys(PIXI.utils.TextureCache).forEach(function (key) {
+                if (!_this.globalCache.textures.includes(key)) {
+                    _this.globalCache.textures.push(key);
+                }
+            });
         };
         this.soundManager = soundManager;
     }
@@ -659,11 +667,15 @@ var Tween = /** @class */ (function () {
         return tween;
     };
     Tween.removeTweens = function (target) {
-        for (var _i = 0, _a = Tween.tweens; _i < _a.length; _i++) {
-            var tween = _a[_i];
-            if (tween.target === target) {
-                tween.destroy();
+        for (var i = Tween.tweens.length - 1; i >= 0; i--) {
+            if (Tween.tweens[i].target === target) {
+                Tween.tweens[i].destroy();
             }
+        }
+    };
+    Tween.removeAllTweens = function () {
+        for (var i = Tween.tweens.length - 1; i >= 0; i--) {
+            Tween.tweens[i].destroy();
         }
     };
     Object.defineProperty(Tween.prototype, "promise", {
@@ -905,22 +917,23 @@ var StageManager = /** @class */ (function () {
             this.scale = this._minSize.ratio / this._maxSize.ratio;
             calcwidth = this._maxSize.width;
             // these styles could - probably should - be replaced by media queries in CSS
-            this.pixi.view.style.height = '100vh';
-            this.pixi.view.style.width = parseInt((this._maxSize.ratio * 100).toString()) + 'vh';
+            this.pixi.view.style.height = height + "px";
+            this.pixi.view.style.width = Math.floor(this._maxSize.ratio * height) + "px";
             this.pixi.view.style.margin = '0 auto';
         }
         else if (aspect < this._minSize.ratio) {
             this.scale = 1;
-            this.pixi.view.style.height = parseInt((100 / this._minSize.ratio).toString()) + 'vw';
-            this.pixi.view.style.width = '100vw';
-            this.pixi.view.style.margin = 'calc((100vh - ' + (100 / this._minSize.ratio).toString() + 'vw)/2) 0';
+            var viewHeight = Math.floor(width / this._minSize.ratio);
+            this.pixi.view.style.height = viewHeight + "px";
+            this.pixi.view.style.width = width + "px";
+            this.pixi.view.style.margin = Math.floor((height - viewHeight) / 2) + "px 0";
         }
         else {
             // between min and max ratio (wider than min)
             this.scale = this._minSize.ratio / aspect;
             calcwidth = this._minSize.width / this.scale; // how much wider is this?
-            this.pixi.view.style.height = '100vh';
-            this.pixi.view.style.width = '100vw';
+            this.pixi.view.style.height = height + "px";
+            this.pixi.view.style.width = width + "px";
             this.pixi.view.style.margin = '0';
         }
         offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
@@ -979,7 +992,7 @@ var StageManager = /** @class */ (function () {
     };
     StageManager.prototype.update = function () {
         // if the game is paused, or there isn't a scene, we can skip rendering/updates  
-        if (this.transitioning || this.isPaused || !this._currentScene) {
+        if (this.isPaused) {
             return;
         }
         var elapsed = PIXI.ticker.shared.elapsedMS;
@@ -988,6 +1001,9 @@ var StageManager = /** @class */ (function () {
             this.captions.update(elapsed / 1000); // captions go by seconds, not ms
         }
         GameTime.gameTick.value = elapsed;
+        if (this.transitioning || !this._currentScene) {
+            return;
+        }
         this._currentScene.update(elapsed);
     };
     return StageManager;
@@ -1070,7 +1086,9 @@ var SoundContext = /** @class */ (function () {
         if (id === this.currentSound) {
             this.currentSound = null;
         }
-        this.sounds[id].stop();
+        if (this.sounds[id]) {
+            this.sounds[id].stop();
+        }
     };
     SoundContext.prototype.stopAll = function () {
         this.currentSound = null;
@@ -1116,6 +1134,9 @@ var SoundContext = /** @class */ (function () {
         PIXI.sound.remove(id);
         delete this.sounds[id];
         delete this.volumes[id];
+        if (id === this.currentSound) {
+            this.currentSound = null;
+        }
     };
     return SoundContext;
 }());
@@ -1257,6 +1278,21 @@ var Game = /** @class */ (function () {
         var _this = this;
         /** object for storing global data - accessible from all Scenes */
         this.dataStore = {};
+        this.preloadGlobal = function () {
+            var assets = _this.preload();
+            if (assets && assets.length) {
+                for (var _i = 0, assets_1 = assets; _i < assets_1.length; _i++) {
+                    var asset = assets_1[_i];
+                    //Game-level assets are always global
+                    asset.isGlobal = true;
+                }
+                _this.assetManager.unloadAssets(); //Prep for fresh loading
+                _this.assetManager.loadAssets(assets, _this.gameReady.bind(_this));
+            }
+            else {
+                _this.gameReady();
+            }
+        };
         this.sound = new SoundManager();
         this.assetManager = new AssetManager(this.sound);
         this.cache = this.assetManager.cache;
@@ -1279,12 +1315,16 @@ var Game = /** @class */ (function () {
             _this.stageManager.pause = pause;
         });
         this.app.state.ready.subscribe(function () {
-            _this.stageManager.setTransition(options.transition, _this.gameReady.bind(_this));
+            _this.stageManager.setTransition(options.transition, _this.preloadGlobal);
         });
         if (options.captions) {
             this.stageManager.addCaptions(options.captions.config, options.captions.display);
         }
     }
+    /** overrride and return list of global assets */
+    Game.prototype.preload = function () {
+        return null;
+    };
     /** called when game is ready to enter first scene - override this function and set first scene here */
     Game.prototype.gameReady = function () {
         //override and set first scene in this function

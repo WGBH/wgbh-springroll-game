@@ -79,7 +79,9 @@ export default class SoundContext {
         if (id === this.currentSound) {
             this.currentSound = null;
         }
-        this.sounds[id].stop();
+        if(this.sounds[id]){
+            this.sounds[id].stop();
+        }
     }
 
     stopAll() {
@@ -128,6 +130,9 @@ export default class SoundContext {
         PIXI.sound.remove(id);
         delete this.sounds[id];
         delete this.volumes[id];
+        if(id === this.currentSound){
+            this.currentSound = null;
+        }
     }
 
 }

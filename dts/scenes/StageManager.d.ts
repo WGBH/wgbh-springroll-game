@@ -1,9 +1,9 @@
+/// <reference types="pixi.js" />
 /// <reference types="pixi-animate" />
 import Scene from './Scene';
 import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
 import PauseableTimer from '../timer/PauseableTimer';
-import { PointLike } from 'pixi.js';
 import { ScaleManager, CaptionData, IRender, Property } from 'springroll';
 /**
  * Manages rendering and transitioning between Scenes
@@ -13,7 +13,7 @@ export default class StageManager {
     width: number;
     height: number;
     scale: number;
-    offset: PointLike;
+    offset: PIXI.PointLike;
     transition: PIXI.animate.MovieClip;
     viewFrame: Property<ViewFrame>;
     leftEdge: number;
@@ -54,7 +54,7 @@ export default class StageManager {
      *
      * @param pointin
      */
-    globalToScene(pointin: PointLike): {
+    globalToScene(pointin: PIXI.PointLike): {
         x: number;
         y: number;
     };
@@ -86,5 +86,5 @@ export declare type ViewFrame = {
     center: number;
     width: number;
     height: number;
-    offset: PointLike;
+    offset: PIXI.PointLike;
 };
