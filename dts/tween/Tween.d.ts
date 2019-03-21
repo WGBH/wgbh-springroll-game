@@ -6,6 +6,7 @@ export default class Tween {
     private currentStep;
     private loop;
     private onComplete;
+    private _listeners;
     private _promise;
     private _resolve;
     constructor(target: any);
@@ -14,6 +15,7 @@ export default class Tween {
     to: (targetValues: any, totalTime: number, ease?: Ease) => this;
     wait: (totalTime: number) => this;
     call: (call: Function) => this;
+    on: (listentype: string, callback: Function) => this;
     readonly promise: Promise<void>;
     private doComplete;
     static update(elapsed: number): void;

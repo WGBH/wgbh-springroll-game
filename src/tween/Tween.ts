@@ -67,7 +67,10 @@ export default class Tween{
     }
 
     on = (listentype:string, callback:Function) => {
-    if(listentype !== 'change') {return this;}
+        if(listentype !== 'change') {return this;}
+        if(!this._listeners) {
+            this._listeners = {};
+        }
         if(!this._listeners[listentype]) {
             this._listeners[listentype] = [];
         }
@@ -136,8 +139,10 @@ export default class Tween{
                 this.target[key] = step.initialValues[key] + step.ease(time) * (step.targetValues[key] - step.initialValues[key]);
             }
         }
-        for(let l of this._listeners.change) {
-            this._listeners.change[l]();
+        if(this._listeners && this._listeners.change) {
+            for(let l in this._listeners.change) {
+                this._listeners.change[l]();
+            }
         }
 
         if(time >= 1){
