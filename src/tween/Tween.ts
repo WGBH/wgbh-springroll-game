@@ -106,6 +106,9 @@ export default class Tween{
                     this.loop--;
                 }
                 this.currentStep = 0;
+                for(let step of this.steps){
+                    step.currentTime = 0;
+                }
             }
             else{
                 return this.doComplete();
