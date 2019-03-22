@@ -598,6 +598,10 @@ var Tween = /** @class */ (function () {
                         _this.loop--;
                     }
                     _this.currentStep = 0;
+                    for (var _i = 0, _a = _this.steps; _i < _a.length; _i++) {
+                        var step_1 = _a[_i];
+                        step_1.currentTime = 0;
+                    }
                 }
                 else {
                     return _this.doComplete();
