@@ -1052,12 +1052,20 @@ var SoundContext = /** @class */ (function () {
      * @param {CompleteCallback} onComplete
      */
     SoundContext.prototype.play = function (id, onComplete) {
+        var _this = this;
         if (this.single && this.currentSound) {
             // stop currently playing sound
             this.stop(this.currentSound);
         }
         this.currentSound = id;
-        return this.sounds[id].play(onComplete);
+        return this.sounds[id].play(function (sound) {
+            if (sound === _this.sounds[_this.currentSound]) {
+                _this.currentSound = null;
+            }
+            if (onComplete) {
+                onComplete(sound);
+            }
+        });
     };
     SoundContext.prototype.stop = function (id) {
         if (id === this.currentSound) {

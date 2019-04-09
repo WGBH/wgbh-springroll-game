@@ -72,7 +72,14 @@ export default class SoundContext {
             this.stop(this.currentSound);
         }
         this.currentSound = id;
-        return this.sounds[id].play(onComplete);
+        return this.sounds[id].play((sound)=>{
+            if(sound === this.sounds[this.currentSound]){
+                this.currentSound = null;
+            }
+            if(onComplete){
+                onComplete(sound);
+            }
+        });
     }
 
     stop(id:string) {
