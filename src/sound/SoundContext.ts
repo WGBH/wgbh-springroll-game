@@ -12,6 +12,7 @@ export default class SoundContext {
 
     public currentSound:string;
     public single:boolean = false;
+    private singleCallback:CompleteCallback;
 
     constructor(issingle?:boolean) {
         this.single = (issingle === true);
@@ -66,18 +67,31 @@ export default class SoundContext {
      * @param {string} id 
      * @param {CompleteCallback} onComplete 
      */
-    play(id:string,onComplete?:CompleteCallback) {
-        if (this.single && this.currentSound) {
-            // stop currently playing sound
-            this.stop(this.currentSound);
+    play(id:string, onComplete?:CompleteCallback) {
+        if (this.single){
+            if(this.currentSound) {
+                // stop currently playing sound
+                this.stop(this.currentSound);
+            }
+            this.singleCallback = onComplete;
         }
         this.currentSound = id;
-        return this.sounds[id].play(onComplete);
+        return this.sounds[id].play(this.single ? this.singlePlayComplete : onComplete);
+    }
+
+    private singlePlayComplete = (sound:PIXI.sound.Sound)=>{
+        this.currentSound = null;
+        if(this.singleCallback){
+            const call = this.singleCallback;
+            this.singleCallback = null;
+            call(sound);
+        }
     }
 
     stop(id:string) {
         if (id === this.currentSound) {
             this.currentSound = null;
+            this.singleCallback = null;
         }
         if(this.sounds[id]){
             this.sounds[id].stop();

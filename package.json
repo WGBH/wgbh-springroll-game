@@ -1,6 +1,6 @@
 {
   "name": "wgbh-springroll-game",
-  "version": "1.0.2",
+  "version": "1.1.2",
   "description": "Framework for SpringRoll 2 games",
   "main": "dist/gamelib.js",
   "typings": "dts/index.d.ts",

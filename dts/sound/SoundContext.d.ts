@@ -10,6 +10,7 @@ export default class SoundContext {
     private _volume;
     currentSound: string;
     single: boolean;
+    private singleCallback;
     constructor(issingle?: boolean);
     /** Context-specific volume */
     volume: number;
@@ -34,6 +35,7 @@ export default class SoundContext {
      * @param {CompleteCallback} onComplete
      */
     play(id: string, onComplete?: CompleteCallback): PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>;
+    private singlePlayComplete;
     stop(id: string): void;
     stopAll(): void;
     /**

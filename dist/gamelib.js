@@ -1015,6 +1015,7 @@ var StageManager = /** @class */ (function () {
 
 var SoundContext = /** @class */ (function () {
     function SoundContext(issingle) {
+        var _this = this;
         /** Map of Sounds by ID */
         this.sounds = {};
         /** Map of individual Sound volumes by ID */
@@ -1022,6 +1023,14 @@ var SoundContext = /** @class */ (function () {
         this._globalVolume = 1;
         this._volume = 1;
         this.single = false;
+        this.singlePlayComplete = function (sound) {
+            _this.currentSound = null;
+            if (_this.singleCallback) {
+                var call = _this.singleCallback;
+                _this.singleCallback = null;
+                call(sound);
+            }
+        };
         this.single = (issingle === true);
         this.currentSound = null;
     }
@@ -1079,16 +1088,20 @@ var SoundContext = /** @class */ (function () {
      * @param {CompleteCallback} onComplete
      */
     SoundContext.prototype.play = function (id, onComplete) {
-        if (this.single && this.currentSound) {
-            // stop currently playing sound
-            this.stop(this.currentSound);
+        if (this.single) {
+            if (this.currentSound) {
+                // stop currently playing sound
+                this.stop(this.currentSound);
+            }
+            this.singleCallback = onComplete;
         }
         this.currentSound = id;
-        return this.sounds[id].play(onComplete);
+        return this.sounds[id].play(this.single ? this.singlePlayComplete : onComplete);
     };
     SoundContext.prototype.stop = function (id) {
         if (id === this.currentSound) {
             this.currentSound = null;
+            this.singleCallback = null;
         }
         if (this.sounds[id]) {
             this.sounds[id].stop();
