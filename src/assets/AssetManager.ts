@@ -284,22 +284,21 @@ export default class AssetManager {
      * @param {ManifestDescriptor} manifestDescriptor 
      */
     private loadManifest(manifestDescriptor:ManifestDescriptor):Promise<AssetDescriptor[]>{
+
+        const dataLoader = new PIXI.loaders.Loader();
         return new Promise((resolve)=>{
-            const request = new XMLHttpRequest();
-            request.open('GET', manifestDescriptor.path);
-            request.onreadystatechange = ()=>{
-                if ((request.status === 200) && (request.readyState === 4))
-                {
-                    let data = JSON.parse(request.responseText);
-                    if(manifestDescriptor.isGlobal){
-                        for(let entry of data){
-                            entry.isGlobal = true;
-                        }
+            dataLoader.add(manifestDescriptor.path);
+            dataLoader.load((loader:PIXI.loaders.Loader, resources:PIXI.loaders.ResourceDictionary)=>{
+                const data:AssetDescriptor[] = resources[manifestDescriptor.path].data;
+                dataLoader.destroy();
+                if(manifestDescriptor.isGlobal){
+                    for(let entry of data){
+                        entry.isGlobal = true;
                     }
-                    resolve(data);
                 }
-            };
-            request.send();
+                resolve(data);
+                
+            });
         });
     }
 }
