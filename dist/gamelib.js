@@ -276,22 +276,20 @@ var AssetManager = /** @class */ (function () {
      * @param {ManifestDescriptor} manifestDescriptor
      */
     AssetManager.prototype.loadManifest = function (manifestDescriptor) {
+        var dataLoader = new PIXI.loaders.Loader();
         return new Promise(function (resolve) {
-            var request = new XMLHttpRequest();
-            request.open('GET', manifestDescriptor.path);
-            request.onreadystatechange = function () {
-                if ((request.status === 200) && (request.readyState === 4)) {
-                    var data = JSON.parse(request.responseText);
-                    if (manifestDescriptor.isGlobal) {
-                        for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
-                            var entry = data_1[_i];
-                            entry.isGlobal = true;
-                        }
+            dataLoader.add(manifestDescriptor.path);
+            dataLoader.load(function (loader, resources) {
+                var data = resources[manifestDescriptor.path].data;
+                dataLoader.destroy();
+                if (manifestDescriptor.isGlobal) {
+                    for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
+                        var entry = data_1[_i];
+                        entry.isGlobal = true;
                     }
-                    resolve(data);
                 }
-            };
-            request.send();
+                resolve(data);
+            });
         });
     };
     return AssetManager;
