@@ -1,4 +1,4 @@
-import { Property, ScaleManager, CaptionPlayer, Application } from 'springroll';
+import { Property, CaptionPlayer, ScaleManager, Application } from 'springroll';
 
 /**
  * Manages loading, caching, and unloading of assets
