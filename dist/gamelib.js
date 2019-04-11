@@ -1,4 +1,4 @@
-import { Property, ScaleManager, CaptionPlayer, Application } from 'springroll';
+import { Property, CaptionPlayer, ScaleManager, Application } from 'springroll';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -276,21 +276,19 @@ var AssetManager = /** @class */ (function () {
      * @param {ManifestDescriptor} manifestDescriptor
      */
     AssetManager.prototype.loadManifest = function (manifestDescriptor) {
+        var dataLoader = new PIXI.loaders.Loader();
         return new Promise(function (resolve) {
-            var dataLoader = new PIXI.loaders.Loader();
-            return new Promise(function (resolve) {
-                dataLoader.add(manifestDescriptor.path);
-                dataLoader.load(function (loader, resources) {
-                    var data = resources[manifestDescriptor.path];
-                    dataLoader.destroy();
-                    if (manifestDescriptor.isGlobal) {
-                        for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
-                            var entry = data_1[_i];
-                            entry.isGlobal = true;
-                        }
+            dataLoader.add(manifestDescriptor.path);
+            dataLoader.load(function (loader, resources) {
+                var data = resources[manifestDescriptor.path].data;
+                dataLoader.destroy();
+                if (manifestDescriptor.isGlobal) {
+                    for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
+                        var entry = data_1[_i];
+                        entry.isGlobal = true;
                     }
-                    resolve(data);
-                });
+                }
+                resolve(data);
             });
         });
     };
