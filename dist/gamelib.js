@@ -892,23 +892,23 @@ var StageManager = /** @class */ (function () {
             this.scale = this._minSize.ratio / this._maxSize.ratio;
             calcwidth = this._maxSize.width;
             // these styles could - probably should - be replaced by media queries in CSS
-            this.pixi.view.style.height = height + "px";
-            this.pixi.view.style.width = Math.floor(this._maxSize.ratio * height) + "px";
+            this.pixi.view.style.height = height / width * 100 + "%";
+            this.pixi.view.style.width = (height * this._maxSize.ratio) / width * 100 + "%";
             this.pixi.view.style.margin = '0 auto';
         }
         else if (aspect < this._minSize.ratio) {
             this.scale = 1;
-            var viewHeight = Math.floor(width / this._minSize.ratio);
-            this.pixi.view.style.height = viewHeight + "px";
-            this.pixi.view.style.width = width + "px";
-            this.pixi.view.style.margin = Math.floor((height - viewHeight) / 2) + "px 0";
+            var viewHeight = (aspect / this._minSize.ratio) * 100;
+            this.pixi.view.style.height = viewHeight + "%";
+            this.pixi.view.style.width = "100%";
+            this.pixi.view.style.margin = (100 - viewHeight) / 2 + "% 0";
         }
         else {
             // between min and max ratio (wider than min)
             this.scale = this._minSize.ratio / aspect;
             calcwidth = this._minSize.width / this.scale; // how much wider is this?
-            this.pixi.view.style.height = height + "px";
-            this.pixi.view.style.width = width + "px";
+            this.pixi.view.style.height = height / width + "%";
+            this.pixi.view.style.width = "100%";
             this.pixi.view.style.margin = '0';
         }
         offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
