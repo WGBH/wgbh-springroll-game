@@ -884,6 +884,9 @@ var StageManager = /** @class */ (function () {
     };
     StageManager.prototype.resize = function (width, height) {
         console.log('got resize, width: ', width, ' height: ', height);
+        console.log('got REAL size, wd: ', window.innerWidth, ' height: ', window.innerHeight);
+        width = window.innerWidth;
+        height = window.innerHeight;
         var aspect = width / height;
         var offset = 0;
         //let scale;

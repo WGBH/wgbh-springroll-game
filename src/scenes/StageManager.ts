@@ -211,6 +211,9 @@ export default class StageManager{
 
     resize(width:number, height:number) {
         console.log('got resize, width: ', width, ' height: ', height);
+        console.log('got REAL size, wd: ', window.innerWidth, ' height: ', window.innerHeight);
+        width = window.innerWidth;
+        height = window.innerHeight;
         const aspect = width / height;
         let offset = 0;
         //let scale;
