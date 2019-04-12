@@ -901,7 +901,7 @@ var StageManager = /** @class */ (function () {
             var viewHeight = (aspect / this._minSize.ratio) * 100;
             this.pixi.view.style.height = viewHeight + "%";
             this.pixi.view.style.width = "100%";
-            this.pixi.view.style.margin = (100 - viewHeight) / 2 + "% 0";
+            this.pixi.view.style.margin = (100 - viewHeight) / 2 + "% 0 0 0";
         }
         else {
             // between min and max ratio (wider than min)

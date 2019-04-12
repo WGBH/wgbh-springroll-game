@@ -228,7 +228,7 @@ export default class StageManager{
             let viewHeight = (aspect / this._minSize.ratio) * 100;
             this.pixi.view.style.height = `${viewHeight}%`;
             this.pixi.view.style.width = `100%`;
-            this.pixi.view.style.margin = `${(100 - viewHeight)/2}% 0`;
+            this.pixi.view.style.margin = `${(100 - viewHeight)/2}% 0 0 0`;
         } else {
             // between min and max ratio (wider than min)
             this.scale = this._minSize.ratio / aspect;
