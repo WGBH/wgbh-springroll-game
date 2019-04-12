@@ -883,6 +883,7 @@ var StageManager = /** @class */ (function () {
         this.resize(window.innerWidth, window.innerHeight);
     };
     StageManager.prototype.resize = function (width, height) {
+        console.log('got resize, width: ', width, ' height: ', height);
         var aspect = width / height;
         var offset = 0;
         //let scale;
@@ -898,10 +899,11 @@ var StageManager = /** @class */ (function () {
         }
         else if (aspect < this._minSize.ratio) {
             this.scale = 1;
-            var viewHeight = (aspect / this._minSize.ratio) * 100;
-            this.pixi.view.style.height = viewHeight + "%";
+            var heightPercent = (100 / this._minSize.ratio);
+            this.pixi.view.style.height = heightPercent + "%";
             this.pixi.view.style.width = "100%";
-            this.pixi.view.style.margin = (100 - viewHeight) / 2 + "% 0 0 0";
+            var margin = ((height - width * (heightPercent / 100)) / width * 100) / 2;
+            this.pixi.view.style.margin = margin + "% 0 0 0";
         }
         else {
             // between min and max ratio (wider than min)

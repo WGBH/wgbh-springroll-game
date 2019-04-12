@@ -210,6 +210,7 @@ export default class StageManager{
     }
 
     resize(width:number, height:number) {
+        console.log('got resize, width: ', width, ' height: ', height);
         const aspect = width / height;
         let offset = 0;
         //let scale;
@@ -225,10 +226,11 @@ export default class StageManager{
             this.pixi.view.style.margin = '0 auto';
         } else if (aspect < this._minSize.ratio) {
             this.scale = 1;
-            let viewHeight = (aspect / this._minSize.ratio) * 100;
-            this.pixi.view.style.height = `${viewHeight}%`;
+            let heightPercent = (100 / this._minSize.ratio);
+            this.pixi.view.style.height = `${heightPercent}%`;
             this.pixi.view.style.width = `100%`;
-            this.pixi.view.style.margin = `${(100 - viewHeight)/2}% 0 0 0`;
+            let margin = ((height - width * (heightPercent/100))/width * 100)/2;
+            this.pixi.view.style.margin = `${margin}% 0 0 0`;
         } else {
             // between min and max ratio (wider than min)
             this.scale = this._minSize.ratio / aspect;
