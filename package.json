@@ -38,6 +38,7 @@
     "springroll": "git+https://github.com/SpringRoll/SpringRoll.git#v2"
   },
   "dependencies": {
-    "eases": "^1.0.8"
+    "eases": "^1.0.8",
+    "tslib": "^1.9.3"
   }
 }
