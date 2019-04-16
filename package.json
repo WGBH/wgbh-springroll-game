@@ -28,6 +28,7 @@
     "rollup-plugin-tslint": "^0.1.38",
     "rollup-plugin-typescript2": "^0.20.1",
     "springroll": "git+https://github.com/SpringRoll/SpringRoll.git#v2",
+    "tslib": "^1.9.3",
     "typedoc": "^0.14.2",
     "typescript": "^3.2.2"
   },
