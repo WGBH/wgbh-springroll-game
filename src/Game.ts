@@ -45,7 +45,7 @@ export default class Game {
             pause ? this.sound.pause() : this.sound.resume();
             this.stageManager.pause = pause;
         });
-        this.app.state.captionsMuted.subscribe((isMuted:boolean, wasMuted:boolean)=> {
+        this.app.state.captionsMuted.subscribe((isMuted:boolean)=> {
             this.stageManager.captionsMuted = isMuted;
         });
 

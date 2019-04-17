@@ -170,9 +170,7 @@ export default class StageManager{
         return this.isCaptionsMuted;
     }
     set captionsMuted(muted:boolean){
-        console.log("Setting the captions to " + muted);
         this.isCaptionsMuted = muted;
-        // todo: set something here to show captions?
         if (muted) {
             this.captions.stop();
         }
