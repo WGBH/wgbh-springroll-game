@@ -844,9 +844,7 @@ var StageManager = /** @class */ (function () {
             return this.isCaptionsMuted;
         },
         set: function (muted) {
-            console.log("Setting the captions to " + muted);
             this.isCaptionsMuted = muted;
-            // todo: set something here to show captions?
             if (muted) {
                 this.captions.stop();
             }
@@ -977,7 +975,6 @@ var StageManager = /** @class */ (function () {
         if (this.isCaptionsMuted) {
             return;
         }
-        console.log("StageManager is showing captions");
         begin = begin || 0;
         this.captions.start(captionid, begin, args);
     };
@@ -1321,7 +1318,7 @@ var Game = /** @class */ (function () {
             pause ? _this.sound.pause() : _this.sound.resume();
             _this.stageManager.pause = pause;
         });
-        this.app.state.captionsMuted.subscribe(function (isMuted, wasMuted) {
+        this.app.state.captionsMuted.subscribe(function (isMuted) {
             _this.stageManager.captionsMuted = isMuted;
         });
         this.app.state.ready.subscribe(function () {
