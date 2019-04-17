@@ -308,7 +308,6 @@ export default class StageManager{
 
     showCaption(captionid:string,begin?:number,args?:any) {
         if (this.isCaptionsMuted) { return; }
-        console.log("StageManager is showing captions");
         begin = begin || 0;
         this.captions.start(captionid,begin,args);
     }
