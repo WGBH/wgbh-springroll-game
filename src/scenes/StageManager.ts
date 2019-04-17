@@ -35,6 +35,7 @@ export default class StageManager{
     private game:Game;
 
     private captions:CaptionPlayer;
+    private isCaptionsMuted:boolean;
 
     /** Map of Scenes by Scene IDs */
     private scenes: {[key:string]:typeof Scene} = {};
@@ -165,6 +166,17 @@ export default class StageManager{
             });
     }
 
+    get captionsMuted(){
+        return this.isCaptionsMuted;
+    }
+    set captionsMuted(muted:boolean){
+        console.log("Setting the captions to " + muted);
+        this.isCaptionsMuted = muted;
+        // todo: set something here to show captions?
+        if (muted) {
+            this.captions.stop();
+        }
+    }
     get pause(){
         return this.isPaused;
     }
@@ -295,6 +307,8 @@ export default class StageManager{
     }
 
     showCaption(captionid:string,begin?:number,args?:any) {
+        if (this.isCaptionsMuted) { return; }
+        console.log("StageManager is showing captions");
         begin = begin || 0;
         this.captions.start(captionid,begin,args);
     }

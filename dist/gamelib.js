@@ -839,6 +839,21 @@ var StageManager = /** @class */ (function () {
             callback();
         });
     };
+    Object.defineProperty(StageManager.prototype, "captionsMuted", {
+        get: function () {
+            return this.isCaptionsMuted;
+        },
+        set: function (muted) {
+            console.log("Setting the captions to " + muted);
+            this.isCaptionsMuted = muted;
+            // todo: set something here to show captions?
+            if (muted) {
+                this.captions.stop();
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(StageManager.prototype, "pause", {
         get: function () {
             return this.isPaused;
@@ -959,6 +974,10 @@ var StageManager = /** @class */ (function () {
         this.timers = [];
     };
     StageManager.prototype.showCaption = function (captionid, begin, args) {
+        if (this.isCaptionsMuted) {
+            return;
+        }
+        console.log("StageManager is showing captions");
         begin = begin || 0;
         this.captions.start(captionid, begin, args);
     };
@@ -1301,6 +1320,9 @@ var Game = /** @class */ (function () {
         this.app.state.pause.subscribe(function (pause) {
             pause ? _this.sound.pause() : _this.sound.resume();
             _this.stageManager.pause = pause;
+        });
+        this.app.state.captionsMuted.subscribe(function (isMuted, wasMuted) {
+            _this.stageManager.captionsMuted = isMuted;
         });
         this.app.state.ready.subscribe(function () {
             _this.stageManager.setTransition(options.transition, _this.preloadGlobal);

@@ -27,6 +27,7 @@ export default class StageManager {
     private isPaused;
     private game;
     private captions;
+    private isCaptionsMuted;
     /** Map of Scenes by Scene IDs */
     private scenes;
     private timers;
@@ -43,6 +44,7 @@ export default class StageManager {
      * @param {string} sceneID ID of Scene to transition to
      */
     changeScene: (newScene: string) => void;
+    captionsMuted: boolean;
     pause: boolean;
     getSize(width: number, height: number): ScreenSize;
     setScaling(scaleconfig: ScaleConfig): void;
