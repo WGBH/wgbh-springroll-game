@@ -884,9 +884,9 @@ var StageManager = /** @class */ (function () {
     };
     StageManager.prototype.resize = function (width, height) {
         console.log('got resize, width: ', width, ' height: ', height);
-        console.log('got REAL size, wd: ', window.innerWidth, ' height: ', window.innerHeight);
-        width = window.innerWidth;
-        height = window.innerHeight;
+        console.log('got REAL size, CW: ', document.documentElement.clientWidth, ' height: ', document.documentElement.clientHeight);
+        width = document.documentElement.clientWidth;
+        height = document.documentElement.clientHeight;
         var aspect = width / height;
         var offset = 0;
         //let scale;
@@ -896,14 +896,14 @@ var StageManager = /** @class */ (function () {
             this.scale = this._minSize.ratio / this._maxSize.ratio;
             calcwidth = this._maxSize.width;
             // these styles could - probably should - be replaced by media queries in CSS
-            this.pixi.view.style.height = height / width * 100 + "%";
+            //this.pixi.view.style.height = `${height/width * 100}%`;
             this.pixi.view.style.width = (height * this._maxSize.ratio) / width * 100 + "%";
             this.pixi.view.style.margin = '0 auto';
         }
         else if (aspect < this._minSize.ratio) {
             this.scale = 1;
             var heightPercent = (100 / this._minSize.ratio);
-            this.pixi.view.style.height = heightPercent + "%";
+            //this.pixi.view.style.height = `${heightPercent}%`;
             this.pixi.view.style.width = "100%";
             var margin = ((height - width * (heightPercent / 100)) / width * 100) / 2;
             this.pixi.view.style.margin = margin + "% 0 0 0";
@@ -912,7 +912,7 @@ var StageManager = /** @class */ (function () {
             // between min and max ratio (wider than min)
             this.scale = this._minSize.ratio / aspect;
             calcwidth = this._minSize.width / this.scale; // how much wider is this?
-            this.pixi.view.style.height = height / width + "%";
+            //this.pixi.view.style.height = `${height/width}%`;
             this.pixi.view.style.width = "100%";
             this.pixi.view.style.margin = '0';
         }
