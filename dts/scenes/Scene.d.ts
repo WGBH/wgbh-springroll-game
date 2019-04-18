@@ -4,6 +4,7 @@ import { AssetList, AssetManager, SoundManager, StageManager } from '..';
 import { AssetCache } from '../assets/AssetManager';
 import Tween, { Ease } from '../tween/Tween';
 import PauseableTimer from '../timer/PauseableTimer';
+import { Application } from 'springroll';
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
  */
@@ -23,6 +24,8 @@ export default class Scene extends PIXI.Container {
     protected readonly assetManager: AssetManager;
     /** Manages transitioning between Scenes - not intended to be controlled directly by a game Scene */
     protected readonly stageManager: StageManager;
+    /** Object reference to Game's SpringRoll Application, interface to Container */
+    protected readonly app: Application;
     constructor(game: Game);
     /**
      * provide list of assets to preload
