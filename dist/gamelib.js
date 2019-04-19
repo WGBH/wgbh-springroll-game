@@ -715,6 +715,28 @@ var GameTime = /** @class */ (function () {
     return GameTime;
 }());
 
+/** Devices which are known/expected to flicker if Pixi's `preserveDrawingBuffer` is not `true` */
+var FLICKERERS = [
+    'KFFOWI',
+    'KFMEWI',
+    'KFTBWI',
+    'KFARWI',
+    'KFASWI',
+    'KFSAWA',
+    'KFSAWI',
+    'KFAPWA',
+    'KFAPWI',
+    'KFTHWA',
+    'KFTHWI',
+    'KFSOWI',
+    'KFJWA',
+    'KFJWI',
+    'KFTT',
+    'KFOT',
+    'Kindle Fire',
+    'Silk',
+    'SM-T280',
+];
 var TRANSITION_ID = 'wgbhSpringRollGameTransition';
 /**
  * Manages rendering and transitioning between Scenes
@@ -783,9 +805,10 @@ var StageManager = /** @class */ (function () {
         this.width = width;
         this.height = height;
         this.offset = new PIXI.Point(0, 0);
+        var flickerProne = !!FLICKERERS.filter(function (value) { return navigator.userAgent.includes(value); }).length;
         // preserveDrawingBuffer is bad for overall performance, but necessary in order to support 
         // some Android devices such as Galaxy Tab A and Kindle Fire
-        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, preserveDrawingBuffer: true });
+        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, preserveDrawingBuffer: flickerProne });
         this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
         var baseSize = { width: width, height: height };
