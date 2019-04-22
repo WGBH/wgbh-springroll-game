@@ -6,6 +6,29 @@ import GameTime from '../timer/GameTime';
 import PauseableTimer from '../timer/PauseableTimer';
 import { ScaleManager, CaptionPlayer, CaptionData, IRender, Property } from 'springroll';
 
+/** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
+const FLICKERERS = [
+    'KFFOWI',
+    'KFMEWI',
+    'KFTBWI',
+    'KFARWI',
+    'KFASWI',
+    'KFSAWA',
+    'KFSAWI',
+    'KFAPWA',
+    'KFAPWI',
+    'KFTHWA',
+    'KFTHWI',
+    'KFSOWI',
+    'KFJWA',
+    'KFJWI',
+    'KFTT',
+    'KFOT',
+    'Kindle Fire',
+    'Silk',
+    'SM-T280',//Galaxy Tab A 7"
+];
+
 
 const TRANSITION_ID = 'wgbhSpringRollGameTransition';
 
@@ -50,9 +73,10 @@ export default class StageManager{
 
         this.offset = new PIXI.Point(0,0);
 
-        // preserveDrawingBuffer is bad for overall performance, but necessary in order to support 
-        // some Android devices such as Galaxy Tab A and Kindle Fire
-        this.pixi = new PIXI.Application({ width, height, antialias:true, preserveDrawingBuffer:true});
+        // transparent rendering mode is bad for overall performance, but necessary in order
+        // to prevent flickering on some Android devices such as Galaxy Tab A and Kindle Fire
+        const flickerProne = !!FLICKERERS.find((value) => navigator.userAgent.includes(value));
+        this.pixi = new PIXI.Application({ width, height, antialias:true, transparent:flickerProne});
         this.pixi.view.style.display = 'block';
 
 
