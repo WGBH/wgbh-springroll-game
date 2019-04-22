@@ -715,7 +715,7 @@ var GameTime = /** @class */ (function () {
     return GameTime;
 }());
 
-/** Devices which are known/expected to flicker if Pixi's `preserveDrawingBuffer` is not `true` */
+/** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
 var FLICKERERS = [
     'KFFOWI',
     'KFMEWI',
@@ -805,10 +805,10 @@ var StageManager = /** @class */ (function () {
         this.width = width;
         this.height = height;
         this.offset = new PIXI.Point(0, 0);
-        var flickerProne = !!FLICKERERS.filter(function (value) { return navigator.userAgent.includes(value); }).length;
-        // preserveDrawingBuffer is bad for overall performance, but necessary in order to support 
-        // some Android devices such as Galaxy Tab A and Kindle Fire
-        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, preserveDrawingBuffer: flickerProne });
+        // transparent rendering mode is bad for overall performance, but necessary in order
+        // to prevent flickering on some Android devices such as Galaxy Tab A and Kindle Fire
+        var flickerProne = !!FLICKERERS.find(function (value) { return navigator.userAgent.includes(value); });
+        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, transparent: flickerProne });
         this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
         var baseSize = { width: width, height: height };
