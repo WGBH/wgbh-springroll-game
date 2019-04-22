@@ -1238,10 +1238,14 @@ var SoundManager = /** @class */ (function () {
      */
     SoundManager.prototype.pause = function (soundID) {
         if (!soundID) {
-            PIXI.sound.pauseAll();
+            // PIXI.sound.pauseAll(); // Buggy in HTML5 Audio mode currently (v2.1.0)
+            //TODO: Fix PIXI.sound.pauseAll in HTML5 audio mode, then replace this:
+            for (var soundID_1 in this.soundMeta) {
+                this.soundMeta[soundID_1].sounds[soundID_1].pause();
+            }
         }
         else {
-            this.soundMeta[soundID].sounds[soundID].resume();
+            this.soundMeta[soundID].sounds[soundID].pause();
         }
     };
     /**
@@ -1250,7 +1254,10 @@ var SoundManager = /** @class */ (function () {
      */
     SoundManager.prototype.resume = function (soundID) {
         if (!soundID) {
-            PIXI.sound.resumeAll();
+            // PIXI.sound.resumeAll(); // Buggy in HTML5 Audio mode currently (v2.1.0)
+            for (var soundID_2 in this.soundMeta) {
+                this.soundMeta[soundID_2].sounds[soundID_2].resume();
+            }
         }
         else {
             this.soundMeta[soundID].sounds[soundID].resume();
