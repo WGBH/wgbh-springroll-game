@@ -88,14 +88,10 @@ export default class SoundManager {
      */
     pause(soundID?:string){
         if(!soundID){
-            // PIXI.sound.pauseAll(); // Buggy in HTML5 Audio mode currently (v2.1.0)
-            //TODO: Fix PIXI.sound.pauseAll in HTML5 audio mode, then replace this:
-            for(let soundID in this.soundMeta){
-                this.soundMeta[soundID].sounds[soundID].pause();
-            }
+            PIXI.sound.pauseAll();
         }
         else{
-            this.soundMeta[soundID].sounds[soundID].pause();
+            this.getSound(soundID).pause();
         }
     }
 
@@ -105,13 +101,10 @@ export default class SoundManager {
      */
     resume(soundID?:string){
         if(!soundID){
-            // PIXI.sound.resumeAll(); // Buggy in HTML5 Audio mode currently (v2.1.0)
-            for(let soundID in this.soundMeta){
-                this.soundMeta[soundID].sounds[soundID].resume();
-            }
+            PIXI.sound.resumeAll();
         }
         else{
-            this.soundMeta[soundID].sounds[soundID].resume();
+            this.getSound(soundID).resume();
         }
     }
 
