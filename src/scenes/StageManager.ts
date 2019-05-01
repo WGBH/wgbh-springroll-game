@@ -63,8 +63,6 @@ export default class StageManager{
     /** Map of Scenes by Scene IDs */
     private scenes: {[key:string]:typeof Scene} = {};
 
-    private timers:PauseableTimer[] = [];
-
     constructor(game:Game, containerID:string, width:number, height:number, altWidth?:number){
         this.game = game;
 
@@ -318,14 +316,12 @@ export default class StageManager{
     }
 
     addTimer(timer:PauseableTimer){
-        this.timers.push(timer);
+        console.warn('StageManager.prototype.addTimer() is deprecated. PauseableTimers manage themselves');
     }
 
     clearTimers() {
-        this.timers.forEach(function(timer:PauseableTimer) {
-            timer.destroy(false);
-        });
-        this.timers = [];
+        console.warn('StageManager.prototype.clearTimers() is deprecated. use PauseableTimer.clearTimers() instead');
+        PauseableTimer.clearTimers();
     }
 
     showCaption(captionid:string,begin?:number,args?:any) {

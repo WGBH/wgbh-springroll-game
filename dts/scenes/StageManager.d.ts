@@ -30,7 +30,6 @@ export default class StageManager {
     private isCaptionsMuted;
     /** Map of Scenes by Scene IDs */
     private scenes;
-    private timers;
     constructor(game: Game, containerID: string, width: number, height: number, altWidth?: number);
     addCaptions(captionData: CaptionData, renderer: IRender): void;
     setCaptionRenderer(renderer: IRender): void;

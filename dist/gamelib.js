@@ -715,6 +715,88 @@ var GameTime = /** @class */ (function () {
     return GameTime;
 }());
 
+var PauseableTimer = /** @class */ (function () {
+    function PauseableTimer(callback, time, loop) {
+        var _this = this;
+        this.active = true;
+        this.paused = false;
+        this.repeat = false;
+        this.update = function (deltaTime) {
+            if (_this.paused || !_this.targetTime) {
+                return;
+            }
+            _this.currentTime += deltaTime;
+            var time = _this.currentTime / _this.targetTime > 1 ? 1 : _this.currentTime / _this.targetTime;
+            if (time >= 1) {
+                if (_this.onComplete) {
+                    _this.onComplete();
+                }
+                if (_this.repeat) {
+                    var delta = _this.currentTime - _this.targetTime;
+                    _this.reset(delta);
+                }
+                else {
+                    _this.destroy(true);
+                }
+            }
+        };
+        this.targetTime = time;
+        this.currentTime = 0;
+        this.onComplete = callback;
+        this.repeat = loop;
+        GameTime.gameTick.subscribe(this.update);
+        PauseableTimer.timers.push(this);
+    }
+    PauseableTimer.clearTimers = function () {
+        for (var _i = 0, _a = PauseableTimer.timers; _i < _a.length; _i++) {
+            var timer = _a[_i];
+            timer.destroy(false);
+        }
+    };
+    Object.defineProperty(PauseableTimer.prototype, "promise", {
+        get: function () {
+            var _this = this;
+            if (!this._promise) {
+                this._promise = new Promise(function (resolve, reject) {
+                    _this.resolve = resolve;
+                    _this.reject = reject;
+                });
+            }
+            return this._promise;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    PauseableTimer.prototype.pause = function (pause) {
+        this.paused = pause;
+    };
+    PauseableTimer.prototype.reset = function (deltaTime) {
+        // deltaTime shows how far over the end we went = do we care?
+        this.currentTime = deltaTime ? deltaTime : 0;
+    };
+    PauseableTimer.prototype.destroy = function (isComplete) {
+        if (isComplete === void 0) { isComplete = false; }
+        this.paused = true; // make sure it doesn't try to do another update.
+        if (isComplete) {
+            if (this.resolve) {
+                this.resolve();
+            }
+        }
+        else if (this.reject) {
+            this.reject('destroyed');
+        }
+        this._promise = null;
+        this.resolve = null;
+        this.reject = null;
+        this.targetTime = null;
+        this.onComplete = null;
+        GameTime.gameTick.unsubscribe(this.update);
+        PauseableTimer.timers.splice(PauseableTimer.timers.indexOf(this), 1);
+    };
+    PauseableTimer.timers = [];
+    return PauseableTimer;
+}());
+
 /** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
 var FLICKERERS = [
     'KFFOWI',
@@ -748,7 +830,6 @@ var StageManager = /** @class */ (function () {
         this.isPaused = false;
         /** Map of Scenes by Scene IDs */
         this.scenes = {};
-        this.timers = [];
         /**
          * Transition to specified scene
          * @param {string} sceneID ID of Scene to transition to
@@ -986,13 +1067,11 @@ var StageManager = /** @class */ (function () {
         return { x: pointin.x - this.offset.x, y: pointin.y - this.offset.y };
     };
     StageManager.prototype.addTimer = function (timer) {
-        this.timers.push(timer);
+        console.warn('StageManager.prototype.addTimer() is deprecated. PauseableTimers manage themselves');
     };
     StageManager.prototype.clearTimers = function () {
-        this.timers.forEach(function (timer) {
-            timer.destroy(false);
-        });
-        this.timers = [];
+        console.warn('StageManager.prototype.clearTimers() is deprecated. use PauseableTimer.clearTimers() instead');
+        PauseableTimer.clearTimers();
     };
     StageManager.prototype.showCaption = function (captionid, begin, args) {
         if (this.isCaptionsMuted) {
@@ -1404,79 +1483,6 @@ function __extends(d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 }
 
-var PauseableTimer = /** @class */ (function () {
-    function PauseableTimer(callback, time, loop) {
-        var _this = this;
-        this.active = true;
-        this.paused = false;
-        this.repeat = false;
-        this.update = function (deltaTime) {
-            if (_this.paused || !_this.targetTime) {
-                return;
-            }
-            _this.currentTime += deltaTime;
-            var time = _this.currentTime / _this.targetTime > 1 ? 1 : _this.currentTime / _this.targetTime;
-            if (time >= 1) {
-                if (_this.onComplete) {
-                    _this.onComplete();
-                }
-                if (_this.repeat) {
-                    var delta = _this.currentTime - _this.targetTime;
-                    _this.reset(delta);
-                }
-                else {
-                    _this.destroy(true);
-                }
-            }
-        };
-        this.targetTime = time;
-        this.currentTime = 0;
-        this.onComplete = callback;
-        this.repeat = loop;
-        GameTime.gameTick.subscribe(this.update);
-    }
-    Object.defineProperty(PauseableTimer.prototype, "promise", {
-        get: function () {
-            var _this = this;
-            if (!this._promise) {
-                this._promise = new Promise(function (resolve, reject) {
-                    _this.resolve = resolve;
-                    _this.reject = reject;
-                });
-            }
-            return this._promise;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    PauseableTimer.prototype.pause = function (pause) {
-        this.paused = pause;
-    };
-    PauseableTimer.prototype.reset = function (deltaTime) {
-        // deltaTime shows how far over the end we went = do we care?
-        this.currentTime = deltaTime ? deltaTime : 0;
-    };
-    PauseableTimer.prototype.destroy = function (isComplete) {
-        if (isComplete === void 0) { isComplete = false; }
-        this.paused = true; // make sure it doesn't try to do another update.
-        if (isComplete) {
-            if (this.resolve) {
-                this.resolve();
-            }
-        }
-        else if (this.reject) {
-            this.reject('destroyed');
-        }
-        this._promise = null;
-        this.resolve = null;
-        this.reject = null;
-        this.targetTime = null;
-        this.onComplete = null;
-        GameTime.gameTick.unsubscribe(this.update);
-    };
-    return PauseableTimer;
-}());
-
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
  */
@@ -1555,9 +1561,7 @@ var Scene = /** @class */ (function (_super) {
      * @param time
      */
     Scene.prototype.setTimeout = function (callback, time) {
-        var timer = new PauseableTimer(callback, time);
-        this.stageManager.addTimer(timer);
-        return timer;
+        return new PauseableTimer(callback, time);
     };
     Scene.prototype.clearTimeout = function (timer) {
         if (timer) {
@@ -1565,9 +1569,7 @@ var Scene = /** @class */ (function (_super) {
         }
     };
     Scene.prototype.setInterval = function (callback, time) {
-        var timer = new PauseableTimer(callback, time, true);
-        this.stageManager.addTimer(timer);
-        return timer;
+        return new PauseableTimer(callback, time, true);
     };
     Scene.prototype.clearInterval = function (timer) {
         if (timer) {
