@@ -1471,6 +1471,7 @@ var PauseableTimer = /** @class */ (function () {
         this.resolve = null;
         this.reject = null;
         this.targetTime = null;
+        this.onComplete = null;
         GameTime.gameTick.unsubscribe(this.update);
     };
     return PauseableTimer;
