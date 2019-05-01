@@ -17,7 +17,6 @@ export default class Tween {
     call: (call: Function) => this;
     readonly promise: Promise<void>;
     private doComplete;
-    static update(elapsed: number): void;
     update: (elapsed: number) => any;
     destroy(): void;
 }

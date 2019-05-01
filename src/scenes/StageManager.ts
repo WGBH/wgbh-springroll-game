@@ -1,7 +1,6 @@
 import Scene from './Scene';
 import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
-import Tween from '../tween/Tween';
 import GameTime from '../timer/GameTime';
 import PauseableTimer from '../timer/PauseableTimer';
 import { ScaleManager, CaptionPlayer, CaptionData, IRender, Property } from 'springroll';
@@ -340,7 +339,6 @@ export default class StageManager{
             return;
         }
         const elapsed = PIXI.ticker.shared.elapsedMS;
-        Tween.update(elapsed);
         if (this.captions) {
             this.captions.update(elapsed/1000); // captions go by seconds, not ms
         }
