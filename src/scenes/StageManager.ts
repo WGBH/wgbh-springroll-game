@@ -1,7 +1,6 @@
 import Scene from './Scene';
 import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
-import Tween from '../tween/Tween';
 import GameTime from '../timer/GameTime';
 import PauseableTimer from '../timer/PauseableTimer';
 import { ScaleManager, CaptionPlayer, CaptionData, IRender, Property } from 'springroll';
@@ -62,8 +61,6 @@ export default class StageManager{
 
     /** Map of Scenes by Scene IDs */
     private scenes: {[key:string]:typeof Scene} = {};
-
-    private timers:PauseableTimer[] = [];
 
     constructor(game:Game, containerID:string, width:number, height:number, altWidth?:number){
         this.game = game;
@@ -318,14 +315,12 @@ export default class StageManager{
     }
 
     addTimer(timer:PauseableTimer){
-        this.timers.push(timer);
+        console.warn('StageManager.prototype.addTimer() is deprecated. PauseableTimers manage themselves');
     }
 
     clearTimers() {
-        this.timers.forEach(function(timer:PauseableTimer) {
-            timer.destroy(false);
-        });
-        this.timers = [];
+        console.warn('StageManager.prototype.clearTimers() is deprecated. use PauseableTimer.clearTimers() instead');
+        PauseableTimer.clearTimers();
     }
 
     showCaption(captionid:string,begin?:number,args?:any) {
@@ -344,7 +339,6 @@ export default class StageManager{
             return;
         }
         const elapsed = PIXI.ticker.shared.elapsedMS;
-        Tween.update(elapsed);
         if (this.captions) {
             this.captions.update(elapsed/1000); // captions go by seconds, not ms
         }

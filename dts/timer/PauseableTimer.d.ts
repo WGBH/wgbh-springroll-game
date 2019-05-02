@@ -1,4 +1,5 @@
 export default class PauseableTimer {
+    static timers: PauseableTimer[];
     active: boolean;
     private currentTime;
     private targetTime;
@@ -9,6 +10,7 @@ export default class PauseableTimer {
     private resolve;
     private reject;
     constructor(callback: Function, time: number, loop?: boolean);
+    static clearTimers(): void;
     readonly promise: Promise<void>;
     pause(pause: boolean): void;
     reset(deltaTime: number): void;

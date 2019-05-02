@@ -295,404 +295,6 @@ var AssetManager = /** @class */ (function () {
     return AssetManager;
 }());
 
-function backInOut(t) {
-  var s = 1.70158 * 1.525;
-  if ((t *= 2) < 1)
-    return 0.5 * (t * t * ((s + 1) * t - s))
-  return 0.5 * ((t -= 2) * t * ((s + 1) * t + s) + 2)
-}
-
-var backInOut_1 = backInOut;
-
-function backIn(t) {
-  var s = 1.70158;
-  return t * t * ((s + 1) * t - s)
-}
-
-var backIn_1 = backIn;
-
-function backOut(t) {
-  var s = 1.70158;
-  return --t * t * ((s + 1) * t + s) + 1
-}
-
-var backOut_1 = backOut;
-
-function bounceOut(t) {
-  var a = 4.0 / 11.0;
-  var b = 8.0 / 11.0;
-  var c = 9.0 / 10.0;
-
-  var ca = 4356.0 / 361.0;
-  var cb = 35442.0 / 1805.0;
-  var cc = 16061.0 / 1805.0;
-
-  var t2 = t * t;
-
-  return t < a
-    ? 7.5625 * t2
-    : t < b
-      ? 9.075 * t2 - 9.9 * t + 3.4
-      : t < c
-        ? ca * t2 - cb * t + cc
-        : 10.8 * t * t - 20.52 * t + 10.72
-}
-
-var bounceOut_1 = bounceOut;
-
-function bounceInOut(t) {
-  return t < 0.5
-    ? 0.5 * (1.0 - bounceOut_1(1.0 - t * 2.0))
-    : 0.5 * bounceOut_1(t * 2.0 - 1.0) + 0.5
-}
-
-var bounceInOut_1 = bounceInOut;
-
-function bounceIn(t) {
-  return 1.0 - bounceOut_1(1.0 - t)
-}
-
-var bounceIn_1 = bounceIn;
-
-function circInOut(t) {
-  if ((t *= 2) < 1) return -0.5 * (Math.sqrt(1 - t * t) - 1)
-  return 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1)
-}
-
-var circInOut_1 = circInOut;
-
-function circIn(t) {
-  return 1.0 - Math.sqrt(1.0 - t * t)
-}
-
-var circIn_1 = circIn;
-
-function circOut(t) {
-  return Math.sqrt(1 - ( --t * t ))
-}
-
-var circOut_1 = circOut;
-
-function cubicInOut(t) {
-  return t < 0.5
-    ? 4.0 * t * t * t
-    : 0.5 * Math.pow(2.0 * t - 2.0, 3.0) + 1.0
-}
-
-var cubicInOut_1 = cubicInOut;
-
-function cubicIn(t) {
-  return t * t * t
-}
-
-var cubicIn_1 = cubicIn;
-
-function cubicOut(t) {
-  var f = t - 1.0;
-  return f * f * f + 1.0
-}
-
-var cubicOut_1 = cubicOut;
-
-function elasticInOut(t) {
-  return t < 0.5
-    ? 0.5 * Math.sin(+13.0 * Math.PI/2 * 2.0 * t) * Math.pow(2.0, 10.0 * (2.0 * t - 1.0))
-    : 0.5 * Math.sin(-13.0 * Math.PI/2 * ((2.0 * t - 1.0) + 1.0)) * Math.pow(2.0, -10.0 * (2.0 * t - 1.0)) + 1.0
-}
-
-var elasticInOut_1 = elasticInOut;
-
-function elasticIn(t) {
-  return Math.sin(13.0 * t * Math.PI/2) * Math.pow(2.0, 10.0 * (t - 1.0))
-}
-
-var elasticIn_1 = elasticIn;
-
-function elasticOut(t) {
-  return Math.sin(-13.0 * (t + 1.0) * Math.PI/2) * Math.pow(2.0, -10.0 * t) + 1.0
-}
-
-var elasticOut_1 = elasticOut;
-
-function expoInOut(t) {
-  return (t === 0.0 || t === 1.0)
-    ? t
-    : t < 0.5
-      ? +0.5 * Math.pow(2.0, (20.0 * t) - 10.0)
-      : -0.5 * Math.pow(2.0, 10.0 - (t * 20.0)) + 1.0
-}
-
-var expoInOut_1 = expoInOut;
-
-function expoIn(t) {
-  return t === 0.0 ? t : Math.pow(2.0, 10.0 * (t - 1.0))
-}
-
-var expoIn_1 = expoIn;
-
-function expoOut(t) {
-  return t === 1.0 ? t : 1.0 - Math.pow(2.0, -10.0 * t)
-}
-
-var expoOut_1 = expoOut;
-
-function linear(t) {
-  return t
-}
-
-var linear_1 = linear;
-
-function quadInOut(t) {
-    t /= 0.5;
-    if (t < 1) return 0.5*t*t
-    t--;
-    return -0.5 * (t*(t-2) - 1)
-}
-
-var quadInOut_1 = quadInOut;
-
-function quadIn(t) {
-  return t * t
-}
-
-var quadIn_1 = quadIn;
-
-function quadOut(t) {
-  return -t * (t - 2.0)
-}
-
-var quadOut_1 = quadOut;
-
-function quarticInOut(t) {
-  return t < 0.5
-    ? +8.0 * Math.pow(t, 4.0)
-    : -8.0 * Math.pow(t - 1.0, 4.0) + 1.0
-}
-
-var quartInOut = quarticInOut;
-
-function quarticIn(t) {
-  return Math.pow(t, 4.0)
-}
-
-var quartIn = quarticIn;
-
-function quarticOut(t) {
-  return Math.pow(t - 1.0, 3.0) * (1.0 - t) + 1.0
-}
-
-var quartOut = quarticOut;
-
-function qinticInOut(t) {
-    if ( ( t *= 2 ) < 1 ) return 0.5 * t * t * t * t * t
-    return 0.5 * ( ( t -= 2 ) * t * t * t * t + 2 )
-}
-
-var quintInOut = qinticInOut;
-
-function qinticIn(t) {
-  return t * t * t * t * t
-}
-
-var quintIn = qinticIn;
-
-function qinticOut(t) {
-  return --t * t * t * t * t + 1
-}
-
-var quintOut = qinticOut;
-
-function sineInOut(t) {
-  return -0.5 * (Math.cos(Math.PI*t) - 1)
-}
-
-var sineInOut_1 = sineInOut;
-
-function sineIn (t) {
-  var v = Math.cos(t * Math.PI * 0.5);
-  if (Math.abs(v) < 1e-14) return 1
-  else return 1 - v
-}
-
-var sineIn_1 = sineIn;
-
-function sineOut(t) {
-  return Math.sin(t * Math.PI/2)
-}
-
-var sineOut_1 = sineOut;
-
-var eases = {
-	'backInOut': backInOut_1,
-	'backIn': backIn_1,
-	'backOut': backOut_1,
-	'bounceInOut': bounceInOut_1,
-	'bounceIn': bounceIn_1,
-	'bounceOut': bounceOut_1,
-	'circInOut': circInOut_1,
-	'circIn': circIn_1,
-	'circOut': circOut_1,
-	'cubicInOut': cubicInOut_1,
-	'cubicIn': cubicIn_1,
-	'cubicOut': cubicOut_1,
-	'elasticInOut': elasticInOut_1,
-	'elasticIn': elasticIn_1,
-	'elasticOut': elasticOut_1,
-	'expoInOut': expoInOut_1,
-	'expoIn': expoIn_1,
-	'expoOut': expoOut_1,
-	'linear': linear_1,
-	'quadInOut': quadInOut_1,
-	'quadIn': quadIn_1,
-	'quadOut': quadOut_1,
-	'quartInOut': quartInOut,
-	'quartIn': quartIn,
-	'quartOut': quartOut,
-	'quintInOut': quintInOut,
-	'quintIn': quintIn,
-	'quintOut': quintOut,
-	'sineInOut': sineInOut_1,
-	'sineIn': sineIn_1,
-	'sineOut': sineOut_1
-};
-
-var Eases = eases;
-var Tween = /** @class */ (function () {
-    function Tween(target) {
-        var _this = this;
-        this.paused = false;
-        this.steps = [];
-        this.currentStep = 0;
-        this.loop = 0;
-        this.to = function (targetValues, totalTime, ease) {
-            if (ease === void 0) { ease = 'linear'; }
-            _this.steps.push({ targetValues: targetValues, totalTime: totalTime, ease: Eases[ease] });
-            return _this;
-        };
-        this.wait = function (totalTime) {
-            _this.steps.push({ totalTime: totalTime });
-            return _this;
-        };
-        this.call = function (call) {
-            _this.steps.push({ call: call });
-            return _this;
-        };
-        this.doComplete = function () {
-            if (_this.onComplete) {
-                _this.onComplete();
-            }
-            if (_this._resolve) {
-                _this._resolve();
-            }
-            _this.destroy();
-        };
-        this.update = function (elapsed) {
-            if (_this.paused) {
-                return;
-            }
-            if (_this.steps.length <= _this.currentStep) {
-                if (_this.loop) {
-                    if (_this.loop > 0) {
-                        _this.loop--;
-                    }
-                    _this.currentStep = 0;
-                    for (var _i = 0, _a = _this.steps; _i < _a.length; _i++) {
-                        var step_1 = _a[_i];
-                        step_1.currentTime = 0;
-                    }
-                }
-                else {
-                    return _this.doComplete();
-                }
-            }
-            var step = _this.steps[_this.currentStep];
-            if (step.call) {
-                _this.currentStep++;
-                return step.call();
-            }
-            if (!step.currentTime) {
-                step.currentTime = 0;
-                if (step.targetValues) {
-                    step.initialValues = {};
-                    for (var key in step.targetValues) {
-                        step.initialValues[key] = _this.target[key];
-                    }
-                }
-            }
-            step.currentTime += elapsed;
-            var time = step.currentTime / step.totalTime > 1 ? 1 : step.currentTime / step.totalTime;
-            if (step.targetValues) {
-                for (var key in step.targetValues) {
-                    _this.target[key] = step.initialValues[key] + step.ease(time) * (step.targetValues[key] - step.initialValues[key]);
-                }
-            }
-            if (time >= 1) {
-                _this.currentStep++;
-            }
-        };
-        this.target = target;
-    }
-    Tween.get = function (target, options) {
-        if (options === void 0) { options = {}; }
-        if (options.override) {
-            this.removeTweens(target);
-        }
-        var tween = new Tween(target);
-        if (options.loop) {
-            if (options.loop % 1) {
-                console.error('Tween options.loop must be an integer. Got: ', options.loop);
-            }
-            tween.loop = options.loop;
-        }
-        if (options.onComplete) {
-            tween.onComplete = options.onComplete;
-        }
-        Tween.tweens.push(tween);
-        return tween;
-    };
-    Tween.removeTweens = function (target) {
-        for (var i = Tween.tweens.length - 1; i >= 0; i--) {
-            if (Tween.tweens[i].target === target) {
-                Tween.tweens[i].destroy();
-            }
-        }
-    };
-    Tween.removeAllTweens = function () {
-        for (var i = Tween.tweens.length - 1; i >= 0; i--) {
-            Tween.tweens[i].destroy();
-        }
-    };
-    Object.defineProperty(Tween.prototype, "promise", {
-        get: function () {
-            var _this = this;
-            if (!this._promise) {
-                this._promise = new Promise(function (resolve) { _this._resolve = resolve; });
-            }
-            return this._promise;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Tween.update = function (elapsed) {
-        if (Tween.tweens.length) {
-            for (var _i = 0, _a = Tween.tweens; _i < _a.length; _i++) {
-                var tween = _a[_i];
-                tween.update(elapsed);
-            }
-        }
-    };
-    Tween.prototype.destroy = function () {
-        Tween.tweens.splice(Tween.tweens.indexOf(this), 1);
-        this.target = null;
-        this.steps = null;
-        this.currentStep = null;
-        this._promise = null;
-        this._resolve = null;
-    };
-    Tween.tweens = [];
-    return Tween;
-}());
-
 /**
  *
  *  GameTime is a relay singleton that any object can hook into via its SpringRoll Property to get the next tick (gameTick) of the game clock.
@@ -713,6 +315,88 @@ var GameTime = /** @class */ (function () {
     };
     GameTime.gameTick = new Property(0);
     return GameTime;
+}());
+
+var PauseableTimer = /** @class */ (function () {
+    function PauseableTimer(callback, time, loop) {
+        var _this = this;
+        this.active = true;
+        this.paused = false;
+        this.repeat = false;
+        this.update = function (deltaTime) {
+            if (_this.paused || !_this.targetTime) {
+                return;
+            }
+            _this.currentTime += deltaTime;
+            var time = _this.currentTime / _this.targetTime > 1 ? 1 : _this.currentTime / _this.targetTime;
+            if (time >= 1) {
+                if (_this.onComplete) {
+                    _this.onComplete();
+                }
+                if (_this.repeat) {
+                    var delta = _this.currentTime - _this.targetTime;
+                    _this.reset(delta);
+                }
+                else {
+                    _this.destroy(true);
+                }
+            }
+        };
+        this.targetTime = time;
+        this.currentTime = 0;
+        this.onComplete = callback;
+        this.repeat = loop;
+        GameTime.gameTick.subscribe(this.update);
+        PauseableTimer.timers.push(this);
+    }
+    PauseableTimer.clearTimers = function () {
+        for (var _i = 0, _a = PauseableTimer.timers; _i < _a.length; _i++) {
+            var timer = _a[_i];
+            timer.destroy(false);
+        }
+    };
+    Object.defineProperty(PauseableTimer.prototype, "promise", {
+        get: function () {
+            var _this = this;
+            if (!this._promise) {
+                this._promise = new Promise(function (resolve, reject) {
+                    _this.resolve = resolve;
+                    _this.reject = reject;
+                });
+            }
+            return this._promise;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    PauseableTimer.prototype.pause = function (pause) {
+        this.paused = pause;
+    };
+    PauseableTimer.prototype.reset = function (deltaTime) {
+        // deltaTime shows how far over the end we went = do we care?
+        this.currentTime = deltaTime ? deltaTime : 0;
+    };
+    PauseableTimer.prototype.destroy = function (isComplete) {
+        if (isComplete === void 0) { isComplete = false; }
+        this.paused = true; // make sure it doesn't try to do another update.
+        if (isComplete) {
+            if (this.resolve) {
+                this.resolve();
+            }
+        }
+        else if (this.reject) {
+            this.reject('destroyed');
+        }
+        this._promise = null;
+        this.resolve = null;
+        this.reject = null;
+        this.targetTime = null;
+        this.onComplete = null;
+        GameTime.gameTick.unsubscribe(this.update);
+        PauseableTimer.timers.splice(PauseableTimer.timers.indexOf(this), 1);
+    };
+    PauseableTimer.timers = [];
+    return PauseableTimer;
 }());
 
 /** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
@@ -748,7 +432,6 @@ var StageManager = /** @class */ (function () {
         this.isPaused = false;
         /** Map of Scenes by Scene IDs */
         this.scenes = {};
-        this.timers = [];
         /**
          * Transition to specified scene
          * @param {string} sceneID ID of Scene to transition to
@@ -986,13 +669,11 @@ var StageManager = /** @class */ (function () {
         return { x: pointin.x - this.offset.x, y: pointin.y - this.offset.y };
     };
     StageManager.prototype.addTimer = function (timer) {
-        this.timers.push(timer);
+        console.warn('StageManager.prototype.addTimer() is deprecated. PauseableTimers manage themselves');
     };
     StageManager.prototype.clearTimers = function () {
-        this.timers.forEach(function (timer) {
-            timer.destroy(false);
-        });
-        this.timers = [];
+        console.warn('StageManager.prototype.clearTimers() is deprecated. use PauseableTimer.clearTimers() instead');
+        PauseableTimer.clearTimers();
     };
     StageManager.prototype.showCaption = function (captionid, begin, args) {
         if (this.isCaptionsMuted) {
@@ -1010,7 +691,6 @@ var StageManager = /** @class */ (function () {
             return;
         }
         var elapsed = PIXI.ticker.shared.elapsedMS;
-        Tween.update(elapsed);
         if (this.captions) {
             this.captions.update(elapsed / 1000); // captions go by seconds, not ms
         }
@@ -1404,76 +1084,396 @@ function __extends(d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 }
 
-var PauseableTimer = /** @class */ (function () {
-    function PauseableTimer(callback, time, loop) {
+function backInOut(t) {
+  var s = 1.70158 * 1.525;
+  if ((t *= 2) < 1)
+    return 0.5 * (t * t * ((s + 1) * t - s))
+  return 0.5 * ((t -= 2) * t * ((s + 1) * t + s) + 2)
+}
+
+var backInOut_1 = backInOut;
+
+function backIn(t) {
+  var s = 1.70158;
+  return t * t * ((s + 1) * t - s)
+}
+
+var backIn_1 = backIn;
+
+function backOut(t) {
+  var s = 1.70158;
+  return --t * t * ((s + 1) * t + s) + 1
+}
+
+var backOut_1 = backOut;
+
+function bounceOut(t) {
+  var a = 4.0 / 11.0;
+  var b = 8.0 / 11.0;
+  var c = 9.0 / 10.0;
+
+  var ca = 4356.0 / 361.0;
+  var cb = 35442.0 / 1805.0;
+  var cc = 16061.0 / 1805.0;
+
+  var t2 = t * t;
+
+  return t < a
+    ? 7.5625 * t2
+    : t < b
+      ? 9.075 * t2 - 9.9 * t + 3.4
+      : t < c
+        ? ca * t2 - cb * t + cc
+        : 10.8 * t * t - 20.52 * t + 10.72
+}
+
+var bounceOut_1 = bounceOut;
+
+function bounceInOut(t) {
+  return t < 0.5
+    ? 0.5 * (1.0 - bounceOut_1(1.0 - t * 2.0))
+    : 0.5 * bounceOut_1(t * 2.0 - 1.0) + 0.5
+}
+
+var bounceInOut_1 = bounceInOut;
+
+function bounceIn(t) {
+  return 1.0 - bounceOut_1(1.0 - t)
+}
+
+var bounceIn_1 = bounceIn;
+
+function circInOut(t) {
+  if ((t *= 2) < 1) return -0.5 * (Math.sqrt(1 - t * t) - 1)
+  return 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1)
+}
+
+var circInOut_1 = circInOut;
+
+function circIn(t) {
+  return 1.0 - Math.sqrt(1.0 - t * t)
+}
+
+var circIn_1 = circIn;
+
+function circOut(t) {
+  return Math.sqrt(1 - ( --t * t ))
+}
+
+var circOut_1 = circOut;
+
+function cubicInOut(t) {
+  return t < 0.5
+    ? 4.0 * t * t * t
+    : 0.5 * Math.pow(2.0 * t - 2.0, 3.0) + 1.0
+}
+
+var cubicInOut_1 = cubicInOut;
+
+function cubicIn(t) {
+  return t * t * t
+}
+
+var cubicIn_1 = cubicIn;
+
+function cubicOut(t) {
+  var f = t - 1.0;
+  return f * f * f + 1.0
+}
+
+var cubicOut_1 = cubicOut;
+
+function elasticInOut(t) {
+  return t < 0.5
+    ? 0.5 * Math.sin(+13.0 * Math.PI/2 * 2.0 * t) * Math.pow(2.0, 10.0 * (2.0 * t - 1.0))
+    : 0.5 * Math.sin(-13.0 * Math.PI/2 * ((2.0 * t - 1.0) + 1.0)) * Math.pow(2.0, -10.0 * (2.0 * t - 1.0)) + 1.0
+}
+
+var elasticInOut_1 = elasticInOut;
+
+function elasticIn(t) {
+  return Math.sin(13.0 * t * Math.PI/2) * Math.pow(2.0, 10.0 * (t - 1.0))
+}
+
+var elasticIn_1 = elasticIn;
+
+function elasticOut(t) {
+  return Math.sin(-13.0 * (t + 1.0) * Math.PI/2) * Math.pow(2.0, -10.0 * t) + 1.0
+}
+
+var elasticOut_1 = elasticOut;
+
+function expoInOut(t) {
+  return (t === 0.0 || t === 1.0)
+    ? t
+    : t < 0.5
+      ? +0.5 * Math.pow(2.0, (20.0 * t) - 10.0)
+      : -0.5 * Math.pow(2.0, 10.0 - (t * 20.0)) + 1.0
+}
+
+var expoInOut_1 = expoInOut;
+
+function expoIn(t) {
+  return t === 0.0 ? t : Math.pow(2.0, 10.0 * (t - 1.0))
+}
+
+var expoIn_1 = expoIn;
+
+function expoOut(t) {
+  return t === 1.0 ? t : 1.0 - Math.pow(2.0, -10.0 * t)
+}
+
+var expoOut_1 = expoOut;
+
+function linear(t) {
+  return t
+}
+
+var linear_1 = linear;
+
+function quadInOut(t) {
+    t /= 0.5;
+    if (t < 1) return 0.5*t*t
+    t--;
+    return -0.5 * (t*(t-2) - 1)
+}
+
+var quadInOut_1 = quadInOut;
+
+function quadIn(t) {
+  return t * t
+}
+
+var quadIn_1 = quadIn;
+
+function quadOut(t) {
+  return -t * (t - 2.0)
+}
+
+var quadOut_1 = quadOut;
+
+function quarticInOut(t) {
+  return t < 0.5
+    ? +8.0 * Math.pow(t, 4.0)
+    : -8.0 * Math.pow(t - 1.0, 4.0) + 1.0
+}
+
+var quartInOut = quarticInOut;
+
+function quarticIn(t) {
+  return Math.pow(t, 4.0)
+}
+
+var quartIn = quarticIn;
+
+function quarticOut(t) {
+  return Math.pow(t - 1.0, 3.0) * (1.0 - t) + 1.0
+}
+
+var quartOut = quarticOut;
+
+function qinticInOut(t) {
+    if ( ( t *= 2 ) < 1 ) return 0.5 * t * t * t * t * t
+    return 0.5 * ( ( t -= 2 ) * t * t * t * t + 2 )
+}
+
+var quintInOut = qinticInOut;
+
+function qinticIn(t) {
+  return t * t * t * t * t
+}
+
+var quintIn = qinticIn;
+
+function qinticOut(t) {
+  return --t * t * t * t * t + 1
+}
+
+var quintOut = qinticOut;
+
+function sineInOut(t) {
+  return -0.5 * (Math.cos(Math.PI*t) - 1)
+}
+
+var sineInOut_1 = sineInOut;
+
+function sineIn (t) {
+  var v = Math.cos(t * Math.PI * 0.5);
+  if (Math.abs(v) < 1e-14) return 1
+  else return 1 - v
+}
+
+var sineIn_1 = sineIn;
+
+function sineOut(t) {
+  return Math.sin(t * Math.PI/2)
+}
+
+var sineOut_1 = sineOut;
+
+var eases = {
+	'backInOut': backInOut_1,
+	'backIn': backIn_1,
+	'backOut': backOut_1,
+	'bounceInOut': bounceInOut_1,
+	'bounceIn': bounceIn_1,
+	'bounceOut': bounceOut_1,
+	'circInOut': circInOut_1,
+	'circIn': circIn_1,
+	'circOut': circOut_1,
+	'cubicInOut': cubicInOut_1,
+	'cubicIn': cubicIn_1,
+	'cubicOut': cubicOut_1,
+	'elasticInOut': elasticInOut_1,
+	'elasticIn': elasticIn_1,
+	'elasticOut': elasticOut_1,
+	'expoInOut': expoInOut_1,
+	'expoIn': expoIn_1,
+	'expoOut': expoOut_1,
+	'linear': linear_1,
+	'quadInOut': quadInOut_1,
+	'quadIn': quadIn_1,
+	'quadOut': quadOut_1,
+	'quartInOut': quartInOut,
+	'quartIn': quartIn,
+	'quartOut': quartOut,
+	'quintInOut': quintInOut,
+	'quintIn': quintIn,
+	'quintOut': quintOut,
+	'sineInOut': sineInOut_1,
+	'sineIn': sineIn_1,
+	'sineOut': sineOut_1
+};
+
+var Eases = eases;
+var Tween$$1 = /** @class */ (function () {
+    function Tween$$1(target) {
         var _this = this;
-        this.active = true;
         this.paused = false;
-        this.repeat = false;
-        this.update = function (deltaTime) {
-            if (_this.paused || !_this.targetTime) {
+        this.steps = [];
+        this.currentStep = 0;
+        this.loop = 0;
+        this.to = function (targetValues, totalTime, ease) {
+            if (ease === void 0) { ease = 'linear'; }
+            _this.steps.push({ targetValues: targetValues, totalTime: totalTime, ease: Eases[ease] });
+            return _this;
+        };
+        this.wait = function (totalTime) {
+            _this.steps.push({ totalTime: totalTime });
+            return _this;
+        };
+        this.call = function (call) {
+            _this.steps.push({ call: call });
+            return _this;
+        };
+        this.doComplete = function () {
+            if (_this.onComplete) {
+                _this.onComplete();
+            }
+            if (_this._resolve) {
+                _this._resolve();
+            }
+            _this.destroy();
+        };
+        this.update = function (elapsed) {
+            if (_this.paused) {
                 return;
             }
-            _this.currentTime += deltaTime;
-            var time = _this.currentTime / _this.targetTime > 1 ? 1 : _this.currentTime / _this.targetTime;
-            if (time >= 1) {
-                if (_this.onComplete) {
-                    _this.onComplete();
-                }
-                if (_this.repeat) {
-                    var delta = _this.currentTime - _this.targetTime;
-                    _this.reset(delta);
+            if (_this.steps.length <= _this.currentStep) {
+                if (_this.loop) {
+                    if (_this.loop > 0) {
+                        _this.loop--;
+                    }
+                    _this.currentStep = 0;
+                    for (var _i = 0, _a = _this.steps; _i < _a.length; _i++) {
+                        var step_1 = _a[_i];
+                        step_1.currentTime = 0;
+                    }
                 }
                 else {
-                    _this.destroy(true);
+                    return _this.doComplete();
                 }
             }
+            var step = _this.steps[_this.currentStep];
+            if (step.call) {
+                _this.currentStep++;
+                return step.call();
+            }
+            if (!step.currentTime) {
+                step.currentTime = 0;
+                if (step.targetValues) {
+                    step.initialValues = {};
+                    for (var key in step.targetValues) {
+                        step.initialValues[key] = _this.target[key];
+                    }
+                }
+            }
+            step.currentTime += elapsed;
+            var time = step.currentTime / step.totalTime > 1 ? 1 : step.currentTime / step.totalTime;
+            if (step.targetValues) {
+                for (var key in step.targetValues) {
+                    _this.target[key] = step.initialValues[key] + step.ease(time) * (step.targetValues[key] - step.initialValues[key]);
+                }
+            }
+            if (time >= 1) {
+                _this.currentStep++;
+            }
         };
-        this.targetTime = time;
-        this.currentTime = 0;
-        this.onComplete = callback;
-        this.repeat = loop;
-        GameTime.gameTick.subscribe(this.update);
+        this.target = target;
     }
-    Object.defineProperty(PauseableTimer.prototype, "promise", {
+    Tween$$1.get = function (target, options) {
+        if (options === void 0) { options = {}; }
+        if (options.override) {
+            this.removeTweens(target);
+        }
+        var tween = new Tween$$1(target);
+        if (options.loop) {
+            if (options.loop % 1) {
+                console.error('Tween options.loop must be an integer. Got: ', options.loop);
+            }
+            tween.loop = options.loop;
+        }
+        if (options.onComplete) {
+            tween.onComplete = options.onComplete;
+        }
+        Tween$$1.tweens.push(tween);
+        GameTime.gameTick.subscribe(tween.update);
+        return tween;
+    };
+    Tween$$1.removeTweens = function (target) {
+        for (var i = Tween$$1.tweens.length - 1; i >= 0; i--) {
+            if (Tween$$1.tweens[i].target === target) {
+                Tween$$1.tweens[i].destroy();
+            }
+        }
+    };
+    Tween$$1.removeAllTweens = function () {
+        for (var i = Tween$$1.tweens.length - 1; i >= 0; i--) {
+            Tween$$1.tweens[i].destroy();
+        }
+    };
+    Object.defineProperty(Tween$$1.prototype, "promise", {
         get: function () {
             var _this = this;
             if (!this._promise) {
-                this._promise = new Promise(function (resolve, reject) {
-                    _this.resolve = resolve;
-                    _this.reject = reject;
-                });
+                this._promise = new Promise(function (resolve) { _this._resolve = resolve; });
             }
             return this._promise;
         },
         enumerable: true,
         configurable: true
     });
-    PauseableTimer.prototype.pause = function (pause) {
-        this.paused = pause;
-    };
-    PauseableTimer.prototype.reset = function (deltaTime) {
-        // deltaTime shows how far over the end we went = do we care?
-        this.currentTime = deltaTime ? deltaTime : 0;
-    };
-    PauseableTimer.prototype.destroy = function (isComplete) {
-        if (isComplete === void 0) { isComplete = false; }
-        this.paused = true; // make sure it doesn't try to do another update.
-        if (isComplete) {
-            if (this.resolve) {
-                this.resolve();
-            }
-        }
-        else if (this.reject) {
-            this.reject('destroyed');
-        }
-        this._promise = null;
-        this.resolve = null;
-        this.reject = null;
-        this.targetTime = null;
+    Tween$$1.prototype.destroy = function () {
         GameTime.gameTick.unsubscribe(this.update);
+        Tween$$1.tweens.splice(Tween$$1.tweens.indexOf(this), 1);
+        this.target = null;
+        this.steps = null;
+        this.currentStep = null;
+        this._promise = null;
+        this._resolve = null;
     };
-    return PauseableTimer;
+    Tween$$1.tweens = [];
+    return Tween$$1;
 }());
 
 /**
@@ -1543,7 +1543,7 @@ var Scene = /** @class */ (function (_super) {
      */
     Scene.prototype.tween = function (target, values, time, ease) {
         console.warn('Scene.tween() is deprecated, please use Tween.get()');
-        return Tween.get(target).to(values, time, ease);
+        return Tween$$1.get(target).to(values, time, ease);
     };
     /**
      *
@@ -1554,9 +1554,7 @@ var Scene = /** @class */ (function (_super) {
      * @param time
      */
     Scene.prototype.setTimeout = function (callback, time) {
-        var timer = new PauseableTimer(callback, time);
-        this.stageManager.addTimer(timer);
-        return timer;
+        return new PauseableTimer(callback, time);
     };
     Scene.prototype.clearTimeout = function (timer) {
         if (timer) {
@@ -1564,9 +1562,7 @@ var Scene = /** @class */ (function (_super) {
         }
     };
     Scene.prototype.setInterval = function (callback, time) {
-        var timer = new PauseableTimer(callback, time, true);
-        this.stageManager.addTimer(timer);
-        return timer;
+        return new PauseableTimer(callback, time, true);
     };
     Scene.prototype.clearInterval = function (timer) {
         if (timer) {
@@ -1588,5 +1584,5 @@ var Scene = /** @class */ (function (_super) {
 
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween$$1 as Tween };
 //# sourceMappingURL=gamelib.js.map

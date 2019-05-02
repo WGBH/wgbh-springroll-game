@@ -2,6 +2,8 @@ import GameTime from "./GameTime";
 
 export default class PauseableTimer {
 
+    static timers:PauseableTimer[] = [];
+
     public active = true;
 
     private currentTime:number;
@@ -22,6 +24,13 @@ export default class PauseableTimer {
         
         this.repeat = loop;
         GameTime.gameTick.subscribe(this.update);
+        PauseableTimer.timers.push(this);
+    }
+
+    static clearTimers(){
+        for(let timer of PauseableTimer.timers){
+            timer.destroy(false);
+        }
     }
 
     get promise() {
@@ -77,6 +86,8 @@ export default class PauseableTimer {
         this.resolve = null;
         this.reject = null;
         this.targetTime = null;
+        this.onComplete = null;
         GameTime.gameTick.unsubscribe(this.update);
+        PauseableTimer.timers.splice(PauseableTimer.timers.indexOf(this), 1);
     }
 }
