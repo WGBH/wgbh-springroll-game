@@ -19,7 +19,7 @@
     "@types/eases": "^1.0.0",
     "@types/pixi.js": "^4.8.7",
     "pixi-animate": "^1.3.4",
-    "pixi-sound": "^2.1.3",
+    "pixi-sound": "^2.1.4",
     "pixi.js": "4.8.2",
     "rollup": "^0.68.0",
     "rollup-plugin-commonjs": "^9.2.0",

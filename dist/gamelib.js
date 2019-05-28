@@ -463,14 +463,38 @@ var StageManager = /** @class */ (function () {
                 _this.game.assetManager.unloadAssets();
             })
                 .then(function () {
+                return new Promise(function (resolve) {
+                    setTimeout(resolve, 250);
+                });
+            })
+                .then(function () {
                 _this._currentScene = new NewScene(_this.game);
                 return new Promise(function (resolve) {
                     _this.game.assetManager.loadAssets(_this._currentScene.preload(), resolve);
                 });
             })
                 .then(function () {
+                return new Promise(function (resolve) {
+                    setTimeout(resolve, 250);
+                });
+            })
+                .then(function () {
                 _this._currentScene.setup();
+            })
+                .then(function () {
+                return new Promise(function (resolve) {
+                    setTimeout(resolve, 250);
+                });
+            })
+                .then(function () {
                 _this.pixi.stage.addChildAt(_this._currentScene, 0);
+            })
+                .then(function () {
+                return new Promise(function (resolve) {
+                    setTimeout(resolve, 250);
+                });
+            })
+                .then(function () {
                 return new Promise(function (resolve) {
                     PIXI.animate.Animator.play(_this.transition, 'reveal', resolve);
                 });
