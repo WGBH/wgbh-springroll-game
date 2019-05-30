@@ -401,6 +401,7 @@ var PauseableTimer = /** @class */ (function () {
 
 /** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
 var FLICKERERS = [
+    //Kindle fire tablets:
     'KFFOWI',
     'KFMEWI',
     'KFTBWI',
@@ -419,7 +420,19 @@ var FLICKERERS = [
     'KFOT',
     'Kindle Fire',
     'Silk',
+    //Galaxy Tab A 7":
     'SM-T280',
+    //RCA tablets:
+    'RCT6077W2',
+    'RCT6103W46',
+    'RCT6203W46',
+    'RCT6272W23',
+    'RCT6303W87',
+    'RCT6378W2',
+    'RCT6773W22',
+    'RCT6773W42',
+    'RCT6873W42',
+    'RCT6973W43',
 ];
 var TRANSITION_ID = 'wgbhSpringRollGameTransition';
 /**
