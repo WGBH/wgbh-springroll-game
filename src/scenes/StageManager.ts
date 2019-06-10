@@ -7,6 +7,7 @@ import { ScaleManager, CaptionPlayer, CaptionData, IRender, Property } from 'spr
 
 /** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
 const FLICKERERS = [
+    //Kindle fire tablets:
     'KFFOWI',
     'KFMEWI',
     'KFTBWI',
@@ -25,7 +26,19 @@ const FLICKERERS = [
     'KFOT',
     'Kindle Fire',
     'Silk',
-    'SM-T280',//Galaxy Tab A 7"
+    //Galaxy Tab A 7":
+    'SM-T280',
+    //RCA tablets:
+    'RCT6077W2',
+    'RCT6103W46',
+    'RCT6203W46',
+    'RCT6272W23',
+    'RCT6303W87',
+    'RCT6378W2',
+    'RCT6773W22',
+    'RCT6773W42',
+    'RCT6873W42',
+    'RCT6973W43',
 ];
 
 
