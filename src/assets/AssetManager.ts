@@ -187,15 +187,21 @@ export default class AssetManager {
      */
     private loadAnimate(animateStageDescriptor:AnimateStageDescriptor):Promise<any>{
         return new Promise((resolve) => {
-            PIXI.animate.load(animateStageDescriptor.stage, (movieClip)=>{
-                if(animateStageDescriptor.cacheInstance){
-                    this.cache.animations[animateStageDescriptor.id] = movieClip;
+            PIXI.animate.load(
+                {
+                    createInstance:!!animateStageDescriptor.cacheInstance,
+                    stage:animateStageDescriptor.stage,
+                    complete: (movieClip?)=>{
+                        if(animateStageDescriptor.cacheInstance){
+                            this.cache.animations[animateStageDescriptor.id] = movieClip;
+                        }
+                        if(animateStageDescriptor.isGlobal){
+                            this.globalCache.animations.push(animateStageDescriptor.id);
+                        }
+                        resolve();
+                    }
                 }
-                if(animateStageDescriptor.isGlobal){
-                    this.globalCache.animations.push(animateStageDescriptor.id);
-                }
-                resolve();
-            });
+            );
         });
     }
 

@@ -179,14 +179,18 @@ var AssetManager = /** @class */ (function () {
     AssetManager.prototype.loadAnimate = function (animateStageDescriptor) {
         var _this = this;
         return new Promise(function (resolve) {
-            PIXI.animate.load(animateStageDescriptor.stage, function (movieClip) {
-                if (animateStageDescriptor.cacheInstance) {
-                    _this.cache.animations[animateStageDescriptor.id] = movieClip;
+            PIXI.animate.load({
+                createInstance: !!animateStageDescriptor.cacheInstance,
+                stage: animateStageDescriptor.stage,
+                complete: function (movieClip) {
+                    if (animateStageDescriptor.cacheInstance) {
+                        _this.cache.animations[animateStageDescriptor.id] = movieClip;
+                    }
+                    if (animateStageDescriptor.isGlobal) {
+                        _this.globalCache.animations.push(animateStageDescriptor.id);
+                    }
+                    resolve();
                 }
-                if (animateStageDescriptor.isGlobal) {
-                    _this.globalCache.animations.push(animateStageDescriptor.id);
-                }
-                resolve();
             });
         });
     };
@@ -399,6 +403,7 @@ var PauseableTimer = /** @class */ (function () {
     return PauseableTimer;
 }());
 
+var LOADING_DELAY = 250;
 /** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
 var FLICKERERS = [
     //Kindle fire tablets:
@@ -476,14 +481,38 @@ var StageManager = /** @class */ (function () {
                 _this.game.assetManager.unloadAssets();
             })
                 .then(function () {
+                return new Promise(function (resolve) {
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+                .then(function () {
                 _this._currentScene = new NewScene(_this.game);
                 return new Promise(function (resolve) {
                     _this.game.assetManager.loadAssets(_this._currentScene.preload(), resolve);
                 });
             })
                 .then(function () {
+                return new Promise(function (resolve) {
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+                .then(function () {
                 _this._currentScene.setup();
+            })
+                .then(function () {
+                return new Promise(function (resolve) {
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+                .then(function () {
                 _this.pixi.stage.addChildAt(_this._currentScene, 0);
+            })
+                .then(function () {
+                return new Promise(function (resolve) {
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+                .then(function () {
                 return new Promise(function (resolve) {
                     PIXI.animate.Animator.play(_this.transition, 'reveal', resolve);
                 });
@@ -1044,6 +1073,10 @@ var Game = /** @class */ (function () {
             this.stageManager.addCaptions(options.captions.config, options.captions.display);
         }
     }
+    /** Add plugin to this instance of SpringRoll */
+    Game.addPlugin = function (plugin) {
+        Application.uses(plugin);
+    };
     /** overrride and return list of global assets */
     Game.prototype.preload = function () {
         return null;

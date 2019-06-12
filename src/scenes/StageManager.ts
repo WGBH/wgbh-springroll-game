@@ -5,6 +5,8 @@ import GameTime from '../timer/GameTime';
 import PauseableTimer from '../timer/PauseableTimer';
 import { ScaleManager, CaptionPlayer, CaptionData, IRender, Property } from 'springroll';
 
+const LOADING_DELAY = 250;
+
 /** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
 const FLICKERERS = [
     //Kindle fire tablets:
@@ -180,6 +182,11 @@ export default class StageManager{
                 }
                 this.game.assetManager.unloadAssets();
             })
+            .then(()=>{
+                return new Promise((resolve)=>{
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
             .then(() => {
                 this._currentScene = new NewScene(this.game);
                 return new Promise((resolve)=>{
@@ -187,8 +194,27 @@ export default class StageManager{
                 });
             })
             .then(()=>{
+                return new Promise((resolve)=>{
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+            .then(()=>{
                 this._currentScene.setup();
+            })
+            .then(()=>{
+                return new Promise((resolve)=>{
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+            .then(()=>{
                 this.pixi.stage.addChildAt(this._currentScene, 0);
+            })
+            .then(()=>{
+                return new Promise((resolve)=>{
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+            .then(()=>{
                 return new Promise((resolve)=>{
                     PIXI.animate.Animator.play(this.transition, 'reveal', resolve);
                 });
