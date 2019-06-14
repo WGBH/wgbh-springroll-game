@@ -1,5 +1,3 @@
-import { CompleteCallback } from "pixi-sound";
-
 export default class SoundContext {
 
     /** Map of Sounds by ID */
@@ -12,7 +10,7 @@ export default class SoundContext {
 
     public currentSound:string;
     public single:boolean = false;
-    private singleCallback:CompleteCallback;
+    private singleCallback:PIXI.sound.CompleteCallback;
 
     constructor(issingle?:boolean) {
         this.single = (issingle === true);
@@ -67,7 +65,7 @@ export default class SoundContext {
      * @param {string} id 
      * @param {CompleteCallback} onComplete 
      */
-    play(id:string, onComplete?:CompleteCallback) {
+    play(id:string, onComplete?:PIXI.sound.CompleteCallback) {
         if (this.single){
             if(this.currentSound) {
                 // stop currently playing sound
