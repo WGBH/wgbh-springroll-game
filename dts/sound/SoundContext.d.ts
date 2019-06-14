@@ -1,4 +1,4 @@
-import { CompleteCallback } from "pixi-sound";
+/// <reference types="pixi-sound" />
 export default class SoundContext {
     /** Map of Sounds by ID */
     sounds: {
@@ -34,7 +34,7 @@ export default class SoundContext {
      * @param {string} id
      * @param {CompleteCallback} onComplete
      */
-    play(id: string, onComplete?: CompleteCallback): PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>;
+    play(id: string, onComplete?: PIXI.sound.CompleteCallback): PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>;
     private singlePlayComplete;
     stop(id: string): void;
     stopAll(): void;
