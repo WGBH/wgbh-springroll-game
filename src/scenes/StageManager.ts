@@ -1,10 +1,47 @@
 import Scene from './Scene';
 import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
-import Tween from '../tween/Tween';
 import GameTime from '../timer/GameTime';
 import PauseableTimer from '../timer/PauseableTimer';
 import { ScaleManager, CaptionPlayer, CaptionData, IRender, Property } from 'springroll';
+
+const LOADING_DELAY = 250;
+
+/** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
+const FLICKERERS = [
+    //Kindle fire tablets:
+    'KFFOWI',
+    'KFMEWI',
+    'KFTBWI',
+    'KFARWI',
+    'KFASWI',
+    'KFSAWA',
+    'KFSAWI',
+    'KFAPWA',
+    'KFAPWI',
+    'KFTHWA',
+    'KFTHWI',
+    'KFSOWI',
+    'KFJWA',
+    'KFJWI',
+    'KFTT',
+    'KFOT',
+    'Kindle Fire',
+    'Silk',
+    //Galaxy Tab A 7":
+    'SM-T280',
+    //RCA tablets:
+    'RCT6077W2',
+    'RCT6103W46',
+    'RCT6203W46',
+    'RCT6272W23',
+    'RCT6303W87',
+    'RCT6378W2',
+    'RCT6773W22',
+    'RCT6773W42',
+    'RCT6873W42',
+    'RCT6973W43',
+];
 
 
 const TRANSITION_ID = 'wgbhSpringRollGameTransition';
@@ -35,11 +72,10 @@ export default class StageManager{
     private game:Game;
 
     private captions:CaptionPlayer;
+    private isCaptionsMuted:boolean;
 
     /** Map of Scenes by Scene IDs */
     private scenes: {[key:string]:typeof Scene} = {};
-
-    private timers:PauseableTimer[] = [];
 
     constructor(game:Game, containerID:string, width:number, height:number, altWidth?:number){
         this.game = game;
@@ -49,9 +85,10 @@ export default class StageManager{
 
         this.offset = new PIXI.Point(0,0);
 
-        // preserveDrawingBuffer is bad for overall performance, but necessary in order to support 
-        // some Android devices such as Galaxy Tab A and Kindle Fire
-        this.pixi = new PIXI.Application({ width, height, antialias:true, preserveDrawingBuffer:true});
+        // transparent rendering mode is bad for overall performance, but necessary in order
+        // to prevent flickering on some Android devices such as Galaxy Tab A and Kindle Fire
+        const flickerProne = !!FLICKERERS.find((value) => navigator.userAgent.includes(value));
+        this.pixi = new PIXI.Application({ width, height, antialias:true, transparent:flickerProne});
         this.pixi.view.style.display = 'block';
 
 
@@ -147,6 +184,11 @@ export default class StageManager{
                 }
                 this.game.assetManager.unloadAssets();
             })
+            .then(()=>{
+                return new Promise((resolve)=>{
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
             .then(() => {
                 this._currentScene = new NewScene(this.game);
                 return new Promise((resolve)=>{
@@ -154,8 +196,27 @@ export default class StageManager{
                 });
             })
             .then(()=>{
+                return new Promise((resolve)=>{
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+            .then(()=>{
                 this._currentScene.setup();
+            })
+            .then(()=>{
+                return new Promise((resolve)=>{
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+            .then(()=>{
                 this.pixi.stage.addChildAt(this._currentScene, 0);
+            })
+            .then(()=>{
+                return new Promise((resolve)=>{
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+            .then(()=>{
                 return new Promise((resolve)=>{
                     PIXI.animate.Animator.play(this.transition, 'reveal', resolve);
                 });
@@ -167,6 +228,15 @@ export default class StageManager{
             });
     }
 
+    get captionsMuted(){
+        return this.isCaptionsMuted;
+    }
+    set captionsMuted(muted:boolean){
+        this.isCaptionsMuted = muted;
+        if (muted) {
+            this.captions.stop();
+        }
+    }
     get pause(){
         return this.isPaused;
     }
@@ -286,17 +356,16 @@ export default class StageManager{
     }
 
     addTimer(timer:PauseableTimer){
-        this.timers.push(timer);
+        console.warn('StageManager.prototype.addTimer() is deprecated. PauseableTimers manage themselves');
     }
 
     clearTimers() {
-        this.timers.forEach(function(timer:PauseableTimer) {
-            timer.destroy(false);
-        });
-        this.timers = [];
+        console.warn('StageManager.prototype.clearTimers() is deprecated. use PauseableTimer.clearTimers() instead');
+        PauseableTimer.clearTimers();
     }
 
     showCaption(captionid:string,begin?:number,args?:any) {
+        if (this.isCaptionsMuted) { return; }
         begin = begin || 0;
         this.captions.start(captionid,begin,args);
     }
@@ -311,7 +380,6 @@ export default class StageManager{
             return;
         }
         const elapsed = PIXI.ticker.shared.elapsedMS;
-        Tween.update(elapsed);
         if (this.captions) {
             this.captions.update(elapsed/1000); // captions go by seconds, not ms
         }

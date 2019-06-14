@@ -91,7 +91,7 @@ export default class SoundManager {
             PIXI.sound.pauseAll();
         }
         else{
-            this.soundMeta[soundID].sounds[soundID].resume();
+            this.getSound(soundID).pause();
         }
     }
 
@@ -104,7 +104,7 @@ export default class SoundManager {
             PIXI.sound.resumeAll();
         }
         else{
-            this.soundMeta[soundID].sounds[soundID].resume();
+            this.getSound(soundID).resume();
         }
     }
 

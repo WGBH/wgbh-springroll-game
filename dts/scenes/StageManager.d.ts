@@ -27,9 +27,9 @@ export default class StageManager {
     private isPaused;
     private game;
     private captions;
+    private isCaptionsMuted;
     /** Map of Scenes by Scene IDs */
     private scenes;
-    private timers;
     constructor(game: Game, containerID: string, width: number, height: number, altWidth?: number);
     addCaptions(captionData: CaptionData, renderer: IRender): void;
     setCaptionRenderer(renderer: IRender): void;
@@ -43,6 +43,7 @@ export default class StageManager {
      * @param {string} sceneID ID of Scene to transition to
      */
     changeScene: (newScene: string) => void;
+    captionsMuted: boolean;
     pause: boolean;
     getSize(width: number, height: number): ScreenSize;
     setScaling(scaleconfig: ScaleConfig): void;

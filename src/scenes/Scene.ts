@@ -3,6 +3,7 @@ import { AssetList, AssetManager, SoundManager, StageManager } from '..';
 import { AssetCache } from '../assets/AssetManager';
 import Tween, { Ease } from '../tween/Tween';
 import PauseableTimer from '../timer/PauseableTimer';
+import { Application } from 'springroll';
 
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
@@ -27,8 +28,12 @@ export default class Scene extends PIXI.Container {
     /** Manages transitioning between Scenes - not intended to be controlled directly by a game Scene */
     protected readonly stageManager: StageManager;
 
+    /** Object reference to Game's SpringRoll Application, interface to Container */
+    protected readonly app: Application;
+
     constructor(game:Game) {
         super();
+        this.app = game.app;
         this.assetManager = game.assetManager;
         this.cache = this.assetManager.cache;
         this.sound = game.sound;
@@ -106,9 +111,7 @@ export default class Scene extends PIXI.Container {
      * @param time 
      */
     setTimeout(callback: Function, time:number):PauseableTimer {
-        const timer = new PauseableTimer(callback, time);
-        this.stageManager.addTimer(timer);
-        return timer;
+        return new PauseableTimer(callback, time);
     }
 
     clearTimeout(timer:PauseableTimer) {
@@ -118,9 +121,7 @@ export default class Scene extends PIXI.Container {
     }
 
     setInterval(callback: Function, time:number):PauseableTimer {
-        const timer = new PauseableTimer(callback, time, true);
-        this.stageManager.addTimer(timer);
-        return timer;
+        return new PauseableTimer(callback, time, true);
     }
 
     clearInterval(timer:PauseableTimer) {

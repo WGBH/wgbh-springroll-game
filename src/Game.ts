@@ -4,6 +4,7 @@ import AssetManager, { AnimateStage, AssetCache, AssetList } from "./assets/Asse
 import StageManager from "./scenes/StageManager";
 import SoundManager from './sound/SoundManager';
 import { Scene } from '.';
+import { ApplicationPlugin } from 'springroll';
 
 
 /** Base Class for WGBH SpringRoll Games - extend this Class in your project */
@@ -21,6 +22,11 @@ export default class Game {
     public sound: SoundManager;
     /** object for storing global data - accessible from all Scenes */
     public dataStore: {[key:string]:any} = {};
+
+    /** Add plugin to this instance of SpringRoll */
+    static addPlugin(plugin:ApplicationPlugin){
+        SpringRoll.Application.uses(plugin);
+    }
 
     constructor(options:GameOptions){
         this.sound = new SoundManager();
@@ -44,6 +50,9 @@ export default class Game {
         this.app.state.pause.subscribe((pause)=>{
             pause ? this.sound.pause() : this.sound.resume();
             this.stageManager.pause = pause;
+        });
+        this.app.state.captionsMuted.subscribe((isMuted:boolean)=> {
+            this.stageManager.captionsMuted = isMuted;
         });
 
         this.app.state.ready.subscribe(() => {

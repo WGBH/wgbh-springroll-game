@@ -187,15 +187,21 @@ export default class AssetManager {
      */
     private loadAnimate(animateStageDescriptor:AnimateStageDescriptor):Promise<any>{
         return new Promise((resolve) => {
-            PIXI.animate.load(animateStageDescriptor.stage, (movieClip)=>{
-                if(animateStageDescriptor.cacheInstance){
-                    this.cache.animations[animateStageDescriptor.id] = movieClip;
+            PIXI.animate.load(
+                {
+                    createInstance:!!animateStageDescriptor.cacheInstance,
+                    stage:animateStageDescriptor.stage,
+                    complete: (movieClip?)=>{
+                        if(animateStageDescriptor.cacheInstance){
+                            this.cache.animations[animateStageDescriptor.id] = movieClip;
+                        }
+                        if(animateStageDescriptor.isGlobal){
+                            this.globalCache.animations.push(animateStageDescriptor.id);
+                        }
+                        resolve();
+                    }
                 }
-                if(animateStageDescriptor.isGlobal){
-                    this.globalCache.animations.push(animateStageDescriptor.id);
-                }
-                resolve();
-            });
+            );
         });
     }
 
@@ -284,22 +290,21 @@ export default class AssetManager {
      * @param {ManifestDescriptor} manifestDescriptor 
      */
     private loadManifest(manifestDescriptor:ManifestDescriptor):Promise<AssetDescriptor[]>{
+
+        const dataLoader = new PIXI.loaders.Loader();
         return new Promise((resolve)=>{
-            const request = new XMLHttpRequest();
-            request.open('GET', manifestDescriptor.path);
-            request.onreadystatechange = ()=>{
-                if ((request.status === 200) && (request.readyState === 4))
-                {
-                    let data = JSON.parse(request.responseText);
-                    if(manifestDescriptor.isGlobal){
-                        for(let entry of data){
-                            entry.isGlobal = true;
-                        }
+            dataLoader.add(manifestDescriptor.path);
+            dataLoader.load((loader:PIXI.loaders.Loader, resources:PIXI.loaders.ResourceDictionary)=>{
+                const data:AssetDescriptor[] = resources[manifestDescriptor.path].data;
+                dataLoader.destroy();
+                if(manifestDescriptor.isGlobal){
+                    for(let entry of data){
+                        entry.isGlobal = true;
                     }
-                    resolve(data);
                 }
-            };
-            request.send();
+                resolve(data);
+                
+            });
         });
     }
 }

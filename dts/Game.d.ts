@@ -3,6 +3,7 @@ import AssetManager, { AnimateStage, AssetCache, AssetList } from "./assets/Asse
 import StageManager from "./scenes/StageManager";
 import SoundManager from './sound/SoundManager';
 import { Scene } from '.';
+import { ApplicationPlugin } from 'springroll';
 /** Base Class for WGBH SpringRoll Games - extend this Class in your project */
 export default class Game {
     /** SpringRoll Application, interface to Container */
@@ -19,6 +20,8 @@ export default class Game {
     dataStore: {
         [key: string]: any;
     };
+    /** Add plugin to this instance of SpringRoll */
+    static addPlugin(plugin: ApplicationPlugin): void;
     constructor(options: GameOptions);
     private preloadGlobal;
     /** overrride and return list of global assets */

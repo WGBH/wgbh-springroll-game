@@ -19,7 +19,6 @@ export default class Tween {
     on: (listentype: string, callback: Function) => this;
     readonly promise: Promise<void>;
     private doComplete;
-    static update(elapsed: number): void;
     update: (elapsed: number) => any;
     destroy(): void;
 }

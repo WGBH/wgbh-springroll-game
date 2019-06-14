@@ -1,4 +1,4 @@
-import { Property, ScaleManager, CaptionPlayer, Application } from 'springroll';
+import { Property, CaptionPlayer, ScaleManager, Application } from 'springroll';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -179,14 +179,18 @@ var AssetManager = /** @class */ (function () {
     AssetManager.prototype.loadAnimate = function (animateStageDescriptor) {
         var _this = this;
         return new Promise(function (resolve) {
-            PIXI.animate.load(animateStageDescriptor.stage, function (movieClip) {
-                if (animateStageDescriptor.cacheInstance) {
-                    _this.cache.animations[animateStageDescriptor.id] = movieClip;
+            PIXI.animate.load({
+                createInstance: !!animateStageDescriptor.cacheInstance,
+                stage: animateStageDescriptor.stage,
+                complete: function (movieClip) {
+                    if (animateStageDescriptor.cacheInstance) {
+                        _this.cache.animations[animateStageDescriptor.id] = movieClip;
+                    }
+                    if (animateStageDescriptor.isGlobal) {
+                        _this.globalCache.animations.push(animateStageDescriptor.id);
+                    }
+                    resolve();
                 }
-                if (animateStageDescriptor.isGlobal) {
-                    _this.globalCache.animations.push(animateStageDescriptor.id);
-                }
-                resolve();
             });
         });
     };
@@ -276,26 +280,857 @@ var AssetManager = /** @class */ (function () {
      * @param {ManifestDescriptor} manifestDescriptor
      */
     AssetManager.prototype.loadManifest = function (manifestDescriptor) {
+        var dataLoader = new PIXI.loaders.Loader();
         return new Promise(function (resolve) {
-            var request = new XMLHttpRequest();
-            request.open('GET', manifestDescriptor.path);
-            request.onreadystatechange = function () {
-                if ((request.status === 200) && (request.readyState === 4)) {
-                    var data = JSON.parse(request.responseText);
-                    if (manifestDescriptor.isGlobal) {
-                        for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
-                            var entry = data_1[_i];
-                            entry.isGlobal = true;
-                        }
+            dataLoader.add(manifestDescriptor.path);
+            dataLoader.load(function (loader, resources) {
+                var data = resources[manifestDescriptor.path].data;
+                dataLoader.destroy();
+                if (manifestDescriptor.isGlobal) {
+                    for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
+                        var entry = data_1[_i];
+                        entry.isGlobal = true;
                     }
-                    resolve(data);
                 }
-            };
-            request.send();
+                resolve(data);
+            });
         });
     };
     return AssetManager;
 }());
+
+/**
+ *
+ *  GameTime is a relay singleton that any object can hook into via its SpringRoll Property to get the next tick (gameTick) of the game clock.
+ *  Its update() should be called on any live tick of the game; determining whether the tick is live (e.g. checking paused) should happen elsewhere.
+ *
+ *  Call in the game's main tick/update function, using the singleton syntax on the class - GameTime.Instance.update(deltaTime);
+ *  Subscribe to changes using singleton syntax on the class - GameTime.Instance.gameTick.subscribe(callbackfunction)
+ *
+ */
+var GameTime = /** @class */ (function () {
+    function GameTime() {
+    }
+    GameTime.update = function (deltaTime) {
+        GameTime.gameTick.value = deltaTime;
+    };
+    GameTime.destroy = function () {
+        GameTime.gameTick.value = null;
+    };
+    GameTime.gameTick = new Property(0);
+    return GameTime;
+}());
+
+var PauseableTimer = /** @class */ (function () {
+    function PauseableTimer(callback, time, loop) {
+        var _this = this;
+        this.active = true;
+        this.paused = false;
+        this.repeat = false;
+        this.update = function (deltaTime) {
+            if (_this.paused || !_this.targetTime) {
+                return;
+            }
+            _this.currentTime += deltaTime;
+            var time = _this.currentTime / _this.targetTime > 1 ? 1 : _this.currentTime / _this.targetTime;
+            if (time >= 1) {
+                if (_this.onComplete) {
+                    _this.onComplete();
+                }
+                if (_this.repeat) {
+                    var delta = _this.currentTime - _this.targetTime;
+                    _this.reset(delta);
+                }
+                else {
+                    _this.destroy(true);
+                }
+            }
+        };
+        this.targetTime = time;
+        this.currentTime = 0;
+        this.onComplete = callback;
+        this.repeat = loop;
+        GameTime.gameTick.subscribe(this.update);
+        PauseableTimer.timers.push(this);
+    }
+    PauseableTimer.clearTimers = function () {
+        for (var _i = 0, _a = PauseableTimer.timers; _i < _a.length; _i++) {
+            var timer = _a[_i];
+            timer.destroy(false);
+        }
+    };
+    Object.defineProperty(PauseableTimer.prototype, "promise", {
+        get: function () {
+            var _this = this;
+            if (!this._promise) {
+                this._promise = new Promise(function (resolve, reject) {
+                    _this.resolve = resolve;
+                    _this.reject = reject;
+                });
+            }
+            return this._promise;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    PauseableTimer.prototype.pause = function (pause) {
+        this.paused = pause;
+    };
+    PauseableTimer.prototype.reset = function (deltaTime) {
+        // deltaTime shows how far over the end we went = do we care?
+        this.currentTime = deltaTime ? deltaTime : 0;
+    };
+    PauseableTimer.prototype.destroy = function (isComplete) {
+        if (isComplete === void 0) { isComplete = false; }
+        this.paused = true; // make sure it doesn't try to do another update.
+        if (isComplete) {
+            if (this.resolve) {
+                this.resolve();
+            }
+        }
+        else if (this.reject) {
+            this.reject('destroyed');
+        }
+        this._promise = null;
+        this.resolve = null;
+        this.reject = null;
+        this.targetTime = null;
+        this.onComplete = null;
+        GameTime.gameTick.unsubscribe(this.update);
+        PauseableTimer.timers.splice(PauseableTimer.timers.indexOf(this), 1);
+    };
+    PauseableTimer.timers = [];
+    return PauseableTimer;
+}());
+
+var LOADING_DELAY = 250;
+/** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
+var FLICKERERS = [
+    //Kindle fire tablets:
+    'KFFOWI',
+    'KFMEWI',
+    'KFTBWI',
+    'KFARWI',
+    'KFASWI',
+    'KFSAWA',
+    'KFSAWI',
+    'KFAPWA',
+    'KFAPWI',
+    'KFTHWA',
+    'KFTHWI',
+    'KFSOWI',
+    'KFJWA',
+    'KFJWI',
+    'KFTT',
+    'KFOT',
+    'Kindle Fire',
+    'Silk',
+    //Galaxy Tab A 7":
+    'SM-T280',
+    //RCA tablets:
+    'RCT6077W2',
+    'RCT6103W46',
+    'RCT6203W46',
+    'RCT6272W23',
+    'RCT6303W87',
+    'RCT6378W2',
+    'RCT6773W22',
+    'RCT6773W42',
+    'RCT6873W42',
+    'RCT6973W43',
+];
+var TRANSITION_ID = 'wgbhSpringRollGameTransition';
+/**
+ * Manages rendering and transitioning between Scenes
+ */
+var StageManager = /** @class */ (function () {
+    function StageManager(game, containerID, width, height, altWidth) {
+        var _this = this;
+        this.transitioning = true;
+        this.isPaused = false;
+        /** Map of Scenes by Scene IDs */
+        this.scenes = {};
+        /**
+         * Transition to specified scene
+         * @param {string} sceneID ID of Scene to transition to
+         */
+        this.changeScene = function (newScene) {
+            var NewScene = _this.scenes[newScene];
+            if (!NewScene) {
+                throw new Error("No Scene found with ID \"" + newScene + "\"");
+            }
+            var oldScene = _this._currentScene;
+            _this.transitioning = true;
+            Promise.resolve()
+                .then(function () {
+                _this.pixi.stage.addChild(_this.transition);
+                _this.transition.stop();
+                if (oldScene) {
+                    return new Promise(function (resolve) {
+                        PIXI.animate.Animator.play(_this.transition, 'cover', resolve);
+                    });
+                }
+            })
+                .then(function () {
+                PIXI.animate.Animator.play(_this.transition, 'load');
+                if (oldScene) {
+                    _this.pixi.stage.removeChild(oldScene);
+                    oldScene.cleanup();
+                    oldScene.destroy({ children: true });
+                }
+                _this.game.assetManager.unloadAssets();
+            })
+                .then(function () {
+                return new Promise(function (resolve) {
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+                .then(function () {
+                _this._currentScene = new NewScene(_this.game);
+                return new Promise(function (resolve) {
+                    _this.game.assetManager.loadAssets(_this._currentScene.preload(), resolve);
+                });
+            })
+                .then(function () {
+                return new Promise(function (resolve) {
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+                .then(function () {
+                _this._currentScene.setup();
+            })
+                .then(function () {
+                return new Promise(function (resolve) {
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+                .then(function () {
+                _this.pixi.stage.addChildAt(_this._currentScene, 0);
+            })
+                .then(function () {
+                return new Promise(function (resolve) {
+                    setTimeout(resolve, LOADING_DELAY);
+                });
+            })
+                .then(function () {
+                return new Promise(function (resolve) {
+                    PIXI.animate.Animator.play(_this.transition, 'reveal', resolve);
+                });
+            })
+                .then(function () {
+                _this.transitioning = false;
+                _this.pixi.stage.removeChild(_this.transition);
+                _this._currentScene.start();
+            });
+        };
+        this.gotResize = function (newsize) {
+            _this.resize(newsize.width, newsize.height);
+        };
+        this.game = game;
+        this.width = width;
+        this.height = height;
+        this.offset = new PIXI.Point(0, 0);
+        // transparent rendering mode is bad for overall performance, but necessary in order
+        // to prevent flickering on some Android devices such as Galaxy Tab A and Kindle Fire
+        var flickerProne = !!FLICKERERS.find(function (value) { return navigator.userAgent.includes(value); });
+        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, transparent: flickerProne });
+        this.pixi.view.style.display = 'block';
+        document.getElementById(containerID).appendChild(this.pixi.view);
+        var baseSize = { width: width, height: height };
+        altWidth = altWidth || width;
+        var altSize = { width: altWidth, height: height };
+        var scale = {
+            origin: baseSize,
+            min: (altWidth > width) ? baseSize : altSize,
+            max: (altWidth > width) ? altSize : baseSize
+        };
+        this.setScaling(scale);
+        this.pixi.ticker.add(this.update.bind(this));
+        this.scaleManager = new ScaleManager(this.gotResize);
+    }
+    StageManager.prototype.addCaptions = function (captionData, renderer) {
+        this.captions = new CaptionPlayer(captionData, renderer);
+    };
+    StageManager.prototype.setCaptionRenderer = function (renderer) {
+        if (this.captions) {
+            this.captions.renderer = renderer;
+        }
+    };
+    StageManager.prototype.addScene = function (id, scene) {
+        this.scenes[id] = scene;
+    };
+    StageManager.prototype.addScenes = function (sceneMap) {
+        for (var id in sceneMap) {
+            this.scenes[id] = sceneMap[id];
+        }
+    };
+    StageManager.prototype.setTransition = function (stage, callback) {
+        var _this = this;
+        this.game.assetManager.loadAssets([
+            { type: 'animate', stage: stage, id: TRANSITION_ID, isGlobal: true, cacheInstance: true }
+        ], function () {
+            _this.transition = _this.game.cache.animations[TRANSITION_ID];
+            var curtainLabels = [
+                'cover',
+                'cover_stop',
+                'load',
+                'load_loop',
+                'reveal',
+                'reveal_stop'
+            ];
+            for (var _i = 0, curtainLabels_1 = curtainLabels; _i < curtainLabels_1.length; _i++) {
+                var label = curtainLabels_1[_i];
+                if (!_this.transition.labelsMap.hasOwnProperty(label)) {
+                    console.error('Curtain MovieClip missing label: ', label);
+                    return;
+                }
+            }
+            _this.transition.gotoAndStop('cover');
+            callback();
+        });
+    };
+    Object.defineProperty(StageManager.prototype, "captionsMuted", {
+        get: function () {
+            return this.isCaptionsMuted;
+        },
+        set: function (muted) {
+            this.isCaptionsMuted = muted;
+            if (muted) {
+                this.captions.stop();
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(StageManager.prototype, "pause", {
+        get: function () {
+            return this.isPaused;
+        },
+        set: function (pause) {
+            this.isPaused = pause;
+            if (this._currentScene) {
+                this._currentScene.pause(pause);
+            }
+            if (this.pixi && this.pixi.ticker) {
+                if (pause) {
+                    PIXI.ticker.shared.stop();
+                }
+                else {
+                    PIXI.ticker.shared.start();
+                }
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
+    StageManager.prototype.getSize = function (width, height) {
+        if (height === 0) {
+            return null;
+        }
+        return {
+            width: width,
+            height: height,
+            ratio: width / height
+        };
+    };
+    StageManager.prototype.setScaling = function (scaleconfig) {
+        if (scaleconfig.origin) {
+            this._originSize = this.getSize(scaleconfig.origin.width, scaleconfig.origin.height);
+        }
+        if (scaleconfig.min) {
+            this._minSize = this.getSize(scaleconfig.min.width, scaleconfig.min.height);
+        }
+        if (scaleconfig.max) {
+            this._maxSize = this.getSize(scaleconfig.max.width, scaleconfig.max.height);
+        }
+        this.resize(window.innerWidth, window.innerHeight);
+    };
+    StageManager.prototype.resize = function (width, height) {
+        var aspect = width / height;
+        var offset = 0;
+        //let scale;
+        var calcwidth = this._minSize.width;
+        if (aspect > this._maxSize.ratio) {
+            // locked in at max (2:1)
+            this.scale = this._minSize.ratio / this._maxSize.ratio;
+            calcwidth = this._maxSize.width;
+            // these styles could - probably should - be replaced by media queries in CSS
+            this.pixi.view.style.height = height + "px";
+            this.pixi.view.style.width = Math.floor(this._maxSize.ratio * height) + "px";
+            this.pixi.view.style.margin = '0 auto';
+        }
+        else if (aspect < this._minSize.ratio) {
+            this.scale = 1;
+            var viewHeight = Math.floor(width / this._minSize.ratio);
+            this.pixi.view.style.height = viewHeight + "px";
+            this.pixi.view.style.width = width + "px";
+            this.pixi.view.style.margin = Math.floor((height - viewHeight) / 2) + "px 0";
+        }
+        else {
+            // between min and max ratio (wider than min)
+            this.scale = this._minSize.ratio / aspect;
+            calcwidth = this._minSize.width / this.scale; // how much wider is this?
+            this.pixi.view.style.height = height + "px";
+            this.pixi.view.style.width = width + "px";
+            this.pixi.view.style.margin = '0';
+        }
+        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
+        this.pixi.stage.position.x = offset;
+        var newframe = {
+            left: offset * -1,
+            right: calcwidth - offset,
+            width: calcwidth,
+            center: calcwidth / 2 - offset,
+            top: 0,
+            bottom: this._minSize.height,
+            height: this._minSize.height,
+            offset: this.offset
+        };
+        if (!this.viewFrame) {
+            this.viewFrame = new Property(newframe);
+        }
+        else {
+            this.viewFrame.value = newframe;
+        }
+        this.width = calcwidth;
+        this.height = this._minSize.height;
+        /* legacy -- should remove */
+        this.leftEdge = newframe.left;
+        this.rightEdge = newframe.right;
+        this.pixi.renderer.resize(calcwidth, this._minSize.height);
+        this.offset.x = offset;
+        if (this._currentScene) {
+            this._currentScene.resize(this.width, this.height, this.offset);
+        }
+    };
+    /**
+     *
+     * globalToScene converts a "global" from PIXI into the scene level, taking into account the offset based on responsive resize
+     *
+     * @param pointin
+     */
+    StageManager.prototype.globalToScene = function (pointin) {
+        return { x: pointin.x - this.offset.x, y: pointin.y - this.offset.y };
+    };
+    StageManager.prototype.addTimer = function (timer) {
+        console.warn('StageManager.prototype.addTimer() is deprecated. PauseableTimers manage themselves');
+    };
+    StageManager.prototype.clearTimers = function () {
+        console.warn('StageManager.prototype.clearTimers() is deprecated. use PauseableTimer.clearTimers() instead');
+        PauseableTimer.clearTimers();
+    };
+    StageManager.prototype.showCaption = function (captionid, begin, args) {
+        if (this.isCaptionsMuted) {
+            return;
+        }
+        begin = begin || 0;
+        this.captions.start(captionid, begin, args);
+    };
+    StageManager.prototype.stopCaption = function () {
+        this.captions.stop();
+    };
+    StageManager.prototype.update = function () {
+        // if the game is paused, or there isn't a scene, we can skip rendering/updates  
+        if (this.isPaused) {
+            return;
+        }
+        var elapsed = PIXI.ticker.shared.elapsedMS;
+        if (this.captions) {
+            this.captions.update(elapsed / 1000); // captions go by seconds, not ms
+        }
+        GameTime.gameTick.value = elapsed;
+        if (this.transitioning || !this._currentScene) {
+            return;
+        }
+        this._currentScene.update(elapsed);
+    };
+    return StageManager;
+}());
+
+var SoundContext = /** @class */ (function () {
+    function SoundContext(issingle) {
+        var _this = this;
+        /** Map of Sounds by ID */
+        this.sounds = {};
+        /** Map of individual Sound volumes by ID */
+        this.volumes = {};
+        this._globalVolume = 1;
+        this._volume = 1;
+        this.single = false;
+        this.singlePlayComplete = function (sound) {
+            _this.currentSound = null;
+            if (_this.singleCallback) {
+                var call = _this.singleCallback;
+                _this.singleCallback = null;
+                call(sound);
+            }
+        };
+        this.single = (issingle === true);
+        this.currentSound = null;
+    }
+    Object.defineProperty(SoundContext.prototype, "volume", {
+        /** Context-specific volume */
+        set: function (volume) {
+            this._volume = volume;
+            for (var key in this.sounds) {
+                this.applyVolume(key);
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SoundContext.prototype, "globalVolume", {
+        /** Volume applied to all contexts */
+        set: function (volume) {
+            this._globalVolume = volume;
+            for (var key in this.sounds) {
+                this.applyVolume(key);
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
+    /**
+     *
+     * @param {PIXI.sound.Sound} sound Sound instance to add
+     * @param {string} id ID of sound to add
+     * @param {number} volume Number 0-1 of volume for this sound
+     */
+    SoundContext.prototype.addSound = function (sound, id, volume) {
+        if (volume === void 0) { volume = 1; }
+        if (this.sounds[id]) {
+            console.error('Sound already added with id: ', id);
+        }
+        this.sounds[id] = sound;
+        this.volumes[id] = volume;
+        this.applyVolume(id);
+    };
+    /**
+     * Adjust volume of a specific sound by ID
+     * @param {string} id ID of sound to set volume on
+     * @param {number} volume Number 0-1 to set volume of specified sound
+     */
+    SoundContext.prototype.applyVolume = function (id, volume) {
+        if (volume !== undefined) {
+            this.volumes[id] = volume;
+        }
+        this.sounds[id].volume = this.volumes[id] * this._globalVolume * this._volume;
+    };
+    /**
+     *
+     * @param {string} id
+     * @param {CompleteCallback} onComplete
+     */
+    SoundContext.prototype.play = function (id, onComplete) {
+        if (this.single) {
+            if (this.currentSound) {
+                // stop currently playing sound
+                this.stop(this.currentSound);
+            }
+            this.singleCallback = onComplete;
+        }
+        this.currentSound = id;
+        return this.sounds[id].play(this.single ? this.singlePlayComplete : onComplete);
+    };
+    SoundContext.prototype.stop = function (id) {
+        if (id === this.currentSound) {
+            this.currentSound = null;
+            this.singleCallback = null;
+        }
+        if (this.sounds[id]) {
+            this.sounds[id].stop();
+        }
+    };
+    SoundContext.prototype.stopAll = function () {
+        this.currentSound = null;
+        for (var key in this.sounds) {
+            this.sounds[key].stop();
+        }
+    };
+    /**
+     *
+     * @param soundid ID of sound to get position of - if none, then find position of most recently played sound
+     */
+    SoundContext.prototype.getPosition = function (soundid) {
+        if (!soundid) {
+            soundid = this.currentSound;
+        }
+        if (!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {
+            return -1;
+        }
+        return this.sounds[soundid].instances[0].progress; // NOTE: There seems to be a Safari bug where the progress listener can become detached from a sound...may need a fallback or workaround
+    };
+    SoundContext.prototype.getPositionSeconds = function (soundid) {
+        if (!soundid) {
+            soundid = this.currentSound;
+        }
+        if (!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {
+            return -1;
+        }
+        return this.sounds[soundid].instances[0].progress * this.sounds[soundid].duration; // NOTE: There seems to be a Safari bug where the progress listener can become detached from a sound...may need a fallback or workaround
+    };
+    SoundContext.prototype.isPlaying = function () {
+        for (var key in this.sounds) {
+            if (this.sounds[key].isPlaying) {
+                return true;
+            }
+        }
+        return false;
+    };
+    /**
+     * Destroy sound, remove from context and PIXI Sound cache
+     * @param id ID of sound to remove
+     */
+    SoundContext.prototype.removeSound = function (id) {
+        PIXI.sound.remove(id);
+        delete this.sounds[id];
+        delete this.volumes[id];
+        if (id === this.currentSound) {
+            this.currentSound = null;
+        }
+    };
+    return SoundContext;
+}());
+
+/**
+ * Manages Sound playback, pausing, resuming, and volume control
+ */
+var SoundManager = /** @class */ (function () {
+    function SoundManager() {
+        /** Context for managing SFX sounds */
+        this.sfx = new SoundContext();
+        /** Context for managing VO sounds */
+        this.vo = new SoundContext(true);
+        /** Context for managing music sounds */
+        this.music = new SoundContext();
+        /** Mapping of which SoundContexts each Sound belongs to, by ID */
+        this.soundMeta = {};
+    }
+    Object.defineProperty(SoundManager.prototype, "volume", {
+        /** Global volume of all SoundContexts */
+        set: function (volume) {
+            this.sfx.globalVolume = volume;
+            this.vo.globalVolume = volume;
+            this.music.globalVolume = volume;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SoundManager.prototype, "sfxVolume", {
+        /** Volume of all sounds in SFX context */
+        set: function (volume) {
+            this.sfx.volume = volume;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SoundManager.prototype, "voVolume", {
+        /** Volume of all sounds in VO context */
+        set: function (volume) {
+            this.vo.volume = volume;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SoundManager.prototype, "musicVolume", {
+        /** Volume of all sounds in Music context */
+        set: function (volume) {
+            this.music.volume = volume;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    /**
+     * Add sound to a SoundManager Context
+     * @param {Sound} sound Sound instance to add
+     * @param {SoundDescriptor} descriptor Asset load metadata for Sound
+     */
+    SoundManager.prototype.addSound = function (sound, descriptor) {
+        var context = this[descriptor.context || 'sfx'];
+        this.soundMeta[descriptor.id] = context;
+        context.addSound(sound, descriptor.id, descriptor.volume);
+    };
+    /**
+     * Play sound by ID
+     * @param {string} soundID ID of Sound to play
+     * @param {PIXI.sound.CompleteCallback} [onComplete] Called when Sound is finished playing
+     * @returns {PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>} instace of playing sound (or promise of to-be-played sound if not preloaded)
+     */
+    SoundManager.prototype.play = function (soundID, onComplete) {
+        return this.soundMeta[soundID].play(soundID, onComplete);
+        // return this.soundMeta[soundID].sounds[soundID].play(onComplete);
+    };
+    SoundManager.prototype.stop = function (soundID) {
+        this.soundMeta[soundID].stop(soundID);
+    };
+    /** Retrieve reference to Sound instance by ID
+     * @param {string} soundID ID of sound to retrieve
+     * @returns {PIXI.sound.Sound} Sound instance
+     */
+    SoundManager.prototype.getSound = function (soundID) {
+        return this.soundMeta[soundID].sounds[soundID];
+    };
+    /**
+     * Retrieve reference to the SoundContext by ID
+     *
+     * @param soundID ID of sound to look up
+     * @returns {SoundContext}
+     */
+    SoundManager.prototype.getContext = function (soundID) {
+        return this.soundMeta[soundID];
+    };
+    /**
+     * Pause specified Sound by ID - if no ID provided, pause all sounds
+     * @param {string} [soundID] ID of sound to pause - if undefined, pause all sounds
+     */
+    SoundManager.prototype.pause = function (soundID) {
+        if (!soundID) {
+            PIXI.sound.pauseAll();
+        }
+        else {
+            this.getSound(soundID).pause();
+        }
+    };
+    /**
+     * Resume specified Sound by ID - if no ID provided, resume all sounds
+     * @param {string} [soundID] ID of sound to resume - if undefined, resume all sounds
+     */
+    SoundManager.prototype.resume = function (soundID) {
+        if (!soundID) {
+            PIXI.sound.resumeAll();
+        }
+        else {
+            this.getSound(soundID).resume();
+        }
+    };
+    /**
+     * Adjust volume of a specific sound by ID
+     * @param {string} id ID of sound to set volume on
+     * @param {number} volume Number 0-1 to set volume of specified sound
+     */
+    SoundManager.prototype.setVolume = function (id, volume) {
+        this.soundMeta[id].applyVolume(id, volume);
+    };
+    /**
+     * Destroy sound, remove from context and PIXI Sound cache
+     * @param id ID of sound to remove
+     */
+    SoundManager.prototype.removeSound = function (id) {
+        var context = this.soundMeta[id];
+        context.removeSound(id);
+        delete this.soundMeta[id];
+    };
+    return SoundManager;
+}());
+
+/** Base Class for WGBH SpringRoll Games - extend this Class in your project */
+var Game = /** @class */ (function () {
+    function Game(options) {
+        var _this = this;
+        /** object for storing global data - accessible from all Scenes */
+        this.dataStore = {};
+        this.preloadGlobal = function () {
+            var assets = _this.preload();
+            if (assets && assets.length) {
+                for (var _i = 0, assets_1 = assets; _i < assets_1.length; _i++) {
+                    var asset = assets_1[_i];
+                    //Game-level assets are always global
+                    asset.isGlobal = true;
+                }
+                _this.assetManager.unloadAssets(); //Prep for fresh loading
+                _this.assetManager.loadAssets(assets, _this.gameReady.bind(_this));
+            }
+            else {
+                _this.gameReady();
+            }
+        };
+        this.sound = new SoundManager();
+        this.assetManager = new AssetManager(this.sound);
+        this.cache = this.assetManager.cache;
+        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth);
+        this.app = new Application(options.springRollConfig);
+        this.app.state.soundVolume.subscribe(function (volume) {
+            _this.sound.volume = volume;
+        });
+        this.app.state.musicVolume.subscribe(function (volume) {
+            _this.sound.musicVolume = volume;
+        });
+        this.app.state.sfxVolume.subscribe(function (volume) {
+            _this.sound.sfxVolume = volume;
+        });
+        this.app.state.voVolume.subscribe(function (volume) {
+            _this.sound.voVolume = volume;
+        });
+        this.app.state.pause.subscribe(function (pause) {
+            pause ? _this.sound.pause() : _this.sound.resume();
+            _this.stageManager.pause = pause;
+        });
+        this.app.state.captionsMuted.subscribe(function (isMuted) {
+            _this.stageManager.captionsMuted = isMuted;
+        });
+        this.app.state.ready.subscribe(function () {
+            _this.stageManager.setTransition(options.transition, _this.preloadGlobal);
+        });
+        if (options.captions) {
+            this.stageManager.addCaptions(options.captions.config, options.captions.display);
+        }
+    }
+    /** Add plugin to this instance of SpringRoll */
+    Game.addPlugin = function (plugin) {
+        Application.uses(plugin);
+    };
+    /** overrride and return list of global assets */
+    Game.prototype.preload = function () {
+        return null;
+    };
+    /** called when game is ready to enter first scene - override this function and set first scene here */
+    Game.prototype.gameReady = function () {
+        //override and set first scene in this function
+    };
+    Game.prototype.addScene = function (id, scene) {
+        this.stageManager.addScene(id, scene);
+    };
+    Game.prototype.addScenes = function (sceneMap) {
+        this.stageManager.addScenes(sceneMap);
+    };
+    /**
+     * Transition to specified scene
+     * @param {string} sceneID ID of Scene to transition to
+     */
+    Game.prototype.changeScene = function (sceneID) {
+        this.stageManager.changeScene(sceneID);
+    };
+    return Game;
+}());
+
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing permissions
+and limitations under the License.
+***************************************************************************** */
+/* global Reflect, Promise */
+
+var extendStatics = function(d, b) {
+    extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return extendStatics(d, b);
+};
+
+function __extends(d, b) {
+    extendStatics(d, b);
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+}
 
 function backInOut(t) {
   var s = 1.70158 * 1.525;
@@ -559,8 +1394,8 @@ var eases = {
 };
 
 var Eases = eases;
-var Tween = /** @class */ (function () {
-    function Tween(target) {
+var Tween$$1 = /** @class */ (function () {
+    function Tween$$1(target) {
         var _this = this;
         this.paused = false;
         this.steps = [];
@@ -577,19 +1412,6 @@ var Tween = /** @class */ (function () {
         };
         this.call = function (call) {
             _this.steps.push({ call: call });
-            return _this;
-        };
-        this.on = function (listentype, callback) {
-            if (listentype !== 'change') {
-                return _this;
-            }
-            if (!_this._listeners) {
-                _this._listeners = {};
-            }
-            if (!_this._listeners[listentype]) {
-                _this._listeners[listentype] = [];
-            }
-            _this._listeners[listentype].push(callback);
             return _this;
         };
         this.doComplete = function () {
@@ -641,23 +1463,18 @@ var Tween = /** @class */ (function () {
                     _this.target[key] = step.initialValues[key] + step.ease(time) * (step.targetValues[key] - step.initialValues[key]);
                 }
             }
-            if (_this._listeners && _this._listeners.change) {
-                for (var l in _this._listeners.change) {
-                    _this._listeners.change[l]();
-                }
-            }
             if (time >= 1) {
                 _this.currentStep++;
             }
         };
         this.target = target;
     }
-    Tween.get = function (target, options) {
+    Tween$$1.get = function (target, options) {
         if (options === void 0) { options = {}; }
         if (options.override) {
             this.removeTweens(target);
         }
-        var tween = new Tween(target);
+        var tween = new Tween$$1(target);
         if (options.loop) {
             if (options.loop % 1) {
                 console.error('Tween options.loop must be an integer. Got: ', options.loop);
@@ -667,22 +1484,23 @@ var Tween = /** @class */ (function () {
         if (options.onComplete) {
             tween.onComplete = options.onComplete;
         }
-        Tween.tweens.push(tween);
+        Tween$$1.tweens.push(tween);
+        GameTime.gameTick.subscribe(tween.update);
         return tween;
     };
-    Tween.removeTweens = function (target) {
-        for (var i = Tween.tweens.length - 1; i >= 0; i--) {
-            if (Tween.tweens[i].target === target) {
-                Tween.tweens[i].destroy();
+    Tween$$1.removeTweens = function (target) {
+        for (var i = Tween$$1.tweens.length - 1; i >= 0; i--) {
+            if (Tween$$1.tweens[i].target === target) {
+                Tween$$1.tweens[i].destroy();
             }
         }
     };
-    Tween.removeAllTweens = function () {
-        for (var i = Tween.tweens.length - 1; i >= 0; i--) {
-            Tween.tweens[i].destroy();
+    Tween$$1.removeAllTweens = function () {
+        for (var i = Tween$$1.tweens.length - 1; i >= 0; i--) {
+            Tween$$1.tweens[i].destroy();
         }
     };
-    Object.defineProperty(Tween.prototype, "promise", {
+    Object.defineProperty(Tween$$1.prototype, "promise", {
         get: function () {
             var _this = this;
             if (!this._promise) {
@@ -693,774 +1511,17 @@ var Tween = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    Tween.update = function (elapsed) {
-        if (Tween.tweens.length) {
-            for (var _i = 0, _a = Tween.tweens; _i < _a.length; _i++) {
-                var tween = _a[_i];
-                tween.update(elapsed);
-            }
-        }
-    };
-    Tween.prototype.destroy = function () {
-        Tween.tweens.splice(Tween.tweens.indexOf(this), 1);
+    Tween$$1.prototype.destroy = function () {
+        GameTime.gameTick.unsubscribe(this.update);
+        Tween$$1.tweens.splice(Tween$$1.tweens.indexOf(this), 1);
         this.target = null;
         this.steps = null;
         this.currentStep = null;
         this._promise = null;
         this._resolve = null;
-        for (var l in this._listeners) {
-            for (var ll in this._listeners[l]) {
-                this._listeners[l][ll] = null;
-            }
-            delete (this._listeners[l]);
-        }
-        this._listeners = null;
     };
-    Tween.tweens = [];
-    return Tween;
-}());
-
-/**
- *
- *  GameTime is a relay singleton that any object can hook into via its SpringRoll Property to get the next tick (gameTick) of the game clock.
- *  Its update() should be called on any live tick of the game; determining whether the tick is live (e.g. checking paused) should happen elsewhere.
- *
- *  Call in the game's main tick/update function, using the singleton syntax on the class - GameTime.Instance.update(deltaTime);
- *  Subscribe to changes using singleton syntax on the class - GameTime.Instance.gameTick.subscribe(callbackfunction)
- *
- */
-var GameTime = /** @class */ (function () {
-    function GameTime() {
-    }
-    GameTime.update = function (deltaTime) {
-        GameTime.gameTick.value = deltaTime;
-    };
-    GameTime.destroy = function () {
-        GameTime.gameTick.value = null;
-    };
-    GameTime.gameTick = new Property(0);
-    return GameTime;
-}());
-
-var TRANSITION_ID = 'wgbhSpringRollGameTransition';
-/**
- * Manages rendering and transitioning between Scenes
- */
-var StageManager = /** @class */ (function () {
-    function StageManager(game, containerID, width, height, altWidth) {
-        var _this = this;
-        this.transitioning = true;
-        this.isPaused = false;
-        /** Map of Scenes by Scene IDs */
-        this.scenes = {};
-        this.timers = [];
-        /**
-         * Transition to specified scene
-         * @param {string} sceneID ID of Scene to transition to
-         */
-        this.changeScene = function (newScene) {
-            var NewScene = _this.scenes[newScene];
-            if (!NewScene) {
-                throw new Error("No Scene found with ID \"" + newScene + "\"");
-            }
-            var oldScene = _this._currentScene;
-            _this.transitioning = true;
-            Promise.resolve()
-                .then(function () {
-                _this.pixi.stage.addChild(_this.transition);
-                _this.transition.stop();
-                if (oldScene) {
-                    return new Promise(function (resolve) {
-                        PIXI.animate.Animator.play(_this.transition, 'cover', resolve);
-                    });
-                }
-            })
-                .then(function () {
-                PIXI.animate.Animator.play(_this.transition, 'load');
-                if (oldScene) {
-                    _this.pixi.stage.removeChild(oldScene);
-                    oldScene.cleanup();
-                    oldScene.destroy({ children: true });
-                }
-                _this.game.assetManager.unloadAssets();
-            })
-                .then(function () {
-                _this._currentScene = new NewScene(_this.game);
-                return new Promise(function (resolve) {
-                    _this.game.assetManager.loadAssets(_this._currentScene.preload(), resolve);
-                });
-            })
-                .then(function () {
-                _this._currentScene.setup();
-                _this.pixi.stage.addChildAt(_this._currentScene, 0);
-                return new Promise(function (resolve) {
-                    PIXI.animate.Animator.play(_this.transition, 'reveal', resolve);
-                });
-            })
-                .then(function () {
-                _this.transitioning = false;
-                _this.pixi.stage.removeChild(_this.transition);
-                _this._currentScene.start();
-            });
-        };
-        this.gotResize = function (newsize) {
-            _this.resize(newsize.width, newsize.height);
-        };
-        this.game = game;
-        this.width = width;
-        this.height = height;
-        this.offset = new PIXI.Point(0, 0);
-        // preserveDrawingBuffer is bad for overall performance, but necessary in order to support 
-        // some Android devices such as Galaxy Tab A and Kindle Fire
-        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, preserveDrawingBuffer: true });
-        this.pixi.view.style.display = 'block';
-        document.getElementById(containerID).appendChild(this.pixi.view);
-        var baseSize = { width: width, height: height };
-        altWidth = altWidth || width;
-        var altSize = { width: altWidth, height: height };
-        var scale = {
-            origin: baseSize,
-            min: (altWidth > width) ? baseSize : altSize,
-            max: (altWidth > width) ? altSize : baseSize
-        };
-        this.setScaling(scale);
-        this.pixi.ticker.add(this.update.bind(this));
-        this.scaleManager = new ScaleManager(this.gotResize);
-    }
-    StageManager.prototype.addCaptions = function (captionData, renderer) {
-        this.captions = new CaptionPlayer(captionData, renderer);
-    };
-    StageManager.prototype.setCaptionRenderer = function (renderer) {
-        if (this.captions) {
-            this.captions.renderer = renderer;
-        }
-    };
-    StageManager.prototype.addScene = function (id, scene) {
-        this.scenes[id] = scene;
-    };
-    StageManager.prototype.addScenes = function (sceneMap) {
-        for (var id in sceneMap) {
-            this.scenes[id] = sceneMap[id];
-        }
-    };
-    StageManager.prototype.setTransition = function (stage, callback) {
-        var _this = this;
-        this.game.assetManager.loadAssets([
-            { type: 'animate', stage: stage, id: TRANSITION_ID, isGlobal: true, cacheInstance: true }
-        ], function () {
-            _this.transition = _this.game.cache.animations[TRANSITION_ID];
-            var curtainLabels = [
-                'cover',
-                'cover_stop',
-                'load',
-                'load_loop',
-                'reveal',
-                'reveal_stop'
-            ];
-            for (var _i = 0, curtainLabels_1 = curtainLabels; _i < curtainLabels_1.length; _i++) {
-                var label = curtainLabels_1[_i];
-                if (!_this.transition.labelsMap.hasOwnProperty(label)) {
-                    console.error('Curtain MovieClip missing label: ', label);
-                    return;
-                }
-            }
-            _this.transition.gotoAndStop('cover');
-            callback();
-        });
-    };
-    Object.defineProperty(StageManager.prototype, "pause", {
-        get: function () {
-            return this.isPaused;
-        },
-        set: function (pause) {
-            this.isPaused = pause;
-            if (this._currentScene) {
-                this._currentScene.pause(pause);
-            }
-            if (this.pixi && this.pixi.ticker) {
-                if (pause) {
-                    PIXI.ticker.shared.stop();
-                }
-                else {
-                    PIXI.ticker.shared.start();
-                }
-            }
-        },
-        enumerable: true,
-        configurable: true
-    });
-    StageManager.prototype.getSize = function (width, height) {
-        if (height === 0) {
-            return null;
-        }
-        return {
-            width: width,
-            height: height,
-            ratio: width / height
-        };
-    };
-    StageManager.prototype.setScaling = function (scaleconfig) {
-        if (scaleconfig.origin) {
-            this._originSize = this.getSize(scaleconfig.origin.width, scaleconfig.origin.height);
-        }
-        if (scaleconfig.min) {
-            this._minSize = this.getSize(scaleconfig.min.width, scaleconfig.min.height);
-        }
-        if (scaleconfig.max) {
-            this._maxSize = this.getSize(scaleconfig.max.width, scaleconfig.max.height);
-        }
-        this.resize(window.innerWidth, window.innerHeight);
-    };
-    StageManager.prototype.resize = function (width, height) {
-        var aspect = width / height;
-        var offset = 0;
-        //let scale;
-        var calcwidth = this._minSize.width;
-        if (aspect > this._maxSize.ratio) {
-            // locked in at max (2:1)
-            this.scale = this._minSize.ratio / this._maxSize.ratio;
-            calcwidth = this._maxSize.width;
-            // these styles could - probably should - be replaced by media queries in CSS
-            this.pixi.view.style.height = height + "px";
-            this.pixi.view.style.width = Math.floor(this._maxSize.ratio * height) + "px";
-            this.pixi.view.style.margin = '0 auto';
-        }
-        else if (aspect < this._minSize.ratio) {
-            this.scale = 1;
-            var viewHeight = Math.floor(width / this._minSize.ratio);
-            this.pixi.view.style.height = viewHeight + "px";
-            this.pixi.view.style.width = width + "px";
-            this.pixi.view.style.margin = Math.floor((height - viewHeight) / 2) + "px 0";
-        }
-        else {
-            // between min and max ratio (wider than min)
-            this.scale = this._minSize.ratio / aspect;
-            calcwidth = this._minSize.width / this.scale; // how much wider is this?
-            this.pixi.view.style.height = height + "px";
-            this.pixi.view.style.width = width + "px";
-            this.pixi.view.style.margin = '0';
-        }
-        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
-        this.pixi.stage.position.x = offset;
-        var newframe = {
-            left: offset * -1,
-            right: calcwidth - offset,
-            width: calcwidth,
-            center: calcwidth / 2 - offset,
-            top: 0,
-            bottom: this._minSize.height,
-            height: this._minSize.height,
-            offset: this.offset
-        };
-        if (!this.viewFrame) {
-            this.viewFrame = new Property(newframe);
-        }
-        else {
-            this.viewFrame.value = newframe;
-        }
-        this.width = calcwidth;
-        this.height = this._minSize.height;
-        /* legacy -- should remove */
-        this.leftEdge = newframe.left;
-        this.rightEdge = newframe.right;
-        this.pixi.renderer.resize(calcwidth, this._minSize.height);
-        this.offset.x = offset;
-        if (this._currentScene) {
-            this._currentScene.resize(this.width, this.height, this.offset);
-        }
-    };
-    /**
-     *
-     * globalToScene converts a "global" from PIXI into the scene level, taking into account the offset based on responsive resize
-     *
-     * @param pointin
-     */
-    StageManager.prototype.globalToScene = function (pointin) {
-        return { x: pointin.x - this.offset.x, y: pointin.y - this.offset.y };
-    };
-    StageManager.prototype.addTimer = function (timer) {
-        this.timers.push(timer);
-    };
-    StageManager.prototype.clearTimers = function () {
-        this.timers.forEach(function (timer) {
-            timer.destroy(false);
-        });
-        this.timers = [];
-    };
-    StageManager.prototype.showCaption = function (captionid, begin, args) {
-        begin = begin || 0;
-        this.captions.start(captionid, begin, args);
-    };
-    StageManager.prototype.stopCaption = function () {
-        this.captions.stop();
-    };
-    StageManager.prototype.update = function () {
-        // if the game is paused, or there isn't a scene, we can skip rendering/updates  
-        if (this.isPaused) {
-            return;
-        }
-        var elapsed = PIXI.ticker.shared.elapsedMS;
-        Tween.update(elapsed);
-        if (this.captions) {
-            this.captions.update(elapsed / 1000); // captions go by seconds, not ms
-        }
-        GameTime.gameTick.value = elapsed;
-        if (this.transitioning || !this._currentScene) {
-            return;
-        }
-        this._currentScene.update(elapsed);
-    };
-    return StageManager;
-}());
-
-var SoundContext = /** @class */ (function () {
-    function SoundContext(issingle) {
-        var _this = this;
-        /** Map of Sounds by ID */
-        this.sounds = {};
-        /** Map of individual Sound volumes by ID */
-        this.volumes = {};
-        this._globalVolume = 1;
-        this._volume = 1;
-        this.single = false;
-        this.singlePlayComplete = function (sound) {
-            _this.currentSound = null;
-            if (_this.singleCallback) {
-                var call = _this.singleCallback;
-                _this.singleCallback = null;
-                call(sound);
-            }
-        };
-        this.single = (issingle === true);
-        this.currentSound = null;
-    }
-    Object.defineProperty(SoundContext.prototype, "volume", {
-        /** Context-specific volume */
-        set: function (volume) {
-            this._volume = volume;
-            for (var key in this.sounds) {
-                this.applyVolume(key);
-            }
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SoundContext.prototype, "globalVolume", {
-        /** Volume applied to all contexts */
-        set: function (volume) {
-            this._globalVolume = volume;
-            for (var key in this.sounds) {
-                this.applyVolume(key);
-            }
-        },
-        enumerable: true,
-        configurable: true
-    });
-    /**
-     *
-     * @param {PIXI.sound.Sound} sound Sound instance to add
-     * @param {string} id ID of sound to add
-     * @param {number} volume Number 0-1 of volume for this sound
-     */
-    SoundContext.prototype.addSound = function (sound, id, volume) {
-        if (volume === void 0) { volume = 1; }
-        if (this.sounds[id]) {
-            console.error('Sound already added with id: ', id);
-        }
-        this.sounds[id] = sound;
-        this.volumes[id] = volume;
-        this.applyVolume(id);
-    };
-    /**
-     * Adjust volume of a specific sound by ID
-     * @param {string} id ID of sound to set volume on
-     * @param {number} volume Number 0-1 to set volume of specified sound
-     */
-    SoundContext.prototype.applyVolume = function (id, volume) {
-        if (volume !== undefined) {
-            this.volumes[id] = volume;
-        }
-        this.sounds[id].volume = this.volumes[id] * this._globalVolume * this._volume;
-    };
-    /**
-     *
-     * @param {string} id
-     * @param {CompleteCallback} onComplete
-     */
-    SoundContext.prototype.play = function (id, onComplete) {
-        if (this.single) {
-            if (this.currentSound) {
-                // stop currently playing sound
-                this.stop(this.currentSound);
-            }
-            this.singleCallback = onComplete;
-        }
-        this.currentSound = id;
-        return this.sounds[id].play(this.single ? this.singlePlayComplete : onComplete);
-    };
-    SoundContext.prototype.stop = function (id) {
-        if (id === this.currentSound) {
-            this.currentSound = null;
-            this.singleCallback = null;
-        }
-        if (this.sounds[id]) {
-            this.sounds[id].stop();
-        }
-    };
-    SoundContext.prototype.stopAll = function () {
-        this.currentSound = null;
-        for (var key in this.sounds) {
-            this.sounds[key].stop();
-        }
-    };
-    /**
-     *
-     * @param soundid ID of sound to get position of - if none, then find position of most recently played sound
-     */
-    SoundContext.prototype.getPosition = function (soundid) {
-        if (!soundid) {
-            soundid = this.currentSound;
-        }
-        if (!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {
-            return -1;
-        }
-        return this.sounds[soundid].instances[0].progress; // NOTE: There seems to be a Safari bug where the progress listener can become detached from a sound...may need a fallback or workaround
-    };
-    SoundContext.prototype.getPositionSeconds = function (soundid) {
-        if (!soundid) {
-            soundid = this.currentSound;
-        }
-        if (!this.sounds[soundid] || !this.sounds[soundid].isPlaying) {
-            return -1;
-        }
-        return this.sounds[soundid].instances[0].progress * this.sounds[soundid].duration; // NOTE: There seems to be a Safari bug where the progress listener can become detached from a sound...may need a fallback or workaround
-    };
-    SoundContext.prototype.isPlaying = function () {
-        for (var key in this.sounds) {
-            if (this.sounds[key].isPlaying) {
-                return true;
-            }
-        }
-        return false;
-    };
-    /**
-     * Destroy sound, remove from context and PIXI Sound cache
-     * @param id ID of sound to remove
-     */
-    SoundContext.prototype.removeSound = function (id) {
-        PIXI.sound.remove(id);
-        delete this.sounds[id];
-        delete this.volumes[id];
-        if (id === this.currentSound) {
-            this.currentSound = null;
-        }
-    };
-    return SoundContext;
-}());
-
-/**
- * Manages Sound playback, pausing, resuming, and volume control
- */
-var SoundManager = /** @class */ (function () {
-    function SoundManager() {
-        /** Context for managing SFX sounds */
-        this.sfx = new SoundContext();
-        /** Context for managing VO sounds */
-        this.vo = new SoundContext(true);
-        /** Context for managing music sounds */
-        this.music = new SoundContext();
-        /** Mapping of which SoundContexts each Sound belongs to, by ID */
-        this.soundMeta = {};
-    }
-    Object.defineProperty(SoundManager.prototype, "volume", {
-        /** Global volume of all SoundContexts */
-        set: function (volume) {
-            this.sfx.globalVolume = volume;
-            this.vo.globalVolume = volume;
-            this.music.globalVolume = volume;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SoundManager.prototype, "sfxVolume", {
-        /** Volume of all sounds in SFX context */
-        set: function (volume) {
-            this.sfx.volume = volume;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SoundManager.prototype, "voVolume", {
-        /** Volume of all sounds in VO context */
-        set: function (volume) {
-            this.vo.volume = volume;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SoundManager.prototype, "musicVolume", {
-        /** Volume of all sounds in Music context */
-        set: function (volume) {
-            this.music.volume = volume;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    /**
-     * Add sound to a SoundManager Context
-     * @param {Sound} sound Sound instance to add
-     * @param {SoundDescriptor} descriptor Asset load metadata for Sound
-     */
-    SoundManager.prototype.addSound = function (sound, descriptor) {
-        var context = this[descriptor.context || 'sfx'];
-        this.soundMeta[descriptor.id] = context;
-        context.addSound(sound, descriptor.id, descriptor.volume);
-    };
-    /**
-     * Play sound by ID
-     * @param {string} soundID ID of Sound to play
-     * @param {PIXI.sound.CompleteCallback} [onComplete] Called when Sound is finished playing
-     * @returns {PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>} instace of playing sound (or promise of to-be-played sound if not preloaded)
-     */
-    SoundManager.prototype.play = function (soundID, onComplete) {
-        return this.soundMeta[soundID].play(soundID, onComplete);
-        // return this.soundMeta[soundID].sounds[soundID].play(onComplete);
-    };
-    SoundManager.prototype.stop = function (soundID) {
-        this.soundMeta[soundID].stop(soundID);
-    };
-    /** Retrieve reference to Sound instance by ID
-     * @param {string} soundID ID of sound to retrieve
-     * @returns {PIXI.sound.Sound} Sound instance
-     */
-    SoundManager.prototype.getSound = function (soundID) {
-        return this.soundMeta[soundID].sounds[soundID];
-    };
-    /**
-     * Retrieve reference to the SoundContext by ID
-     *
-     * @param soundID ID of sound to look up
-     * @returns {SoundContext}
-     */
-    SoundManager.prototype.getContext = function (soundID) {
-        return this.soundMeta[soundID];
-    };
-    /**
-     * Pause specified Sound by ID - if no ID provided, pause all sounds
-     * @param {string} [soundID] ID of sound to pause - if undefined, pause all sounds
-     */
-    SoundManager.prototype.pause = function (soundID) {
-        if (!soundID) {
-            PIXI.sound.pauseAll();
-        }
-        else {
-            this.soundMeta[soundID].sounds[soundID].resume();
-        }
-    };
-    /**
-     * Resume specified Sound by ID - if no ID provided, resume all sounds
-     * @param {string} [soundID] ID of sound to resume - if undefined, resume all sounds
-     */
-    SoundManager.prototype.resume = function (soundID) {
-        if (!soundID) {
-            PIXI.sound.resumeAll();
-        }
-        else {
-            this.soundMeta[soundID].sounds[soundID].resume();
-        }
-    };
-    /**
-     * Adjust volume of a specific sound by ID
-     * @param {string} id ID of sound to set volume on
-     * @param {number} volume Number 0-1 to set volume of specified sound
-     */
-    SoundManager.prototype.setVolume = function (id, volume) {
-        this.soundMeta[id].applyVolume(id, volume);
-    };
-    /**
-     * Destroy sound, remove from context and PIXI Sound cache
-     * @param id ID of sound to remove
-     */
-    SoundManager.prototype.removeSound = function (id) {
-        var context = this.soundMeta[id];
-        context.removeSound(id);
-        delete this.soundMeta[id];
-    };
-    return SoundManager;
-}());
-
-/** Base Class for WGBH SpringRoll Games - extend this Class in your project */
-var Game = /** @class */ (function () {
-    function Game(options) {
-        var _this = this;
-        /** object for storing global data - accessible from all Scenes */
-        this.dataStore = {};
-        this.preloadGlobal = function () {
-            var assets = _this.preload();
-            if (assets && assets.length) {
-                for (var _i = 0, assets_1 = assets; _i < assets_1.length; _i++) {
-                    var asset = assets_1[_i];
-                    //Game-level assets are always global
-                    asset.isGlobal = true;
-                }
-                _this.assetManager.unloadAssets(); //Prep for fresh loading
-                _this.assetManager.loadAssets(assets, _this.gameReady.bind(_this));
-            }
-            else {
-                _this.gameReady();
-            }
-        };
-        this.sound = new SoundManager();
-        this.assetManager = new AssetManager(this.sound);
-        this.cache = this.assetManager.cache;
-        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth);
-        this.app = new Application(options.springRollConfig);
-        this.app.state.soundVolume.subscribe(function (volume) {
-            _this.sound.volume = volume;
-        });
-        this.app.state.musicVolume.subscribe(function (volume) {
-            _this.sound.musicVolume = volume;
-        });
-        this.app.state.sfxVolume.subscribe(function (volume) {
-            _this.sound.sfxVolume = volume;
-        });
-        this.app.state.voVolume.subscribe(function (volume) {
-            _this.sound.voVolume = volume;
-        });
-        this.app.state.pause.subscribe(function (pause) {
-            pause ? _this.sound.pause() : _this.sound.resume();
-            _this.stageManager.pause = pause;
-        });
-        this.app.state.ready.subscribe(function () {
-            _this.stageManager.setTransition(options.transition, _this.preloadGlobal);
-        });
-        if (options.captions) {
-            this.stageManager.addCaptions(options.captions.config, options.captions.display);
-        }
-    }
-    /** overrride and return list of global assets */
-    Game.prototype.preload = function () {
-        return null;
-    };
-    /** called when game is ready to enter first scene - override this function and set first scene here */
-    Game.prototype.gameReady = function () {
-        //override and set first scene in this function
-    };
-    Game.prototype.addScene = function (id, scene) {
-        this.stageManager.addScene(id, scene);
-    };
-    Game.prototype.addScenes = function (sceneMap) {
-        this.stageManager.addScenes(sceneMap);
-    };
-    /**
-     * Transition to specified scene
-     * @param {string} sceneID ID of Scene to transition to
-     */
-    Game.prototype.changeScene = function (sceneID) {
-        this.stageManager.changeScene(sceneID);
-    };
-    return Game;
-}());
-
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation. All rights reserved.
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-this file except in compliance with the License. You may obtain a copy of the
-License at http://www.apache.org/licenses/LICENSE-2.0
-
-THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-MERCHANTABLITY OR NON-INFRINGEMENT.
-
-See the Apache Version 2.0 License for specific language governing permissions
-and limitations under the License.
-***************************************************************************** */
-/* global Reflect, Promise */
-
-var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return extendStatics(d, b);
-};
-
-function __extends(d, b) {
-    extendStatics(d, b);
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-}
-
-var PauseableTimer = /** @class */ (function () {
-    function PauseableTimer(callback, time, loop) {
-        var _this = this;
-        this.active = true;
-        this.paused = false;
-        this.repeat = false;
-        this.update = function (deltaTime) {
-            if (_this.paused || !_this.targetTime) {
-                return;
-            }
-            _this.currentTime += deltaTime;
-            var time = _this.currentTime / _this.targetTime > 1 ? 1 : _this.currentTime / _this.targetTime;
-            if (time >= 1) {
-                if (_this.onComplete) {
-                    _this.onComplete();
-                }
-                if (_this.repeat) {
-                    var delta = _this.currentTime - _this.targetTime;
-                    _this.reset(delta);
-                }
-                else {
-                    _this.destroy(true);
-                }
-            }
-        };
-        this.targetTime = time;
-        this.currentTime = 0;
-        this.onComplete = callback;
-        this.repeat = loop;
-        GameTime.gameTick.subscribe(this.update);
-    }
-    Object.defineProperty(PauseableTimer.prototype, "promise", {
-        get: function () {
-            var _this = this;
-            if (!this._promise) {
-                this._promise = new Promise(function (resolve, reject) {
-                    _this.resolve = resolve;
-                    _this.reject = reject;
-                });
-            }
-            return this._promise;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    PauseableTimer.prototype.pause = function (pause) {
-        this.paused = pause;
-    };
-    PauseableTimer.prototype.reset = function (deltaTime) {
-        // deltaTime shows how far over the end we went = do we care?
-        this.currentTime = deltaTime ? deltaTime : 0;
-    };
-    PauseableTimer.prototype.destroy = function (isComplete) {
-        if (isComplete === void 0) { isComplete = false; }
-        this.paused = true; // make sure it doesn't try to do another update.
-        if (isComplete) {
-            if (this.resolve) {
-                this.resolve();
-            }
-        }
-        else if (this.reject) {
-            this.reject('destroyed');
-        }
-        this._promise = null;
-        this.resolve = null;
-        this.reject = null;
-        this.targetTime = null;
-        GameTime.gameTick.unsubscribe(this.update);
-    };
-    return PauseableTimer;
+    Tween$$1.tweens = [];
+    return Tween$$1;
 }());
 
 /**
@@ -1470,6 +1531,7 @@ var Scene = /** @class */ (function (_super) {
     __extends(Scene, _super);
     function Scene(game) {
         var _this = _super.call(this) || this;
+        _this.app = game.app;
         _this.assetManager = game.assetManager;
         _this.cache = _this.assetManager.cache;
         _this.sound = game.sound;
@@ -1529,7 +1591,7 @@ var Scene = /** @class */ (function (_super) {
      */
     Scene.prototype.tween = function (target, values, time, ease) {
         console.warn('Scene.tween() is deprecated, please use Tween.get()');
-        return Tween.get(target).to(values, time, ease);
+        return Tween$$1.get(target).to(values, time, ease);
     };
     /**
      *
@@ -1540,9 +1602,7 @@ var Scene = /** @class */ (function (_super) {
      * @param time
      */
     Scene.prototype.setTimeout = function (callback, time) {
-        var timer = new PauseableTimer(callback, time);
-        this.stageManager.addTimer(timer);
-        return timer;
+        return new PauseableTimer(callback, time);
     };
     Scene.prototype.clearTimeout = function (timer) {
         if (timer) {
@@ -1550,9 +1610,7 @@ var Scene = /** @class */ (function (_super) {
         }
     };
     Scene.prototype.setInterval = function (callback, time) {
-        var timer = new PauseableTimer(callback, time, true);
-        this.stageManager.addTimer(timer);
-        return timer;
+        return new PauseableTimer(callback, time, true);
     };
     Scene.prototype.clearInterval = function (timer) {
         if (timer) {
@@ -1574,5 +1632,5 @@ var Scene = /** @class */ (function (_super) {
 
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween$$1 as Tween };
 //# sourceMappingURL=gamelib.js.map

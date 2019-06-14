@@ -1,6 +1,6 @@
 {
   "name": "wgbh-springroll-game",
-  "version": "1.1.2",
+  "version": "1.1.12",
   "description": "Framework for SpringRoll 2 games",
   "main": "dist/gamelib.js",
   "typings": "dts/index.d.ts",
@@ -17,24 +17,25 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@types/eases": "^1.0.0",
-    "@types/pixi.js": "^4.8.4",
-    "pixi-animate": "git+https://github.com/ericente/pixi-animate.git#publish",
-    "pixi-sound": "^2.0.3",
-    "pixi.js": "^4.8.3",
-    "rollup": "^0.67.4",
+    "@types/pixi.js": "^4.8.7",
+    "pixi-animate": "^1.3.5",
+    "pixi-sound": "^2.1.4",
+    "pixi.js": "4.8.2",
+    "rollup": "^0.68.0",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^4.0.0",
     "rollup-plugin-terser": "^3.0.0",
     "rollup-plugin-tslint": "^0.1.38",
-    "rollup-plugin-typescript2": "^0.18.1",
+    "rollup-plugin-typescript2": "^0.20.1",
     "springroll": "git+https://github.com/SpringRoll/SpringRoll.git#v2",
-    "typedoc": "^0.13.0",
+    "tslib": "^1.9.3",
+    "typedoc": "^0.14.2",
     "typescript": "^3.2.2"
   },
   "peerDependencies": {
-    "pixi-animate": "git+https://github.com/ericente/pixi-animate.git#publish",
-    "pixi-sound": "^2.0.3",
-    "pixi.js": "^4.8.3",
+    "pixi-animate": "^1.3.5",
+    "pixi-sound": "^2.1.4",
+    "pixi.js": "4.8.2",
     "springroll": "git+https://github.com/SpringRoll/SpringRoll.git#v2"
   },
   "dependencies": {

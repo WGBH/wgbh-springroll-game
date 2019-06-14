@@ -1,4 +1,5 @@
 import * as eases from 'eases';
+import { GameTime } from '..';
 
 const Eases:typeof eases = (eases as any).default;
 
@@ -40,6 +41,7 @@ export default class Tween{
             tween.onComplete = options.onComplete;
         }
         Tween.tweens.push(tween);
+        GameTime.gameTick.subscribe(tween.update);
         return tween;
     }
 
@@ -101,14 +103,6 @@ export default class Tween{
         this.destroy();
     }
 
-    static update(elapsed:number){
-        if(Tween.tweens.length){
-            for(let tween of Tween.tweens){
-                tween.update(elapsed);
-            }
-        }
-    }
-
     update = (elapsed:number) => {
         if(this.paused){
             return;
@@ -162,6 +156,7 @@ export default class Tween{
     }
 
     destroy(){
+        GameTime.gameTick.unsubscribe(this.update);
         Tween.tweens.splice(Tween.tweens.indexOf(this), 1);
         this.target = null;
         this.steps = null;
