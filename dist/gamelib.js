@@ -1414,6 +1414,19 @@ var Tween$$1 = /** @class */ (function () {
             _this.steps.push({ call: call });
             return _this;
         };
+        this.on = function (listentype, callback) {
+            if (listentype !== 'change') {
+                return _this;
+            }
+            if (!_this._listeners) {
+                _this._listeners = {};
+            }
+            if (!_this._listeners[listentype]) {
+                _this._listeners[listentype] = [];
+            }
+            _this._listeners[listentype].push(callback);
+            return _this;
+        };
         this.doComplete = function () {
             if (_this.onComplete) {
                 _this.onComplete();
@@ -1461,6 +1474,11 @@ var Tween$$1 = /** @class */ (function () {
             if (step.targetValues) {
                 for (var key in step.targetValues) {
                     _this.target[key] = step.initialValues[key] + step.ease(time) * (step.targetValues[key] - step.initialValues[key]);
+                }
+            }
+            if (_this._listeners && _this._listeners.change) {
+                for (var l in _this._listeners.change) {
+                    _this._listeners.change[l]();
                 }
             }
             if (time >= 1) {
@@ -1519,6 +1537,13 @@ var Tween$$1 = /** @class */ (function () {
         this.currentStep = null;
         this._promise = null;
         this._resolve = null;
+        for (var l in this._listeners) {
+            for (var ll in this._listeners[l]) {
+                this._listeners[l][ll] = null;
+            }
+            delete (this._listeners[l]);
+        }
+        this._listeners = null;
     };
     Tween$$1.tweens = [];
     return Tween$$1;
