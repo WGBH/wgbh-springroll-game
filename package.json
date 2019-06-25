@@ -11,10 +11,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git@atlas.wgbh.org:7999/sroll/wgbh-springroll-game.git"
+    "url": "ssh://git@github.com:WGBH/wgbh-springroll-game.git"
   },
   "author": "",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "devDependencies": {
     "@types/eases": "^1.0.0",
     "@types/pixi.js": "^4.8.7",
