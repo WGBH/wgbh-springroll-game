@@ -1392,8 +1392,8 @@ var eases = {
 };
 
 var Eases = eases;
-var Tween$$1 = /** @class */ (function () {
-    function Tween$$1(target) {
+var Tween = /** @class */ (function () {
+    function Tween(target) {
         var _this = this;
         this.paused = false;
         this.steps = [];
@@ -1467,12 +1467,12 @@ var Tween$$1 = /** @class */ (function () {
         };
         this.target = target;
     }
-    Tween$$1.get = function (target, options) {
+    Tween.get = function (target, options) {
         if (options === void 0) { options = {}; }
         if (options.override) {
             this.removeTweens(target);
         }
-        var tween = new Tween$$1(target);
+        var tween = new Tween(target);
         if (options.loop) {
             if (options.loop % 1) {
                 console.error('Tween options.loop must be an integer. Got: ', options.loop);
@@ -1482,23 +1482,23 @@ var Tween$$1 = /** @class */ (function () {
         if (options.onComplete) {
             tween.onComplete = options.onComplete;
         }
-        Tween$$1.tweens.push(tween);
+        Tween.tweens.push(tween);
         GameTime.gameTick.subscribe(tween.update);
         return tween;
     };
-    Tween$$1.removeTweens = function (target) {
-        for (var i = Tween$$1.tweens.length - 1; i >= 0; i--) {
-            if (Tween$$1.tweens[i].target === target) {
-                Tween$$1.tweens[i].destroy();
+    Tween.removeTweens = function (target) {
+        for (var i = Tween.tweens.length - 1; i >= 0; i--) {
+            if (Tween.tweens[i].target === target) {
+                Tween.tweens[i].destroy();
             }
         }
     };
-    Tween$$1.removeAllTweens = function () {
-        for (var i = Tween$$1.tweens.length - 1; i >= 0; i--) {
-            Tween$$1.tweens[i].destroy();
+    Tween.removeAllTweens = function () {
+        for (var i = Tween.tweens.length - 1; i >= 0; i--) {
+            Tween.tweens[i].destroy();
         }
     };
-    Object.defineProperty(Tween$$1.prototype, "promise", {
+    Object.defineProperty(Tween.prototype, "promise", {
         get: function () {
             var _this = this;
             if (!this._promise) {
@@ -1509,17 +1509,17 @@ var Tween$$1 = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    Tween$$1.prototype.destroy = function () {
+    Tween.prototype.destroy = function () {
         GameTime.gameTick.unsubscribe(this.update);
-        Tween$$1.tweens.splice(Tween$$1.tweens.indexOf(this), 1);
+        Tween.tweens.splice(Tween.tweens.indexOf(this), 1);
         this.target = null;
         this.steps = null;
         this.currentStep = null;
         this._promise = null;
         this._resolve = null;
     };
-    Tween$$1.tweens = [];
-    return Tween$$1;
+    Tween.tweens = [];
+    return Tween;
 }());
 
 /**
@@ -1589,7 +1589,7 @@ var Scene = /** @class */ (function (_super) {
      */
     Scene.prototype.tween = function (target, values, time, ease) {
         console.warn('Scene.tween() is deprecated, please use Tween.get()');
-        return Tween$$1.get(target).to(values, time, ease);
+        return Tween.get(target).to(values, time, ease);
     };
     /**
      *
@@ -1630,5 +1630,5 @@ var Scene = /** @class */ (function (_super) {
 
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween$$1 as Tween };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween };
 //# sourceMappingURL=gamelib.js.map

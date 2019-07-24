@@ -1,5 +1,5 @@
 import * as eases from 'eases';
-import { GameTime } from '..';
+import GameTime from '../timer/GameTime';
 
 const Eases:typeof eases = (eases as any).default;
 
