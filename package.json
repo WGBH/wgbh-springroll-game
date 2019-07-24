@@ -35,7 +35,7 @@
   "peerDependencies": {
     "pixi-animate": "^1.3.5",
     "pixi-sound": "^2.1.4",
-    "pixi.js": "4.8.2",
+    "pixi.js": "^4.8.8",
     "springroll": "^2.0.0"
   },
   "dependencies": {
