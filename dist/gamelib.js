@@ -407,37 +407,19 @@ var LOADING_DELAY = 250;
 /** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
 var FLICKERERS = [
     //Kindle fire tablets:
-    'KFFOWI',
-    'KFMEWI',
-    'KFTBWI',
-    'KFARWI',
-    'KFASWI',
-    'KFSAWA',
-    'KFSAWI',
-    'KFAPWA',
-    'KFAPWI',
-    'KFTHWA',
-    'KFTHWI',
-    'KFSOWI',
-    'KFJWA',
-    'KFJWI',
-    'KFTT',
-    'KFOT',
-    'Kindle Fire',
-    'Silk',
+    // /KFMUWI/, /KFKAWI/, /KFSUWI/, /KFAUWI/, /KFDOWI/, /KFGIWI/, /KFFOWI/, /KFMEWI/, /KFTBWI/, /KFARWI/, /KFASWI/, /KFSAWA/, /KFSAWI/, /KFAPWA/, /KFAPWI/, /KFTHWA/, /KFTHWI/, /KFSOWI/,
+    /KF..WI/,
+    /KFJWA/,
+    /KFJWI/,
+    /KFTT/,
+    /KFOT/,
+    /Kindle Fire/,
+    /Silk/,
     //Galaxy Tab A 7":
-    'SM-T280',
+    /SM-T280/,
     //RCA tablets:
-    'RCT6077W2',
-    'RCT6103W46',
-    'RCT6203W46',
-    'RCT6272W23',
-    'RCT6303W87',
-    'RCT6378W2',
-    'RCT6773W22',
-    'RCT6773W42',
-    'RCT6873W42',
-    'RCT6973W43',
+    // /RCT6077W2/, /RCT6103W46/, /RCT6203W46/, /RCT6272W23/, /RCT6303W87/, /RCT6378W2/, /RCT6773W22/, /RCT6773W42/, /RCT6873W42/, /RCT6973W43/,
+    /RCT6\d\d\dW\d?\d/
 ];
 var TRANSITION_ID = 'wgbhSpringRollGameTransition';
 /**
@@ -532,7 +514,7 @@ var StageManager = /** @class */ (function () {
         this.offset = new PIXI.Point(0, 0);
         // transparent rendering mode is bad for overall performance, but necessary in order
         // to prevent flickering on some Android devices such as Galaxy Tab A and Kindle Fire
-        var flickerProne = !!FLICKERERS.find(function (value) { return navigator.userAgent.includes(value); });
+        var flickerProne = !!FLICKERERS.find(function (value) { return value.test(navigator.userAgent); });
         this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, transparent: flickerProne });
         this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
