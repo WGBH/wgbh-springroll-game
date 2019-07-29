@@ -10,6 +10,12 @@ const LOADING_DELAY = 250;
 /** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
 const FLICKERERS = [
     //Kindle fire tablets:
+    'KFMUWI',
+    'KFKAWI',
+    'KFSUWI',
+    'KFAUWI',
+    'KFDOWI',
+    'KFGIWI',
     'KFFOWI',
     'KFMEWI',
     'KFTBWI',
