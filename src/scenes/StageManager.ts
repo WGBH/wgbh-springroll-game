@@ -170,9 +170,14 @@ export default class StageManager{
             })
             .then(() => {
                 this._currentScene = new NewScene(this.game);
-                return new Promise((resolve)=>{
-                    this.game.assetManager.loadAssets(this._currentScene.preload(), resolve);
-                });
+                return this._currentScene.preload();
+            })
+            .then((assetList)=>{
+                if(assetList){
+                    return new Promise((resolve)=>{
+                        this.game.assetManager.loadAssets(assetList, resolve);
+                    });
+                }
             })
             .then(()=>{
                 return new Promise((resolve)=>{
@@ -180,7 +185,7 @@ export default class StageManager{
                 });
             })
             .then(()=>{
-                this._currentScene.setup();
+                return this._currentScene.setup();
             })
             .then(()=>{
                 return new Promise((resolve)=>{

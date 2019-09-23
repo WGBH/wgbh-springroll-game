@@ -28,19 +28,22 @@ export default class Scene extends PIXI.Container {
     protected readonly app: Application;
     constructor(game: Game);
     /**
-     * provide list of assets to preload
-     * @returns {AssetList}
+     * Provide list of assets to preload.
+     * Optionally, return a Promise which may return a list of assets to preload.
+     * @returns {AssetList | Promise<AssetList>}
      */
-    preload(): AssetList;
+    preload(): AssetList | Promise<AssetList>;
     /**
      * Exit this Scene and transition to specified scene
      * @param {string} sceneID ID of Scene to transition to
      */
     changeScene(sceneID: string): void;
     /**
-     * prepare initial visual state - called after preload is complete, while scene is obscured by loader
+     * Prepare initial visual state - called after preload is complete, while scene is obscured by loader.
+     * Optionally return a Promise, which will delay removal of the loader until it is resolved.
+     * @returns {Promise<any> | void}
      */
-    setup(): void;
+    setup(): Promise<any> | void;
     /**
      * entrypoint to scene - called after loader transition is complete
      */
