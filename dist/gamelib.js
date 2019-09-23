@@ -1524,8 +1524,9 @@ var Scene = /** @class */ (function (_super) {
         return _this;
     }
     /**
-     * provide list of assets to preload
-     * @returns {AssetList}
+     * Provide list of assets to preload.
+     * Optionally, return a Promise which may return a list of assets to preload.
+     * @returns {AssetList | Promise<AssetList>}
      */
     Scene.prototype.preload = function () {
         return;
@@ -1538,7 +1539,9 @@ var Scene = /** @class */ (function (_super) {
         this.stageManager.changeScene(sceneID);
     };
     /**
-     * prepare initial visual state - called after preload is complete, while scene is obscured by loader
+     * Prepare initial visual state - called after preload is complete, while scene is obscured by loader.
+     * Optionally return a Promise, which will delay removal of the loader until it is resolved.
+     * @returns {Promise<any> | void}
      */
     Scene.prototype.setup = function () {
         //override this, called to prepare graphics
