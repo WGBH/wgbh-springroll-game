@@ -468,9 +468,14 @@ var StageManager = /** @class */ (function () {
             })
                 .then(function () {
                 _this._currentScene = new NewScene(_this.game);
-                return new Promise(function (resolve) {
-                    _this.game.assetManager.loadAssets(_this._currentScene.preload(), resolve);
-                });
+                return _this._currentScene.preload();
+            })
+                .then(function (assetList) {
+                if (assetList) {
+                    return new Promise(function (resolve) {
+                        _this.game.assetManager.loadAssets(assetList, resolve);
+                    });
+                }
             })
                 .then(function () {
                 return new Promise(function (resolve) {
@@ -478,7 +483,7 @@ var StageManager = /** @class */ (function () {
                 });
             })
                 .then(function () {
-                _this._currentScene.setup();
+                return _this._currentScene.setup();
             })
                 .then(function () {
                 return new Promise(function (resolve) {

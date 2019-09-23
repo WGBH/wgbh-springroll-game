@@ -31,7 +31,7 @@ export default class Scene extends PIXI.Container {
      * provide list of assets to preload
      * @returns {AssetList}
      */
-    preload(): AssetList;
+    preload(): AssetList | Promise<AssetList>;
     /**
      * Exit this Scene and transition to specified scene
      * @param {string} sceneID ID of Scene to transition to
@@ -40,7 +40,7 @@ export default class Scene extends PIXI.Container {
     /**
      * prepare initial visual state - called after preload is complete, while scene is obscured by loader
      */
-    setup(): void;
+    setup(): Promise<any> | void;
     /**
      * entrypoint to scene - called after loader transition is complete
      */

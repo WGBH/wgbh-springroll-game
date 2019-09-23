@@ -45,7 +45,7 @@ export default class Scene extends PIXI.Container {
      * provide list of assets to preload
      * @returns {AssetList}
      */
-    preload():AssetList {
+    preload(): AssetList | Promise<AssetList>{
         return;
     }
 
@@ -60,7 +60,7 @@ export default class Scene extends PIXI.Container {
     /**
      * prepare initial visual state - called after preload is complete, while scene is obscured by loader
      */
-    setup(){
+    setup(): Promise<any> | void{
         //override this, called to prepare graphics
     }
     
