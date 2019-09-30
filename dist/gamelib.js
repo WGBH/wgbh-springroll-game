@@ -1046,8 +1046,10 @@ var Game = /** @class */ (function () {
             _this.sound.voVolume = volume;
         });
         this.app.state.pause.subscribe(function (pause) {
-            pause ? _this.sound.pause() : _this.sound.resume();
-            _this.stageManager.pause = pause;
+            if (_this.stageManager.pause !== pause) {
+                pause ? _this.sound.pause() : _this.sound.resume();
+                _this.stageManager.pause = pause;
+            }
         });
         this.app.state.captionsMuted.subscribe(function (isMuted) {
             _this.stageManager.captionsMuted = isMuted;
