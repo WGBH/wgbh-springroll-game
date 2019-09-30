@@ -48,8 +48,10 @@ export default class Game {
             this.sound.voVolume = volume;
         });
         this.app.state.pause.subscribe((pause)=>{
-            pause ? this.sound.pause() : this.sound.resume();
-            this.stageManager.pause = pause;
+            if(this.stageManager.pause !== pause){
+                pause ? this.sound.pause() : this.sound.resume();
+                this.stageManager.pause = pause;
+            }
         });
         this.app.state.captionsMuted.subscribe((isMuted:boolean)=> {
             this.stageManager.captionsMuted = isMuted;
