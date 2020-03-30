@@ -45,7 +45,6 @@ export default class StageManager{
 
     private _minSize:ScreenSize;
     private _maxSize:ScreenSize;
-    // private _originSize:ScreenSize;
 
     private transitioning = true;
     private isPaused = false;

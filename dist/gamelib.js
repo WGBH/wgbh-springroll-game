@@ -427,7 +427,6 @@ var TRANSITION_ID = 'wgbhSpringRollGameTransition';
 var StageManager = /** @class */ (function () {
     function StageManager(game, containerID, width, height, altWidth, altHeight) {
         var _this = this;
-        // private _originSize:ScreenSize;
         this.transitioning = true;
         this.isPaused = false;
         /** Map of Scenes by Scene IDs */
