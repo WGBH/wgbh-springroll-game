@@ -12,7 +12,6 @@ export default class StageManager {
     pixi: PIXI.Application;
     width: number;
     height: number;
-    scale: number;
     offset: PIXI.PointLike;
     transition: PIXI.animate.MovieClip;
     viewFrame: Property<ViewFrame>;
@@ -22,7 +21,6 @@ export default class StageManager {
     private _currentScene;
     private _minSize;
     private _maxSize;
-    private _originSize;
     private transitioning;
     private isPaused;
     private game;
@@ -30,7 +28,8 @@ export default class StageManager {
     private isCaptionsMuted;
     /** Map of Scenes by Scene IDs */
     private scenes;
-    constructor(game: Game, containerID: string, width: number, height: number, altWidth?: number);
+    readonly scale: number;
+    constructor(game: Game, containerID: string, width: number, height: number, altWidth?: number, altHeight?: number);
     addCaptions(captionData: CaptionData, renderer: IRender): void;
     setCaptionRenderer(renderer: IRender): void;
     addScene(id: string, scene: typeof Scene): void;
@@ -75,6 +74,7 @@ export declare type RectLike = {
     height: number;
 };
 export declare type ScaleConfig = {
+    /** DEPRECATED */
     origin?: RectLike;
     min?: RectLike;
     max?: RectLike;
@@ -85,6 +85,7 @@ export declare type ViewFrame = {
     top: number;
     bottom: number;
     center: number;
+    verticalCenter: number;
     width: number;
     height: number;
     offset: PIXI.PointLike;

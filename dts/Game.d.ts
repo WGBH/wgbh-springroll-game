@@ -48,6 +48,8 @@ export interface GameOptions {
     height: number;
     /** alternate width - wider or narrower than base width  */
     altWidth?: number;
+    /** alternate height - taller or shorter than base height  */
+    altHeight?: number;
     /** caption configuration */
     captions?: CaptionParams;
     /** Class of Animate Stage to use for transitions */
