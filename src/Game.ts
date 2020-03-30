@@ -115,9 +115,9 @@ export interface GameOptions {
     width: number;
     /** target height of game in pixels */
     height: number;
-    /** alternate width - wider or narrower than base width  */
+    /** alternate width - wider or narrower than base width. Cannot be used with altHeight */
     altWidth?: number;
-    /** alternate height - taller or shorter than base height  */
+    /** alternate height - taller or shorter than base height. Cannot be used with altWidth */
     altHeight?: number;
     /** caption configuration */
     captions?: CaptionParams;
