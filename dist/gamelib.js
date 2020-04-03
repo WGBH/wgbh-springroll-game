@@ -425,7 +425,7 @@ var TRANSITION_ID = 'wgbhSpringRollGameTransition';
  * Manages rendering and transitioning between Scenes
  */
 var StageManager = /** @class */ (function () {
-    function StageManager(game, containerID, width, height, altWidth) {
+    function StageManager(game, containerID, width, height, altWidth, altHeight) {
         var _this = this;
         this.transitioning = true;
         this.isPaused = false;
@@ -512,6 +512,9 @@ var StageManager = /** @class */ (function () {
         this.gotResize = function (newsize) {
             _this.resize(newsize.width, newsize.height);
         };
+        if (altWidth && altHeight) {
+            console.error('responsive scaling system only supports altWidth OR altHeight, using both will produce undesirable results');
+        }
         this.game = game;
         this.width = width;
         this.height = height;
@@ -524,16 +527,25 @@ var StageManager = /** @class */ (function () {
         document.getElementById(containerID).appendChild(this.pixi.view);
         var baseSize = { width: width, height: height };
         altWidth = altWidth || width;
-        var altSize = { width: altWidth, height: height };
+        altHeight = altHeight || height;
+        var altSize = { width: altWidth, height: altHeight };
+        var altBigger = altWidth > width || altHeight > height;
         var scale = {
-            origin: baseSize,
-            min: (altWidth > width) ? baseSize : altSize,
-            max: (altWidth > width) ? altSize : baseSize
+            min: altBigger ? baseSize : altSize,
+            max: altBigger ? altSize : baseSize
         };
         this.setScaling(scale);
         this.pixi.ticker.add(this.update.bind(this));
         this.scaleManager = new ScaleManager(this.gotResize);
     }
+    Object.defineProperty(StageManager.prototype, "scale", {
+        get: function () {
+            console.warn('scale is deprecated, please reference viewFrame for stage size info');
+            return 1;
+        },
+        enumerable: true,
+        configurable: true
+    });
     StageManager.prototype.addCaptions = function (captionData, renderer) {
         this.captions = new CaptionPlayer(captionData, renderer);
     };
@@ -619,7 +631,7 @@ var StageManager = /** @class */ (function () {
     };
     StageManager.prototype.setScaling = function (scaleconfig) {
         if (scaleconfig.origin) {
-            this._originSize = this.getSize(scaleconfig.origin.width, scaleconfig.origin.height);
+            console.warn('origin is deprecated and will be ignored');
         }
         if (scaleconfig.min) {
             this._minSize = this.getSize(scaleconfig.min.width, scaleconfig.min.height);
@@ -631,44 +643,67 @@ var StageManager = /** @class */ (function () {
     };
     StageManager.prototype.resize = function (width, height) {
         var aspect = width / height;
-        var offset = 0;
-        //let scale;
-        var calcwidth = this._minSize.width;
-        if (aspect > this._maxSize.ratio) {
+        var wideSize = this._maxSize.width > this._minSize.width ? this._maxSize : this._minSize;
+        var tallSize = this._maxSize.height > this._minSize.height ? this._maxSize : this._minSize;
+        var calcwidth;
+        var calcheight;
+        if (aspect > wideSize.ratio) {
             // locked in at max (2:1)
-            this.scale = this._minSize.ratio / this._maxSize.ratio;
-            calcwidth = this._maxSize.width;
+            calcwidth = wideSize.width;
+            calcheight = wideSize.height;
             // these styles could - probably should - be replaced by media queries in CSS
             this.pixi.view.style.height = height + "px";
-            this.pixi.view.style.width = Math.floor(this._maxSize.ratio * height) + "px";
+            this.pixi.view.style.width = Math.floor(wideSize.ratio * height) + "px";
             this.pixi.view.style.margin = '0 auto';
         }
-        else if (aspect < this._minSize.ratio) {
-            this.scale = 1;
-            var viewHeight = Math.floor(width / this._minSize.ratio);
+        else if (aspect < tallSize.ratio) {
+            calcwidth = tallSize.width;
+            calcheight = tallSize.height;
+            var viewHeight = Math.floor(width / tallSize.ratio);
             this.pixi.view.style.height = viewHeight + "px";
             this.pixi.view.style.width = width + "px";
             this.pixi.view.style.margin = Math.floor((height - viewHeight) / 2) + "px 0";
         }
         else {
-            // between min and max ratio (wider than min)
-            this.scale = this._minSize.ratio / aspect;
-            calcwidth = this._minSize.width / this.scale; // how much wider is this?
+            // between min and max ratio
+            if (wideSize.width !== tallSize.width) {
+                var widthDiff = wideSize.width - tallSize.width;
+                var aspectDiff = wideSize.ratio - tallSize.ratio;
+                var diffRatio = (wideSize.ratio - aspect) / aspectDiff;
+                calcwidth = wideSize.width - widthDiff * diffRatio;
+                calcheight = wideSize.height;
+            }
+            else if (tallSize.height !== wideSize.height) {
+                var heightDiff = tallSize.height - wideSize.height;
+                var aspectDiff = wideSize.ratio - tallSize.ratio;
+                var diffRatio = (aspect - tallSize.ratio) / aspectDiff;
+                calcheight = tallSize.height - heightDiff * diffRatio;
+                calcwidth = tallSize.width;
+            }
+            else {
+                calcheight = tallSize.height;
+                calcwidth = wideSize.width;
+            }
             this.pixi.view.style.height = height + "px";
             this.pixi.view.style.width = width + "px";
             this.pixi.view.style.margin = '0';
         }
-        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
-        this.pixi.stage.position.x = offset;
+        var offset = (calcwidth - wideSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
+        var verticalOffset = (calcheight - tallSize.height) * 0.5;
+        this.offset.x = offset;
+        this.offset.y = verticalOffset;
+        this.pixi.stage.position.copy(this.offset);
         var newframe = {
             left: offset * -1,
             right: calcwidth - offset,
             width: calcwidth,
             center: calcwidth / 2 - offset,
+            verticalCenter: calcheight / 2 - verticalOffset,
             top: 0,
-            bottom: this._minSize.height,
-            height: this._minSize.height,
-            offset: this.offset
+            bottom: calcheight,
+            height: calcheight,
+            offset: this.offset,
+            verticalOffset: verticalOffset
         };
         if (!this.viewFrame) {
             this.viewFrame = new Property(newframe);
@@ -677,12 +712,11 @@ var StageManager = /** @class */ (function () {
             this.viewFrame.value = newframe;
         }
         this.width = calcwidth;
-        this.height = this._minSize.height;
+        this.height = calcheight;
         /* legacy -- should remove */
         this.leftEdge = newframe.left;
         this.rightEdge = newframe.right;
-        this.pixi.renderer.resize(calcwidth, this._minSize.height);
-        this.offset.x = offset;
+        this.pixi.renderer.resize(calcwidth, calcheight);
         if (this._currentScene) {
             this._currentScene.resize(this.width, this.height, this.offset);
         }
@@ -1031,7 +1065,7 @@ var Game = /** @class */ (function () {
         this.sound = new SoundManager();
         this.assetManager = new AssetManager(this.sound);
         this.cache = this.assetManager.cache;
-        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth);
+        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth, options.altHeight);
         this.app = new Application(options.springRollConfig);
         this.app.state.soundVolume.subscribe(function (volume) {
             _this.sound.volume = volume;

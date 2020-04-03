@@ -32,7 +32,7 @@ export default class Game {
         this.sound = new SoundManager();
         this.assetManager = new AssetManager(this.sound);
         this.cache = this.assetManager.cache;
-        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth);
+        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth, options.altHeight);
 
         this.app = new SpringRoll.Application(options.springRollConfig);
         this.app.state.soundVolume.subscribe((volume)=>{
@@ -115,8 +115,10 @@ export interface GameOptions {
     width: number;
     /** target height of game in pixels */
     height: number;
-    /** alternate width - wider or narrower than base width  */
+    /** alternate width - wider or narrower than base width. Cannot be used with altHeight */
     altWidth?: number;
+    /** alternate height - taller or shorter than base height. Cannot be used with altWidth */
+    altHeight?: number;
     /** caption configuration */
     captions?: CaptionParams;
     /** Class of Animate Stage to use for transitions */
