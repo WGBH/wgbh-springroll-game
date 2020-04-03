@@ -540,7 +540,7 @@ var StageManager = /** @class */ (function () {
     }
     Object.defineProperty(StageManager.prototype, "scale", {
         get: function () {
-            console.warn('scale is deprecated, please reference viewFrame for stage size info');
+            console.warn('scale is obsolete, please reference viewFrame for stage size info');
             return 1;
         },
         enumerable: true,
@@ -631,7 +631,7 @@ var StageManager = /** @class */ (function () {
     };
     StageManager.prototype.setScaling = function (scaleconfig) {
         if (scaleconfig.origin) {
-            console.warn('origin is deprecated and will be ignored');
+            console.warn('origin is obsolete and will be ignored');
         }
         if (scaleconfig.min) {
             this._minSize = this.getSize(scaleconfig.min.width, scaleconfig.min.height);
