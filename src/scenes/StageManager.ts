@@ -10,37 +10,18 @@ const LOADING_DELAY = 250;
 /** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
 const FLICKERERS = [
     //Kindle fire tablets:
-    'KFFOWI',
-    'KFMEWI',
-    'KFTBWI',
-    'KFARWI',
-    'KFASWI',
-    'KFSAWA',
-    'KFSAWI',
-    'KFAPWA',
-    'KFAPWI',
-    'KFTHWA',
-    'KFTHWI',
-    'KFSOWI',
-    'KFJWA',
-    'KFJWI',
-    'KFTT',
-    'KFOT',
-    'Kindle Fire',
-    'Silk',
+    // /KFMUWI/, /KFKAWI/, /KFSUWI/, /KFAUWI/, /KFDOWI/, /KFGIWI/, /KFFOWI/, /KFMEWI/, /KFTBWI/, /KFARWI/, /KFASWI/, /KFSAWA/, /KFSAWI/, /KFAPWA/, /KFAPWI/, /KFTHWA/, /KFTHWI/, /KFSOWI/, /KFJWA/, /KFJWI/,
+    /KF.?.WI/,
+    /KF.?.WA/,
+    /KFTT/,
+    /KFOT/,
+    /Kindle Fire/,
+    /Silk/,
     //Galaxy Tab A 7":
-    'SM-T280',
+    /SM-T280/,
     //RCA tablets:
-    'RCT6077W2',
-    'RCT6103W46',
-    'RCT6203W46',
-    'RCT6272W23',
-    'RCT6303W87',
-    'RCT6378W2',
-    'RCT6773W22',
-    'RCT6773W42',
-    'RCT6873W42',
-    'RCT6973W43',
+    // /RCT6077W2/, /RCT6103W46/, /RCT6203W46/, /RCT6272W23/, /RCT6303W87/, /RCT6378W2/, /RCT6773W22/, /RCT6773W42/, /RCT6873W42/, /RCT6973W43/,
+    /RCT6\d\d\dW\d?\d/
 ];
 
 
@@ -53,7 +34,6 @@ export default class StageManager{
     public pixi: PIXI.Application;
     public width: number;
     public height: number;
-    public scale:number;
     public offset:PIXI.PointLike; // offset for the x,y origin when resizing
     public transition:PIXI.animate.MovieClip;
     public viewFrame:Property<ViewFrame>;
@@ -65,7 +45,6 @@ export default class StageManager{
 
     private _minSize:ScreenSize;
     private _maxSize:ScreenSize;
-    private _originSize:ScreenSize;
 
     private transitioning = true;
     private isPaused = false;
@@ -76,8 +55,15 @@ export default class StageManager{
 
     /** Map of Scenes by Scene IDs */
     private scenes: {[key:string]:typeof Scene} = {};
+    public get scale():number{
+        console.warn('scale is obsolete, please reference viewFrame for stage size info');
+        return 1;
+    }
 
-    constructor(game:Game, containerID:string, width:number, height:number, altWidth?:number){
+    constructor(game:Game, containerID:string, width:number, height:number, altWidth?:number, altHeight?:number){
+        if(altWidth && altHeight){
+            console.error('responsive scaling system only supports altWidth OR altHeight, using both will produce undesirable results');
+        }
         this.game = game;
 
         this.width = width;
@@ -87,7 +73,7 @@ export default class StageManager{
 
         // transparent rendering mode is bad for overall performance, but necessary in order
         // to prevent flickering on some Android devices such as Galaxy Tab A and Kindle Fire
-        const flickerProne = !!FLICKERERS.find((value) => navigator.userAgent.includes(value));
+        const flickerProne = !!FLICKERERS.find((value) => value.test(navigator.userAgent));
         this.pixi = new PIXI.Application({ width, height, antialias:true, transparent:flickerProne});
         this.pixi.view.style.display = 'block';
 
@@ -97,11 +83,12 @@ export default class StageManager{
         const baseSize = {width:width,height:height};
 
         altWidth = altWidth || width;
-        const altSize = {width:altWidth,height:height};
+        altHeight = altHeight || height;
+        const altSize = {width:altWidth,height:altHeight};
+        const altBigger = altWidth > width || altHeight > height;
         const scale = {
-            origin:baseSize,
-            min:(altWidth > width) ? baseSize : altSize,
-            max:(altWidth > width) ? altSize : baseSize
+            min:altBigger ? baseSize : altSize,
+            max:altBigger ? altSize : baseSize
         };
         this.setScaling(scale);
 
@@ -191,9 +178,14 @@ export default class StageManager{
             })
             .then(() => {
                 this._currentScene = new NewScene(this.game);
-                return new Promise((resolve)=>{
-                    this.game.assetManager.loadAssets(this._currentScene.preload(), resolve);
-                });
+                return this._currentScene.preload();
+            })
+            .then((assetList)=>{
+                if(assetList){
+                    return new Promise((resolve)=>{
+                        this.game.assetManager.loadAssets(assetList, resolve);
+                    });
+                }
             })
             .then(()=>{
                 return new Promise((resolve)=>{
@@ -201,7 +193,7 @@ export default class StageManager{
                 });
             })
             .then(()=>{
-                this._currentScene.setup();
+                return this._currentScene.setup();
             })
             .then(()=>{
                 return new Promise((resolve)=>{
@@ -266,7 +258,7 @@ export default class StageManager{
 
     setScaling(scaleconfig:ScaleConfig) {
         if(scaleconfig.origin) {
-            this._originSize = this.getSize(scaleconfig.origin.width,scaleconfig.origin.height);
+            console.warn('origin is obsolete and will be ignored');
         }
         if(scaleconfig.min) {
             this._minSize = this.getSize(scaleconfig.min.width,scaleconfig.min.height);
@@ -283,45 +275,67 @@ export default class StageManager{
 
     resize(width:number, height:number) {
         const aspect = width / height;
-        let offset = 0;
-        //let scale;
-        let calcwidth = this._minSize.width;
-        if(aspect > this._maxSize.ratio) {
+        const wideSize = this._maxSize.width > this._minSize.width ? this._maxSize : this._minSize;
+        const tallSize = this._maxSize.height > this._minSize.height ? this._maxSize : this._minSize;
+        let calcwidth:number;
+        let calcheight:number;
+        if(aspect > wideSize.ratio) {
             // locked in at max (2:1)
-            this.scale = this._minSize.ratio/this._maxSize.ratio;
-            calcwidth = this._maxSize.width;
-            
+            calcwidth = wideSize.width;
+            calcheight = wideSize.height;
             // these styles could - probably should - be replaced by media queries in CSS
             this.pixi.view.style.height = `${height}px`;
-            this.pixi.view.style.width = `${Math.floor(this._maxSize.ratio * height)}px`;
+            this.pixi.view.style.width = `${Math.floor(wideSize.ratio * height)}px`;
             this.pixi.view.style.margin = '0 auto';
-        } else if (aspect < this._minSize.ratio) {
-            this.scale = 1;
-            let viewHeight = Math.floor(width / this._minSize.ratio);
+        } else if (aspect < tallSize.ratio) {
+            calcwidth = tallSize.width;
+            calcheight = tallSize.height;
+            let viewHeight = Math.floor(width / tallSize.ratio);
             this.pixi.view.style.height = `${viewHeight}px`;
             this.pixi.view.style.width = `${width}px`;
             this.pixi.view.style.margin = `${Math.floor((height - viewHeight)/2)}px 0`;
         } else {
-            // between min and max ratio (wider than min)
-            this.scale = this._minSize.ratio / aspect;
-            calcwidth = this._minSize.width / this.scale; // how much wider is this?
+            // between min and max ratio
+            if(wideSize.width !== tallSize.width){
+                let widthDiff = wideSize.width - tallSize.width;
+                let aspectDiff = wideSize.ratio - tallSize.ratio;
+                let diffRatio = (wideSize.ratio - aspect) / aspectDiff;
+                calcwidth = wideSize.width - widthDiff * diffRatio;
+                calcheight = wideSize.height;
+            }
+            else if(tallSize.height !== wideSize.height){
+                let heightDiff = tallSize.height - wideSize.height;
+                let aspectDiff = wideSize.ratio - tallSize.ratio;
+                let diffRatio = (aspect - tallSize.ratio) / aspectDiff;
+                calcheight = tallSize.height - heightDiff * diffRatio;
+                calcwidth = tallSize.width;
+            }
+            else{
+                calcheight = tallSize.height;
+                calcwidth = wideSize.width;
+            }
+
 
             this.pixi.view.style.height = `${height}px`;
             this.pixi.view.style.width = `${width}px`;
             this.pixi.view.style.margin = '0';
         }
-        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
-        this.pixi.stage.position.x = offset;
-
+        let offset = (calcwidth - wideSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
+        let verticalOffset = (calcheight - tallSize.height) * 0.5;
+        this.offset.x = offset;
+        this.offset.y = verticalOffset;
+        this.pixi.stage.position.copy(this.offset);
         const newframe = {
             left: offset * -1,
             right: calcwidth - offset,
             width: calcwidth,
             center: calcwidth / 2 - offset,
+            verticalCenter: calcheight / 2 - verticalOffset,
             top: 0,
-            bottom: this._minSize.height,
-            height: this._minSize.height,
-            offset: this.offset
+            bottom: calcheight,
+            height: calcheight,
+            offset: this.offset,
+            verticalOffset: verticalOffset
         };
         if(!this.viewFrame) {
             this.viewFrame = new Property(newframe);
@@ -330,15 +344,14 @@ export default class StageManager{
         }
 
         this.width = calcwidth;
-        this.height = this._minSize.height;
+        this.height = calcheight;
 
         /* legacy -- should remove */
         this.leftEdge = newframe.left;
         this.rightEdge = newframe.right;
         
-        this.pixi.renderer.resize(calcwidth,this._minSize.height);
+        this.pixi.renderer.resize(calcwidth, calcheight);
 
-        this.offset.x = offset;
         if (this._currentScene) {
           this._currentScene.resize(this.width,this.height,this.offset);
         }
@@ -405,6 +418,7 @@ export type RectLike = {
 };
 
 export type ScaleConfig = {
+    /** DEPRECATED */
     origin?:RectLike,
     min?:RectLike,
     max?:RectLike
@@ -416,6 +430,7 @@ export type ViewFrame = {
     top:number,
     bottom:number,
     center:number,
+    verticalCenter:number,
     width:number,
     height:number,
     offset:PIXI.PointLike

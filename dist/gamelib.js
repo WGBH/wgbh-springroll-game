@@ -407,44 +407,25 @@ var LOADING_DELAY = 250;
 /** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
 var FLICKERERS = [
     //Kindle fire tablets:
-    'KFFOWI',
-    'KFMEWI',
-    'KFTBWI',
-    'KFARWI',
-    'KFASWI',
-    'KFSAWA',
-    'KFSAWI',
-    'KFAPWA',
-    'KFAPWI',
-    'KFTHWA',
-    'KFTHWI',
-    'KFSOWI',
-    'KFJWA',
-    'KFJWI',
-    'KFTT',
-    'KFOT',
-    'Kindle Fire',
-    'Silk',
+    // /KFMUWI/, /KFKAWI/, /KFSUWI/, /KFAUWI/, /KFDOWI/, /KFGIWI/, /KFFOWI/, /KFMEWI/, /KFTBWI/, /KFARWI/, /KFASWI/, /KFSAWA/, /KFSAWI/, /KFAPWA/, /KFAPWI/, /KFTHWA/, /KFTHWI/, /KFSOWI/, /KFJWA/, /KFJWI/,
+    /KF.?.WI/,
+    /KF.?.WA/,
+    /KFTT/,
+    /KFOT/,
+    /Kindle Fire/,
+    /Silk/,
     //Galaxy Tab A 7":
-    'SM-T280',
+    /SM-T280/,
     //RCA tablets:
-    'RCT6077W2',
-    'RCT6103W46',
-    'RCT6203W46',
-    'RCT6272W23',
-    'RCT6303W87',
-    'RCT6378W2',
-    'RCT6773W22',
-    'RCT6773W42',
-    'RCT6873W42',
-    'RCT6973W43',
+    // /RCT6077W2/, /RCT6103W46/, /RCT6203W46/, /RCT6272W23/, /RCT6303W87/, /RCT6378W2/, /RCT6773W22/, /RCT6773W42/, /RCT6873W42/, /RCT6973W43/,
+    /RCT6\d\d\dW\d?\d/
 ];
 var TRANSITION_ID = 'wgbhSpringRollGameTransition';
 /**
  * Manages rendering and transitioning between Scenes
  */
 var StageManager = /** @class */ (function () {
-    function StageManager(game, containerID, width, height, altWidth) {
+    function StageManager(game, containerID, width, height, altWidth, altHeight) {
         var _this = this;
         this.transitioning = true;
         this.isPaused = false;
@@ -487,9 +468,14 @@ var StageManager = /** @class */ (function () {
             })
                 .then(function () {
                 _this._currentScene = new NewScene(_this.game);
-                return new Promise(function (resolve) {
-                    _this.game.assetManager.loadAssets(_this._currentScene.preload(), resolve);
-                });
+                return _this._currentScene.preload();
+            })
+                .then(function (assetList) {
+                if (assetList) {
+                    return new Promise(function (resolve) {
+                        _this.game.assetManager.loadAssets(assetList, resolve);
+                    });
+                }
             })
                 .then(function () {
                 return new Promise(function (resolve) {
@@ -497,7 +483,7 @@ var StageManager = /** @class */ (function () {
                 });
             })
                 .then(function () {
-                _this._currentScene.setup();
+                return _this._currentScene.setup();
             })
                 .then(function () {
                 return new Promise(function (resolve) {
@@ -526,28 +512,40 @@ var StageManager = /** @class */ (function () {
         this.gotResize = function (newsize) {
             _this.resize(newsize.width, newsize.height);
         };
+        if (altWidth && altHeight) {
+            console.error('responsive scaling system only supports altWidth OR altHeight, using both will produce undesirable results');
+        }
         this.game = game;
         this.width = width;
         this.height = height;
         this.offset = new PIXI.Point(0, 0);
         // transparent rendering mode is bad for overall performance, but necessary in order
         // to prevent flickering on some Android devices such as Galaxy Tab A and Kindle Fire
-        var flickerProne = !!FLICKERERS.find(function (value) { return navigator.userAgent.includes(value); });
+        var flickerProne = !!FLICKERERS.find(function (value) { return value.test(navigator.userAgent); });
         this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, transparent: flickerProne });
         this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
         var baseSize = { width: width, height: height };
         altWidth = altWidth || width;
-        var altSize = { width: altWidth, height: height };
+        altHeight = altHeight || height;
+        var altSize = { width: altWidth, height: altHeight };
+        var altBigger = altWidth > width || altHeight > height;
         var scale = {
-            origin: baseSize,
-            min: (altWidth > width) ? baseSize : altSize,
-            max: (altWidth > width) ? altSize : baseSize
+            min: altBigger ? baseSize : altSize,
+            max: altBigger ? altSize : baseSize
         };
         this.setScaling(scale);
         this.pixi.ticker.add(this.update.bind(this));
         this.scaleManager = new ScaleManager(this.gotResize);
     }
+    Object.defineProperty(StageManager.prototype, "scale", {
+        get: function () {
+            console.warn('scale is obsolete, please reference viewFrame for stage size info');
+            return 1;
+        },
+        enumerable: true,
+        configurable: true
+    });
     StageManager.prototype.addCaptions = function (captionData, renderer) {
         this.captions = new CaptionPlayer(captionData, renderer);
     };
@@ -635,7 +633,7 @@ var StageManager = /** @class */ (function () {
     };
     StageManager.prototype.setScaling = function (scaleconfig) {
         if (scaleconfig.origin) {
-            this._originSize = this.getSize(scaleconfig.origin.width, scaleconfig.origin.height);
+            console.warn('origin is obsolete and will be ignored');
         }
         if (scaleconfig.min) {
             this._minSize = this.getSize(scaleconfig.min.width, scaleconfig.min.height);
@@ -647,44 +645,67 @@ var StageManager = /** @class */ (function () {
     };
     StageManager.prototype.resize = function (width, height) {
         var aspect = width / height;
-        var offset = 0;
-        //let scale;
-        var calcwidth = this._minSize.width;
-        if (aspect > this._maxSize.ratio) {
+        var wideSize = this._maxSize.width > this._minSize.width ? this._maxSize : this._minSize;
+        var tallSize = this._maxSize.height > this._minSize.height ? this._maxSize : this._minSize;
+        var calcwidth;
+        var calcheight;
+        if (aspect > wideSize.ratio) {
             // locked in at max (2:1)
-            this.scale = this._minSize.ratio / this._maxSize.ratio;
-            calcwidth = this._maxSize.width;
+            calcwidth = wideSize.width;
+            calcheight = wideSize.height;
             // these styles could - probably should - be replaced by media queries in CSS
             this.pixi.view.style.height = height + "px";
-            this.pixi.view.style.width = Math.floor(this._maxSize.ratio * height) + "px";
+            this.pixi.view.style.width = Math.floor(wideSize.ratio * height) + "px";
             this.pixi.view.style.margin = '0 auto';
         }
-        else if (aspect < this._minSize.ratio) {
-            this.scale = 1;
-            var viewHeight = Math.floor(width / this._minSize.ratio);
+        else if (aspect < tallSize.ratio) {
+            calcwidth = tallSize.width;
+            calcheight = tallSize.height;
+            var viewHeight = Math.floor(width / tallSize.ratio);
             this.pixi.view.style.height = viewHeight + "px";
             this.pixi.view.style.width = width + "px";
             this.pixi.view.style.margin = Math.floor((height - viewHeight) / 2) + "px 0";
         }
         else {
-            // between min and max ratio (wider than min)
-            this.scale = this._minSize.ratio / aspect;
-            calcwidth = this._minSize.width / this.scale; // how much wider is this?
+            // between min and max ratio
+            if (wideSize.width !== tallSize.width) {
+                var widthDiff = wideSize.width - tallSize.width;
+                var aspectDiff = wideSize.ratio - tallSize.ratio;
+                var diffRatio = (wideSize.ratio - aspect) / aspectDiff;
+                calcwidth = wideSize.width - widthDiff * diffRatio;
+                calcheight = wideSize.height;
+            }
+            else if (tallSize.height !== wideSize.height) {
+                var heightDiff = tallSize.height - wideSize.height;
+                var aspectDiff = wideSize.ratio - tallSize.ratio;
+                var diffRatio = (aspect - tallSize.ratio) / aspectDiff;
+                calcheight = tallSize.height - heightDiff * diffRatio;
+                calcwidth = tallSize.width;
+            }
+            else {
+                calcheight = tallSize.height;
+                calcwidth = wideSize.width;
+            }
             this.pixi.view.style.height = height + "px";
             this.pixi.view.style.width = width + "px";
             this.pixi.view.style.margin = '0';
         }
-        offset = (calcwidth - this._originSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
-        this.pixi.stage.position.x = offset;
+        var offset = (calcwidth - wideSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
+        var verticalOffset = (calcheight - tallSize.height) * 0.5;
+        this.offset.x = offset;
+        this.offset.y = verticalOffset;
+        this.pixi.stage.position.copy(this.offset);
         var newframe = {
             left: offset * -1,
             right: calcwidth - offset,
             width: calcwidth,
             center: calcwidth / 2 - offset,
+            verticalCenter: calcheight / 2 - verticalOffset,
             top: 0,
-            bottom: this._minSize.height,
-            height: this._minSize.height,
-            offset: this.offset
+            bottom: calcheight,
+            height: calcheight,
+            offset: this.offset,
+            verticalOffset: verticalOffset
         };
         if (!this.viewFrame) {
             this.viewFrame = new Property(newframe);
@@ -693,12 +714,11 @@ var StageManager = /** @class */ (function () {
             this.viewFrame.value = newframe;
         }
         this.width = calcwidth;
-        this.height = this._minSize.height;
+        this.height = calcheight;
         /* legacy -- should remove */
         this.leftEdge = newframe.left;
         this.rightEdge = newframe.right;
-        this.pixi.renderer.resize(calcwidth, this._minSize.height);
-        this.offset.x = offset;
+        this.pixi.renderer.resize(calcwidth, calcheight);
         if (this._currentScene) {
             this._currentScene.resize(this.width, this.height, this.offset);
         }
@@ -1047,7 +1067,7 @@ var Game = /** @class */ (function () {
         this.sound = new SoundManager();
         this.assetManager = new AssetManager(this.sound);
         this.cache = this.assetManager.cache;
-        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth);
+        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth, options.altHeight);
         this.app = new Application(options.springRollConfig);
         this.app.state.soundVolume.subscribe(function (volume) {
             _this.sound.volume = volume;
@@ -1062,8 +1082,10 @@ var Game = /** @class */ (function () {
             _this.sound.voVolume = volume;
         });
         this.app.state.pause.subscribe(function (pause) {
-            pause ? _this.sound.pause() : _this.sound.resume();
-            _this.stageManager.pause = pause;
+            if (_this.stageManager.pause !== pause) {
+                pause ? _this.sound.pause() : _this.sound.resume();
+                _this.stageManager.pause = pause;
+            }
         });
         this.app.state.captionsMuted.subscribe(function (isMuted) {
             _this.stageManager.captionsMuted = isMuted;
@@ -1394,8 +1416,8 @@ var eases = {
 };
 
 var Eases = eases;
-var Tween$$1 = /** @class */ (function () {
-    function Tween$$1(target) {
+var Tween = /** @class */ (function () {
+    function Tween(target) {
         var _this = this;
         this.paused = false;
         this.steps = [];
@@ -1487,12 +1509,12 @@ var Tween$$1 = /** @class */ (function () {
         };
         this.target = target;
     }
-    Tween$$1.get = function (target, options) {
+    Tween.get = function (target, options) {
         if (options === void 0) { options = {}; }
         if (options.override) {
             this.removeTweens(target);
         }
-        var tween = new Tween$$1(target);
+        var tween = new Tween(target);
         if (options.loop) {
             if (options.loop % 1) {
                 console.error('Tween options.loop must be an integer. Got: ', options.loop);
@@ -1502,23 +1524,23 @@ var Tween$$1 = /** @class */ (function () {
         if (options.onComplete) {
             tween.onComplete = options.onComplete;
         }
-        Tween$$1.tweens.push(tween);
+        Tween.tweens.push(tween);
         GameTime.gameTick.subscribe(tween.update);
         return tween;
     };
-    Tween$$1.removeTweens = function (target) {
-        for (var i = Tween$$1.tweens.length - 1; i >= 0; i--) {
-            if (Tween$$1.tweens[i].target === target) {
-                Tween$$1.tweens[i].destroy();
+    Tween.removeTweens = function (target) {
+        for (var i = Tween.tweens.length - 1; i >= 0; i--) {
+            if (Tween.tweens[i].target === target) {
+                Tween.tweens[i].destroy();
             }
         }
     };
-    Tween$$1.removeAllTweens = function () {
-        for (var i = Tween$$1.tweens.length - 1; i >= 0; i--) {
-            Tween$$1.tweens[i].destroy();
+    Tween.removeAllTweens = function () {
+        for (var i = Tween.tweens.length - 1; i >= 0; i--) {
+            Tween.tweens[i].destroy();
         }
     };
-    Object.defineProperty(Tween$$1.prototype, "promise", {
+    Object.defineProperty(Tween.prototype, "promise", {
         get: function () {
             var _this = this;
             if (!this._promise) {
@@ -1529,9 +1551,9 @@ var Tween$$1 = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    Tween$$1.prototype.destroy = function () {
+    Tween.prototype.destroy = function () {
         GameTime.gameTick.unsubscribe(this.update);
-        Tween$$1.tweens.splice(Tween$$1.tweens.indexOf(this), 1);
+        Tween.tweens.splice(Tween.tweens.indexOf(this), 1);
         this.target = null;
         this.steps = null;
         this.currentStep = null;
@@ -1545,8 +1567,8 @@ var Tween$$1 = /** @class */ (function () {
         }
         this._listeners = null;
     };
-    Tween$$1.tweens = [];
-    return Tween$$1;
+    Tween.tweens = [];
+    return Tween;
 }());
 
 /**
@@ -1565,8 +1587,9 @@ var Scene = /** @class */ (function (_super) {
         return _this;
     }
     /**
-     * provide list of assets to preload
-     * @returns {AssetList}
+     * Provide list of assets to preload.
+     * Optionally, return a Promise which may return a list of assets to preload.
+     * @returns {AssetList | Promise<AssetList>}
      */
     Scene.prototype.preload = function () {
         return;
@@ -1579,7 +1602,9 @@ var Scene = /** @class */ (function (_super) {
         this.stageManager.changeScene(sceneID);
     };
     /**
-     * prepare initial visual state - called after preload is complete, while scene is obscured by loader
+     * Prepare initial visual state - called after preload is complete, while scene is obscured by loader.
+     * Optionally return a Promise, which will delay removal of the loader until it is resolved.
+     * @returns {Promise<any> | void}
      */
     Scene.prototype.setup = function () {
         //override this, called to prepare graphics
@@ -1616,7 +1641,7 @@ var Scene = /** @class */ (function (_super) {
      */
     Scene.prototype.tween = function (target, values, time, ease) {
         console.warn('Scene.tween() is deprecated, please use Tween.get()');
-        return Tween$$1.get(target).to(values, time, ease);
+        return Tween.get(target).to(values, time, ease);
     };
     /**
      *
@@ -1657,5 +1682,5 @@ var Scene = /** @class */ (function (_super) {
 
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween$$1 as Tween };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween };
 //# sourceMappingURL=gamelib.js.map
