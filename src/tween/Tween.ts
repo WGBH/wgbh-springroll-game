@@ -40,7 +40,7 @@ export default class Tween{
             tween.onComplete = options.onComplete;
         }
         Tween.tweens.push(tween);
-        GameTime.gameTick.subscribe(tween.update);
+        GameTime.subscribe(tween.update);
         return tween;
     }
 
@@ -136,7 +136,7 @@ export default class Tween{
     }
 
     destroy(){
-        GameTime.gameTick.unsubscribe(this.update);
+        GameTime.unsubscribe(this.update);
         Tween.tweens.splice(Tween.tweens.indexOf(this), 1);
         this.target = null;
         this.steps = null;

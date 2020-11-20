@@ -394,7 +394,7 @@ export default class StageManager{
         if (this.captions) {
             this.captions.update(elapsed/1000); // captions go by seconds, not ms
         }
-        GameTime.gameTick.value = elapsed;
+        GameTime.update(elapsed);
         if (this.transitioning || !this._currentScene){
             return;
         }

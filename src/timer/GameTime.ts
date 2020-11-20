@@ -11,13 +11,42 @@ import { Property } from "springroll";
 
 
 export default class GameTime {
-    static gameTick: Property<number> = new Property(0);
+
+    static listeners:((elapsed?:number)=>any)[] = [];
+
+    /**
+     * @deprecated use GameTime.subscribe() and GameTime.unsubscribe() directly instead
+     */
+    static gameTick: Property<number> = new Property(0, true);
 
     static update(deltaTime:number){
-       GameTime.gameTick.value = deltaTime;
+        for (let i = 0; i < this.listeners.length; i++) {
+            this.listeners[i](deltaTime);
+        }
+
+        if(GameTime.gameTick.hasListeners){
+            GameTime.gameTick.value = deltaTime;
+        }
+    }
+
+    /**
+     * Adds an update listener
+     * @param {function} callback The listener to call every frame update
+     */
+    static subscribe(callback:(elapsed?:number)=>any) {
+      GameTime.listeners.push(callback);
+    }
+  
+    /**
+     * Removes an update listener
+     * @param {function} callback The listener to unsubscribe.
+     */
+    static unsubscribe(callback:(elapsed?:number)=>any) {
+      GameTime.listeners = GameTime.listeners.filter(listener => listener !== callback);
     }
 
     static destroy(){
+        GameTime.listeners.length = 0;
         GameTime.gameTick.value = null;
     }
 }

@@ -9,7 +9,21 @@
  */
 import { Property } from "springroll";
 export default class GameTime {
+    static listeners: ((elapsed?: number) => any)[];
+    /**
+     * @deprecated use GameTime.subscribe() and GameTime.unsubscribe() directly instead
+     */
     static gameTick: Property<number>;
     static update(deltaTime: number): void;
+    /**
+     * Adds an update listener
+     * @param {function} callback The listener to call every frame update
+     */
+    static subscribe(callback: (elapsed?: number) => any): void;
+    /**
+     * Removes an update listener
+     * @param {function} callback The listener to unsubscribe.
+     */
+    static unsubscribe(callback: (elapsed?: number) => any): void;
     static destroy(): void;
 }
