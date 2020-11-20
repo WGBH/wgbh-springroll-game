@@ -23,7 +23,7 @@ export default class PauseableTimer {
         this.onComplete = callback;
         
         this.repeat = loop;
-        GameTime.gameTick.subscribe(this.update);
+        GameTime.subscribe(this.update);
         PauseableTimer.timers.push(this);
     }
 
@@ -87,7 +87,7 @@ export default class PauseableTimer {
         this.reject = null;
         this.targetTime = null;
         this.onComplete = null;
-        GameTime.gameTick.unsubscribe(this.update);
+        GameTime.unsubscribe(this.update);
         PauseableTimer.timers.splice(PauseableTimer.timers.indexOf(this), 1);
     }
 }

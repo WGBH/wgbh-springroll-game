@@ -301,23 +301,47 @@ var AssetManager = /** @class */ (function () {
 
 /**
  *
- *  GameTime is a relay singleton that any object can hook into via its SpringRoll Property to get the next tick (gameTick) of the game clock.
+ *  GameTime is a relay singleton that any object can hook into via its static subscribe() method to get the next tick of the game clock.
  *  Its update() should be called on any live tick of the game; determining whether the tick is live (e.g. checking paused) should happen elsewhere.
  *
- *  Call in the game's main tick/update function, using the singleton syntax on the class - GameTime.Instance.update(deltaTime);
- *  Subscribe to changes using singleton syntax on the class - GameTime.Instance.gameTick.subscribe(callbackfunction)
+ *  Call in the game's main tick/update function, using the static method on the class - GameTime.update(deltaTime);
+ *  Subscribe to changes using static method on the class - GameTime.subscribe(callbackfunction)
  *
  */
 var GameTime = /** @class */ (function () {
     function GameTime() {
     }
     GameTime.update = function (deltaTime) {
-        GameTime.gameTick.value = deltaTime;
+        for (var i = 0; i < this.listeners.length; i++) {
+            this.listeners[i](deltaTime);
+        }
+        if (GameTime.gameTick.hasListeners) {
+            GameTime.gameTick.value = deltaTime;
+        }
+    };
+    /**
+     * Adds an update listener
+     * @param {function} callback The listener to call every frame update
+     */
+    GameTime.subscribe = function (callback) {
+        GameTime.listeners.push(callback);
+    };
+    /**
+     * Removes an update listener
+     * @param {function} callback The listener to unsubscribe.
+     */
+    GameTime.unsubscribe = function (callback) {
+        GameTime.listeners = GameTime.listeners.filter(function (listener) { return listener !== callback; });
     };
     GameTime.destroy = function () {
+        GameTime.listeners.length = 0;
         GameTime.gameTick.value = null;
     };
-    GameTime.gameTick = new Property(0);
+    GameTime.listeners = [];
+    /**
+     * @deprecated use GameTime.subscribe() and GameTime.unsubscribe() directly instead
+     */
+    GameTime.gameTick = new Property(0, true);
     return GameTime;
 }());
 
@@ -350,7 +374,7 @@ var PauseableTimer = /** @class */ (function () {
         this.currentTime = 0;
         this.onComplete = callback;
         this.repeat = loop;
-        GameTime.gameTick.subscribe(this.update);
+        GameTime.subscribe(this.update);
         PauseableTimer.timers.push(this);
     }
     PauseableTimer.clearTimers = function () {
@@ -396,7 +420,7 @@ var PauseableTimer = /** @class */ (function () {
         this.reject = null;
         this.targetTime = null;
         this.onComplete = null;
-        GameTime.gameTick.unsubscribe(this.update);
+        GameTime.unsubscribe(this.update);
         PauseableTimer.timers.splice(PauseableTimer.timers.indexOf(this), 1);
     };
     PauseableTimer.timers = [];
@@ -756,7 +780,7 @@ var StageManager = /** @class */ (function () {
         if (this.captions) {
             this.captions.update(elapsed / 1000); // captions go by seconds, not ms
         }
-        GameTime.gameTick.value = elapsed;
+        GameTime.update(elapsed);
         if (this.transitioning || !this._currentScene) {
             return;
         }
@@ -1505,7 +1529,7 @@ var Tween = /** @class */ (function () {
             tween.onComplete = options.onComplete;
         }
         Tween.tweens.push(tween);
-        GameTime.gameTick.subscribe(tween.update);
+        GameTime.subscribe(tween.update);
         return tween;
     };
     Tween.removeTweens = function (target) {
@@ -1532,7 +1556,7 @@ var Tween = /** @class */ (function () {
         configurable: true
     });
     Tween.prototype.destroy = function () {
-        GameTime.gameTick.unsubscribe(this.update);
+        GameTime.unsubscribe(this.update);
         Tween.tweens.splice(Tween.tweens.indexOf(this), 1);
         this.target = null;
         this.steps = null;
