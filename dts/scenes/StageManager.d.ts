@@ -5,6 +5,7 @@ import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
 import PauseableTimer from '../timer/PauseableTimer';
 import { ScaleManager, CaptionData, IRender, Property } from 'springroll';
+import Curtain from './Curtain';
 /**
  * Manages rendering and transitioning between Scenes
  */
@@ -24,6 +25,7 @@ export default class StageManager {
     private transitioning;
     private isPaused;
     private game;
+    curtain: Curtain;
     private captions;
     private isCaptionsMuted;
     /** Map of Scenes by Scene IDs */
@@ -36,7 +38,8 @@ export default class StageManager {
     addScenes(sceneMap: {
         [key: string]: typeof Scene;
     }): void;
-    setTransition(stage: AnimateStage, callback: Function): void;
+    setTransition(stage: AnimateStage | Curtain, callback: Function): void;
+    setCurtain(curtain: Curtain, callback: Function): void;
     /**
      * Transition to specified scene
      * @param {string} sceneID ID of Scene to transition to

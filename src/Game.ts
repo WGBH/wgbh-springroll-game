@@ -58,7 +58,11 @@ export default class Game {
         });
 
         this.app.state.ready.subscribe(() => {
-                this.stageManager.setTransition(options.transition, this.preloadGlobal);
+                if(options.curtain) {
+                    this.stageManager.setCurtain(options.curtain, this.preloadGlobal);
+                } else {
+                    this.stageManager.setTransition(options.transition, this.preloadGlobal);
+                }
             });
 
         if(options.captions) {
@@ -123,6 +127,7 @@ export interface GameOptions {
     captions?: CaptionParams;
     /** Class of Animate Stage to use for transitions */
     transition: AnimateStage;
+    curtain?: any;
     /** ID of HTML element on your page to add this game's Canvas to */
     containerID: string;
 }

@@ -10,6 +10,7 @@ import StageManager from './scenes/StageManager';
 import AssetManager from './assets/AssetManager';
 import SoundManager from './sound/SoundManager';
 import SoundContext from './sound/SoundContext';
+import Curtain from './scenes/Curtain';
 import PauseableTimer from './timer/PauseableTimer';
 import GameTime from './timer/GameTime';
 import {AssetList} from './assets/AssetManager';
@@ -28,4 +29,5 @@ export {
     PauseableTimer,
     GameTime,
     Tween,
+    Curtain,
 };

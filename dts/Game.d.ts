@@ -54,6 +54,7 @@ export interface GameOptions {
     captions?: CaptionParams;
     /** Class of Animate Stage to use for transitions */
     transition: AnimateStage;
+    curtain?: any;
     /** ID of HTML element on your page to add this game's Canvas to */
     containerID: string;
 }

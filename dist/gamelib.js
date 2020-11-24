@@ -403,6 +403,137 @@ var PauseableTimer = /** @class */ (function () {
     return PauseableTimer;
 }());
 
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing permissions
+and limitations under the License.
+***************************************************************************** */
+/* global Reflect, Promise */
+
+var extendStatics = function(d, b) {
+    extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return extendStatics(d, b);
+};
+
+function __extends(d, b) {
+    extendStatics(d, b);
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+}
+
+var Curtain = /** @class */ (function () {
+    function Curtain() {
+        this.status = new Property("closed");
+    }
+    Curtain.prototype.assetsToLoad = function (arg) {
+        return null;
+    };
+    Curtain.prototype.open = function (callback) {
+        this.status.value = "opening";
+        this.status.value = "open";
+        callback();
+    };
+    Curtain.prototype.close = function (callback) {
+        this.status.value = "closing";
+        this.status.value = "closed";
+        callback();
+    };
+    Curtain.prototype.cover = function () {
+        this.status.value = "closed";
+    };
+    Curtain.prototype.add = function (mainstage) {
+    };
+    Curtain.prototype.init = function (stagemanager, cache) {
+        this.stageManager = stagemanager;
+        return true;
+    };
+    Curtain.prototype.loading = function () {
+        this.status.value = "loading";
+    };
+    Curtain.prototype.hide = function (mainstage) {
+        this.status.value = "hidden";
+    };
+    Curtain.prototype.progress = function (pct) {
+        // progress = pct
+    };
+    return Curtain;
+}());
+
+/**
+ * Animate Curtain
+ */
+var CurtainAnimate = /** @class */ (function (_super) {
+    __extends(CurtainAnimate, _super);
+    function CurtainAnimate(stage, id) {
+        var _this = _super.call(this) || this;
+        _this.stage = stage;
+        _this.id = id;
+        return _this;
+    }
+    CurtainAnimate.prototype.assetsToLoad = function (arg) {
+        return [
+            { type: 'animate', stage: this.stage, id: this.id, isGlobal: true, cacheInstance: true }
+        ];
+    };
+    CurtainAnimate.prototype.close = function (callback) {
+        this.transition.visible = true;
+        PIXI.animate.Animator.play(this.transition, 'cover', callback);
+    };
+    CurtainAnimate.prototype.open = function (callback) {
+        this.transition.visible = true;
+        PIXI.animate.Animator.play(this.transition, 'reveal', callback);
+    };
+    CurtainAnimate.prototype.init = function (stagemanager, cache) {
+        this.stageManager = stagemanager;
+        this.transition = cache.animations[this.id];
+        var curtainLabels = [
+            'cover',
+            'cover_stop',
+            'load',
+            'load_loop',
+            'reveal',
+            'reveal_stop'
+        ];
+        for (var _i = 0, curtainLabels_1 = curtainLabels; _i < curtainLabels_1.length; _i++) {
+            var label = curtainLabels_1[_i];
+            if (!this.transition.labelsMap.hasOwnProperty(label)) {
+                console.error('Curtain MovieClip missing label: ', label);
+                return false;
+            }
+        }
+        return true;
+    };
+    CurtainAnimate.prototype.cover = function () {
+        this.transition.visible = true;
+        this.transition.gotoAndStop('cover');
+    };
+    CurtainAnimate.prototype.add = function (mainstage) {
+        mainstage.addChild(this.transition);
+    };
+    CurtainAnimate.prototype.hide = function (mainstage) {
+        this.transition.stop();
+        mainstage.removeChild(this.transition);
+        this.transition.visible = false;
+    };
+    CurtainAnimate.prototype.loading = function () {
+        PIXI.animate.Animator.play(this.transition, 'load');
+    };
+    CurtainAnimate.prototype.progress = function (pct) {
+    };
+    return CurtainAnimate;
+}(Curtain));
+
 var LOADING_DELAY = 250;
 /** Devices which are known/expected to flicker if Pixi's `transparent` mode is not enabled */
 var FLICKERERS = [
@@ -444,16 +575,19 @@ var StageManager = /** @class */ (function () {
             _this.transitioning = true;
             Promise.resolve()
                 .then(function () {
-                _this.pixi.stage.addChild(_this.transition);
-                _this.transition.stop();
-                if (oldScene) {
-                    return new Promise(function (resolve) {
-                        PIXI.animate.Animator.play(_this.transition, 'cover', resolve);
-                    });
+                _this.curtain.add(_this.pixi.stage);
+                //                this.pixi.stage.addChild(this.transition);
+                //                this.transition.stop();
+                if (oldScene) { /*
+                    return new Promise((resolve)=>{
+                        PIXI.animate.Animator.play(this.transition, 'cover', resolve);
+                    });*/
+                    return new Promise(function (resolve) { _this.curtain.close(resolve); });
                 }
             })
                 .then(function () {
-                PIXI.animate.Animator.play(_this.transition, 'load');
+                //                PIXI.animate.Animator.play(this.transition, 'load');
+                _this.curtain.loading();
                 if (oldScene) {
                     _this.pixi.stage.removeChild(oldScene);
                     oldScene.cleanup();
@@ -499,13 +633,16 @@ var StageManager = /** @class */ (function () {
                 });
             })
                 .then(function () {
-                return new Promise(function (resolve) {
-                    PIXI.animate.Animator.play(_this.transition, 'reveal', resolve);
-                });
+                /*
+                return new Promise((resolve)=>{
+                    PIXI.animate.Animator.play(this.transition, 'reveal', resolve);
+                });*/
+                return new Promise(function (resolve) { _this.curtain.open(resolve); });
             })
                 .then(function () {
                 _this.transitioning = false;
-                _this.pixi.stage.removeChild(_this.transition);
+                _this.curtain.hide(_this.pixi.stage);
+                //                this.pixi.stage.removeChild(this.transition);
                 _this._currentScene.start();
             });
         };
@@ -563,28 +700,27 @@ var StageManager = /** @class */ (function () {
         }
     };
     StageManager.prototype.setTransition = function (stage, callback) {
+        console.log("stage type:", stage.hasOwnProperty('assets'));
+        this.setCurtain(new CurtainAnimate(stage, TRANSITION_ID), callback);
+    };
+    StageManager.prototype.setCurtain = function (curtain, callback) {
         var _this = this;
-        this.game.assetManager.loadAssets([
-            { type: 'animate', stage: stage, id: TRANSITION_ID, isGlobal: true, cacheInstance: true }
-        ], function () {
-            _this.transition = _this.game.cache.animations[TRANSITION_ID];
-            var curtainLabels = [
-                'cover',
-                'cover_stop',
-                'load',
-                'load_loop',
-                'reveal',
-                'reveal_stop'
-            ];
-            for (var _i = 0, curtainLabels_1 = curtainLabels; _i < curtainLabels_1.length; _i++) {
-                var label = curtainLabels_1[_i];
-                if (!_this.transition.labelsMap.hasOwnProperty(label)) {
-                    console.error('Curtain MovieClip missing label: ', label);
-                    return;
-                }
+        this.curtain = curtain;
+        this.game.assetManager.loadAssets(this.curtain.assetsToLoad(), function () {
+            /*                this.transition = this.game.cache.animations[TRANSITION_ID];
+                            this.curtain = new CurtainAnimate(this.transition);
+                            if(!this.curtain) {
+                                return;
+                            }
+            //                this.transition.gotoAndStop('cover');
+            */
+            if (_this.curtain.init(_this, _this.game.cache)) {
+                _this.curtain.cover();
+                callback();
             }
-            _this.transition.gotoAndStop('cover');
-            callback();
+            else {
+                return;
+            }
         });
     };
     Object.defineProperty(StageManager.prototype, "captionsMuted", {
@@ -1091,7 +1227,12 @@ var Game = /** @class */ (function () {
             _this.stageManager.captionsMuted = isMuted;
         });
         this.app.state.ready.subscribe(function () {
-            _this.stageManager.setTransition(options.transition, _this.preloadGlobal);
+            if (options.curtain) {
+                _this.stageManager.setCurtain(options.curtain, _this.preloadGlobal);
+            }
+            else {
+                _this.stageManager.setTransition(options.transition, _this.preloadGlobal);
+            }
         });
         if (options.captions) {
             this.stageManager.addCaptions(options.captions.config, options.captions.display);
@@ -1124,35 +1265,6 @@ var Game = /** @class */ (function () {
     };
     return Game;
 }());
-
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation. All rights reserved.
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-this file except in compliance with the License. You may obtain a copy of the
-License at http://www.apache.org/licenses/LICENSE-2.0
-
-THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-MERCHANTABLITY OR NON-INFRINGEMENT.
-
-See the Apache Version 2.0 License for specific language governing permissions
-and limitations under the License.
-***************************************************************************** */
-/* global Reflect, Promise */
-
-var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return extendStatics(d, b);
-};
-
-function __extends(d, b) {
-    extendStatics(d, b);
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-}
 
 function backInOut(t) {
   var s = 1.70158 * 1.525;
@@ -1682,5 +1794,5 @@ var Scene = /** @class */ (function (_super) {
 
 /// <reference types="pixi-animate" />
 
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween };
+export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween, Curtain };
 //# sourceMappingURL=gamelib.js.map

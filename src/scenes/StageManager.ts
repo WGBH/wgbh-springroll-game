@@ -3,7 +3,9 @@ import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
 import GameTime from '../timer/GameTime';
 import PauseableTimer from '../timer/PauseableTimer';
+import CurtainAnimate from './CurtainAnimate';
 import { ScaleManager, CaptionPlayer, CaptionData, IRender, Property } from 'springroll';
+import Curtain from './Curtain';
 
 const LOADING_DELAY = 250;
 
@@ -49,6 +51,7 @@ export default class StageManager{
     private transitioning = true;
     private isPaused = false;
     private game:Game;
+    public curtain:Curtain;
 
     private captions:CaptionPlayer;
     private isCaptionsMuted:boolean;
@@ -116,28 +119,29 @@ export default class StageManager{
         }
     }
 
-    setTransition(stage:AnimateStage, callback:Function){
-        this.game.assetManager.loadAssets([
-                {type:'animate', stage:stage, id:TRANSITION_ID, isGlobal:true, cacheInstance:true}
-            ], ()=>{
-                this.transition = this.game.cache.animations[TRANSITION_ID];
-                const curtainLabels = [
-                    'cover',
-                    'cover_stop',
-                    'load',
-                    'load_loop',
-                    'reveal',
-                    'reveal_stop'
-                ];
-                for(let label of curtainLabels){
-                    if(!this.transition.labelsMap.hasOwnProperty(label)){
-                        console.error('Curtain MovieClip missing label: ', label);
-                        return;
-                    }
+    setTransition(stage:AnimateStage|Curtain, callback:Function){
+        console.log("stage type:",stage.hasOwnProperty('assets'));
+        this.setCurtain(new CurtainAnimate(stage as AnimateStage,TRANSITION_ID), callback);
+    }
+
+    setCurtain(curtain:Curtain, callback:Function) {
+        this.curtain = curtain;
+        this.game.assetManager.loadAssets(this.curtain.assetsToLoad(), ()=>{
+/*                this.transition = this.game.cache.animations[TRANSITION_ID];
+                this.curtain = new CurtainAnimate(this.transition);
+                if(!this.curtain) {
+                    return;
                 }
-                this.transition.gotoAndStop('cover');
-                callback();
+//                this.transition.gotoAndStop('cover');
+*/
+                if(this.curtain.init(this,this.game.cache)) {
+                    this.curtain.cover();
+                    callback();
+                } else {
+                    return;
+                }
             });
+
     }
 
     /**
@@ -154,16 +158,19 @@ export default class StageManager{
         this.transitioning = true;
         Promise.resolve()
             .then(()=>{
-                this.pixi.stage.addChild(this.transition);
-                this.transition.stop();
-                if(oldScene){
+                this.curtain.add(this.pixi.stage);
+//                this.pixi.stage.addChild(this.transition);
+//                this.transition.stop();
+                if(oldScene){/*
                     return new Promise((resolve)=>{
                         PIXI.animate.Animator.play(this.transition, 'cover', resolve);
-                    });
+                    });*/
+                   return new Promise((resolve) => {this.curtain.close(resolve)});
                 }
             })
             .then(()=>{
-                PIXI.animate.Animator.play(this.transition, 'load');
+//                PIXI.animate.Animator.play(this.transition, 'load');
+                this.curtain.loading();
                 if(oldScene){
                     this.pixi.stage.removeChild(oldScene);
                     oldScene.cleanup();
@@ -209,13 +216,17 @@ export default class StageManager{
                 });
             })
             .then(()=>{
+                /*
                 return new Promise((resolve)=>{
                     PIXI.animate.Animator.play(this.transition, 'reveal', resolve);
-                });
+                });*/
+
+                return new Promise((resolve) => {this.curtain.open(resolve)});
             })
             .then(()=>{
                 this.transitioning = false;
-                this.pixi.stage.removeChild(this.transition);
+                this.curtain.hide(this.pixi.stage);
+//                this.pixi.stage.removeChild(this.transition);
                 this._currentScene.start();
             });
     }
