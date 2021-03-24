@@ -1,19 +1,19 @@
-/// <reference types="pixi.js" />
-/// <reference types="pixi-animate" />
 import Scene from './Scene';
-import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
 import PauseableTimer from '../timer/PauseableTimer';
 import { ScaleManager, CaptionData, IRender, Property } from 'springroll';
+import { Application } from '@pixi/app';
+import { Point } from '@pixi/math';
+import { AnimateAsset, MovieClip } from 'pixi-animate';
 /**
  * Manages rendering and transitioning between Scenes
  */
 export default class StageManager {
-    pixi: PIXI.Application;
+    pixi: Application;
     width: number;
     height: number;
-    offset: PIXI.PointLike;
-    transition: PIXI.animate.MovieClip;
+    offset: Point;
+    transition: MovieClip;
     viewFrame: Property<ViewFrame>;
     leftEdge: number;
     rightEdge: number;
@@ -28,7 +28,7 @@ export default class StageManager {
     private isCaptionsMuted;
     /** Map of Scenes by Scene IDs */
     private scenes;
-    readonly scale: number;
+    get scale(): number;
     constructor(game: Game, containerID: string, width: number, height: number, altWidth?: number, altHeight?: number);
     addCaptions(captionData: CaptionData, renderer: IRender): void;
     setCaptionRenderer(renderer: IRender): void;
@@ -36,14 +36,16 @@ export default class StageManager {
     addScenes(sceneMap: {
         [key: string]: typeof Scene;
     }): void;
-    setTransition(stage: AnimateStage, callback: Function): void;
+    setTransition(asset: AnimateAsset, callback: Function): void;
     /**
      * Transition to specified scene
      * @param {string} sceneID ID of Scene to transition to
      */
     changeScene: (newScene: string) => void;
-    captionsMuted: boolean;
-    pause: boolean;
+    get captionsMuted(): boolean;
+    set captionsMuted(muted: boolean);
+    get pause(): boolean;
+    set pause(pause: boolean);
     getSize(width: number, height: number): ScreenSize;
     setScaling(scaleconfig: ScaleConfig): void;
     gotResize: (newsize: ScreenSize) => void;
@@ -54,7 +56,7 @@ export default class StageManager {
      *
      * @param pointin
      */
-    globalToScene(pointin: PIXI.PointLike): {
+    globalToScene(pointin: Point): {
         x: number;
         y: number;
     };
@@ -88,5 +90,5 @@ export declare type ViewFrame = {
     verticalCenter: number;
     width: number;
     height: number;
-    offset: PIXI.PointLike;
+    offset: Point;
 };

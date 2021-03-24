@@ -1,3 +1,4 @@
+import pixiSound from 'pixi-sound';
 import { SoundDescriptor } from "../assets/AssetManager";
 import SoundContext from "./SoundContext";
 
@@ -43,7 +44,7 @@ export default class SoundManager {
      * @param {Sound} sound Sound instance to add
      * @param {SoundDescriptor} descriptor Asset load metadata for Sound
      */
-    addSound(sound:PIXI.sound.Sound, descriptor:SoundDescriptor){
+    addSound(sound:pixiSound.Sound, descriptor:SoundDescriptor){
         const context = this[descriptor.context || 'sfx'];
         this.soundMeta[descriptor.id] = context;
         context.addSound(sound, descriptor.id, descriptor.volume);
@@ -52,10 +53,10 @@ export default class SoundManager {
     /**
      * Play sound by ID
      * @param {string} soundID ID of Sound to play
-     * @param {PIXI.sound.CompleteCallback} [onComplete] Called when Sound is finished playing
-     * @returns {PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>} instace of playing sound (or promise of to-be-played sound if not preloaded)
+     * @param {pixiSound.CompleteCallback} [onComplete] Called when Sound is finished playing
+     * @returns {pixiSound.IMediaInstance | Promise<pixiSound.IMediaInstance>} instace of playing sound (or promise of to-be-played sound if not preloaded)
      */
-    play(soundID:string, onComplete?:PIXI.sound.CompleteCallback){
+    play(soundID:string, onComplete?:pixiSound.CompleteCallback){
         return this.soundMeta[soundID].play(soundID,onComplete);
        // return this.soundMeta[soundID].sounds[soundID].play(onComplete);
     }
@@ -66,9 +67,9 @@ export default class SoundManager {
 
     /** Retrieve reference to Sound instance by ID
      * @param {string} soundID ID of sound to retrieve
-     * @returns {PIXI.sound.Sound} Sound instance
+     * @returns {pixiSound.Sound} Sound instance
      */
-    getSound(soundID:string):PIXI.sound.Sound{
+    getSound(soundID:string):pixiSound.Sound{
         return this.soundMeta[soundID].sounds[soundID];
     }
 
@@ -88,7 +89,7 @@ export default class SoundManager {
      */
     pause(soundID?:string){
         if(!soundID){
-            PIXI.sound.pauseAll();
+            pixiSound.pauseAll();
         }
         else{
             this.getSound(soundID).pause();
@@ -101,7 +102,7 @@ export default class SoundManager {
      */
     resume(soundID?:string){
         if(!soundID){
-            PIXI.sound.resumeAll();
+            pixiSound.resumeAll();
         }
         else{
             this.getSound(soundID).resume();

@@ -1,7 +1,9 @@
+import pixiSound from 'pixi-sound';
+
 export default class SoundContext {
 
     /** Map of Sounds by ID */
-    public sounds: {[key:string]: PIXI.sound.Sound} = {};
+    public sounds: {[key:string]: pixiSound.Sound} = {};
     /** Map of individual Sound volumes by ID */
     private volumes: {[key:string]: number} = {};
 
@@ -10,7 +12,7 @@ export default class SoundContext {
 
     public currentSound:string;
     public single:boolean = false;
-    private singleCallback:PIXI.sound.CompleteCallback;
+    private singleCallback:pixiSound.CompleteCallback;
 
     constructor(issingle?:boolean) {
         this.single = (issingle === true);
@@ -35,11 +37,11 @@ export default class SoundContext {
 
     /**
      * 
-     * @param {PIXI.sound.Sound} sound Sound instance to add
+     * @param {pixiSound.Sound} sound Sound instance to add
      * @param {string} id ID of sound to add
      * @param {number} volume Number 0-1 of volume for this sound
      */
-    addSound(sound:PIXI.sound.Sound, id:string, volume:number = 1){
+    addSound(sound:pixiSound.Sound, id:string, volume:number = 1){
         if(this.sounds[id]){
             console.error('Sound already added with id: ', id);
         }
@@ -65,7 +67,7 @@ export default class SoundContext {
      * @param {string} id 
      * @param {CompleteCallback} onComplete 
      */
-    play(id:string, onComplete?:PIXI.sound.CompleteCallback) {
+    play(id:string, onComplete?:pixiSound.CompleteCallback) {
         if (this.single){
             if(this.currentSound) {
                 // stop currently playing sound
@@ -77,7 +79,7 @@ export default class SoundContext {
         return this.sounds[id].play(this.single ? this.singlePlayComplete : onComplete);
     }
 
-    private singlePlayComplete = (sound:PIXI.sound.Sound)=>{
+    private singlePlayComplete = (sound:pixiSound.Sound)=>{
         this.currentSound = null;
         if(this.singleCallback){
             const call = this.singleCallback;
@@ -139,7 +141,7 @@ export default class SoundContext {
      * @param id ID of sound to remove
      */
     removeSound(id:string){
-        PIXI.sound.remove(id);
+        pixiSound.remove(id);
         delete this.sounds[id];
         delete this.volumes[id];
         if(id === this.currentSound){

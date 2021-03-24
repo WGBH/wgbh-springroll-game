@@ -1,4 +1,11 @@
-import { Property, CaptionPlayer, ScaleManager, Application } from 'springroll';
+import { Property, CaptionPlayer, ScaleManager, Application as Application$1 } from 'springroll';
+import * as animate from 'pixi-animate';
+import { load, Animator, Container } from 'pixi-animate';
+import pixiSound from 'pixi-sound';
+import { utils, Loader } from 'pixi.js';
+import { Application } from '@pixi/app';
+import { Point } from '@pixi/math';
+import { Ticker } from '@pixi/ticker';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -7,7 +14,7 @@ var AssetManager = /** @class */ (function () {
     function AssetManager(soundManager) {
         var _this = this;
         /** object containing references to cached instances of loaded assets */
-        this.cache = { data: {}, images: {}, animations: {}, spritesheets: {} };
+        this.cache = { data: {}, images: {}, animations: {}, animateAssets: {}, spritesheets: {} };
         /** IDs of cached assets that should persist between scenes */
         this.globalCache = {
             shapes: [],
@@ -21,12 +28,7 @@ var AssetManager = /** @class */ (function () {
         this.sceneActive = false;
         /** Save current state of PIXI Global caches, to prevent unloading global assets */
         this.saveCacheState = function () {
-            Object.keys(PIXI.animate.ShapesCache).forEach(function (key) {
-                if (!_this.globalCache.shapes.includes(key)) {
-                    _this.globalCache.shapes.push(key);
-                }
-            });
-            Object.keys(PIXI.utils.TextureCache).forEach(function (key) {
+            Object.keys(utils.TextureCache).forEach(function (key) {
                 if (!_this.globalCache.textures.includes(key)) {
                     _this.globalCache.textures.push(key);
                 }
@@ -146,18 +148,32 @@ var AssetManager = /** @class */ (function () {
                     this.cache.animations[id].destroy();
                     delete this.cache.animations[id];
                 }
+                if (this.cache.animateAssets[id]) {
+                    for (var key in this.cache.animateAssets[id].shapes) {
+                        delete this.cache.animateAssets[id].shapes[key];
+                    }
+                    for (var key in this.cache.animateAssets[id].textures) {
+                        this.cache.animateAssets[id].textures[key].destroy(true);
+                        delete this.cache.animateAssets[id].textures[key];
+                    }
+                    for (var _i = 0, _a = this.cache.animateAssets[id].spritesheets; _i < _a.length; _i++) {
+                        var spritesheet = _a[_i];
+                        spritesheet.destroy(true);
+                    }
+                    this.cache.animateAssets[id].spritesheets.length = 0;
+                }
             }
         }
-        for (var id in PIXI.utils.TextureCache) {
+        for (var id in this.cache.animateAssets) {
+            if (!this.globalCache.animations.includes(id)) {
+                delete this.cache.animateAssets[id];
+            }
+        }
+        for (var id in utils.TextureCache) {
             if (!this.globalCache.textures.includes(id)) {
-                PIXI.utils.TextureCache[id].destroy(true);
+                utils.TextureCache[id].destroy(true);
                 delete this.cache.images[id];
                 delete this.cache.spritesheets[id];
-            }
-        }
-        for (var id in PIXI.animate.ShapesCache) {
-            if (!this.globalCache.shapes.includes(id)) {
-                PIXI.animate.ShapesCache.remove(id);
             }
         }
         for (var i = this.soundIDs.length - 1; i >= 0; i--) {
@@ -167,28 +183,29 @@ var AssetManager = /** @class */ (function () {
                 this.soundIDs.splice(i, 1);
             }
         }
-        for (var id in PIXI.loader.resources) {
-            console.warn('unmanaged resource detected: ', id, PIXI.loader.resources[id]);
+        for (var id in Loader.shared.resources) {
+            console.warn('unmanaged resource detected: ', id, Loader.shared.resources[id]);
         }
         this.sceneActive = false;
     };
     /**
      * load assets for a PixiAnimate stage
-     * @param {AnimateStageDescriptor} animateStageDescriptor
+     * @param {AnimateAssetDescriptor} animateAssetDescriptor
      */
-    AssetManager.prototype.loadAnimate = function (animateStageDescriptor) {
+    AssetManager.prototype.loadAnimate = function (animateAssetDescriptor) {
         var _this = this;
         return new Promise(function (resolve) {
-            PIXI.animate.load({
-                createInstance: !!animateStageDescriptor.cacheInstance,
-                stage: animateStageDescriptor.stage,
+            animateAssetDescriptor.asset.setup(animate);
+            load(animateAssetDescriptor.asset, {
+                createInstance: !!animateAssetDescriptor.cacheInstance,
                 complete: function (movieClip) {
-                    if (animateStageDescriptor.cacheInstance) {
-                        _this.cache.animations[animateStageDescriptor.id] = movieClip;
+                    if (animateAssetDescriptor.cacheInstance) {
+                        _this.cache.animations[animateAssetDescriptor.id] = movieClip;
                     }
-                    if (animateStageDescriptor.isGlobal) {
-                        _this.globalCache.animations.push(animateStageDescriptor.id);
+                    if (animateAssetDescriptor.isGlobal) {
+                        _this.globalCache.animations.push(animateAssetDescriptor.id);
                     }
+                    _this.cache.animateAssets[animateAssetDescriptor.id] = animateAssetDescriptor.asset;
                     resolve();
                 }
             });
@@ -200,7 +217,7 @@ var AssetManager = /** @class */ (function () {
      */
     AssetManager.prototype.loadImages = function (assets) {
         var _this = this;
-        var imageLoader = new PIXI.loaders.Loader();
+        var imageLoader = new Loader();
         return new Promise(function (resolve) {
             for (var _i = 0, assets_1 = assets; _i < assets_1.length; _i++) {
                 var asset = assets_1[_i];
@@ -230,7 +247,7 @@ var AssetManager = /** @class */ (function () {
             if (soundOptions.preload) {
                 soundOptions.loaded = function () { resolve(); };
             }
-            _this.soundManager.addSound(PIXI.sound.add(soundDescriptor.id, soundOptions), soundDescriptor);
+            _this.soundManager.addSound(pixiSound.add(soundDescriptor.id, soundOptions), soundDescriptor);
             _this.soundIDs.push(soundDescriptor.id);
             if (soundDescriptor.isGlobal) {
                 _this.globalCache.sounds.push(soundDescriptor.id);
@@ -246,7 +263,7 @@ var AssetManager = /** @class */ (function () {
      */
     AssetManager.prototype.loadData = function (dataDescriptor) {
         var _this = this;
-        var dataLoader = new PIXI.loaders.Loader();
+        var dataLoader = new Loader();
         return new Promise(function (resolve) {
             dataLoader.add(dataDescriptor.id, dataDescriptor.path);
             dataLoader.load(function (loader, resources) {
@@ -265,7 +282,7 @@ var AssetManager = /** @class */ (function () {
      */
     AssetManager.prototype.loadSpritesheet = function (descriptor) {
         var _this = this;
-        var dataLoader = new PIXI.loaders.Loader();
+        var dataLoader = new Loader();
         return new Promise(function (resolve) {
             dataLoader.add(descriptor.id, descriptor.path);
             dataLoader.load(function (loader, resources) {
@@ -280,7 +297,7 @@ var AssetManager = /** @class */ (function () {
      * @param {ManifestDescriptor} manifestDescriptor
      */
     AssetManager.prototype.loadManifest = function (manifestDescriptor) {
-        var dataLoader = new PIXI.loaders.Loader();
+        var dataLoader = new Loader();
         return new Promise(function (resolve) {
             dataLoader.add(manifestDescriptor.path);
             dataLoader.load(function (loader, resources) {
@@ -394,7 +411,7 @@ var PauseableTimer = /** @class */ (function () {
             }
             return this._promise;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     PauseableTimer.prototype.pause = function (pause) {
@@ -472,12 +489,12 @@ var StageManager = /** @class */ (function () {
                 _this.transition.stop();
                 if (oldScene) {
                     return new Promise(function (resolve) {
-                        PIXI.animate.Animator.play(_this.transition, 'cover', resolve);
+                        Animator.play(_this.transition, 'cover', resolve);
                     });
                 }
             })
                 .then(function () {
-                PIXI.animate.Animator.play(_this.transition, 'load');
+                Animator.play(_this.transition, 'load');
                 if (oldScene) {
                     _this.pixi.stage.removeChild(oldScene);
                     oldScene.cleanup();
@@ -524,7 +541,7 @@ var StageManager = /** @class */ (function () {
             })
                 .then(function () {
                 return new Promise(function (resolve) {
-                    PIXI.animate.Animator.play(_this.transition, 'reveal', resolve);
+                    Animator.play(_this.transition, 'reveal', resolve);
                 });
             })
                 .then(function () {
@@ -542,11 +559,11 @@ var StageManager = /** @class */ (function () {
         this.game = game;
         this.width = width;
         this.height = height;
-        this.offset = new PIXI.Point(0, 0);
+        this.offset = new Point(0, 0);
         // transparent rendering mode is bad for overall performance, but necessary in order
         // to prevent flickering on some Android devices such as Galaxy Tab A and Kindle Fire
         var flickerProne = !!FLICKERERS.find(function (value) { return value.test(navigator.userAgent); });
-        this.pixi = new PIXI.Application({ width: width, height: height, antialias: true, transparent: flickerProne });
+        this.pixi = new Application({ width: width, height: height, antialias: true, transparent: flickerProne });
         this.pixi.view.style.display = 'block';
         document.getElementById(containerID).appendChild(this.pixi.view);
         var baseSize = { width: width, height: height };
@@ -567,7 +584,7 @@ var StageManager = /** @class */ (function () {
             console.warn('scale is obsolete, please reference viewFrame for stage size info');
             return 1;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     StageManager.prototype.addCaptions = function (captionData, renderer) {
@@ -584,10 +601,10 @@ var StageManager = /** @class */ (function () {
             this.scenes[id] = sceneMap[id];
         }
     };
-    StageManager.prototype.setTransition = function (stage, callback) {
+    StageManager.prototype.setTransition = function (asset, callback) {
         var _this = this;
         this.game.assetManager.loadAssets([
-            { type: 'animate', stage: stage, id: TRANSITION_ID, isGlobal: true, cacheInstance: true }
+            { type: 'animate', asset: asset, id: TRANSITION_ID, isGlobal: true, cacheInstance: true }
         ], function () {
             _this.transition = _this.game.cache.animations[TRANSITION_ID];
             var curtainLabels = [
@@ -619,7 +636,7 @@ var StageManager = /** @class */ (function () {
                 this.captions.stop();
             }
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(StageManager.prototype, "pause", {
@@ -633,14 +650,14 @@ var StageManager = /** @class */ (function () {
             }
             if (this.pixi && this.pixi.ticker) {
                 if (pause) {
-                    PIXI.ticker.shared.stop();
+                    Ticker.shared.stop();
                 }
                 else {
-                    PIXI.ticker.shared.start();
+                    Ticker.shared.start();
                 }
             }
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     StageManager.prototype.getSize = function (width, height) {
@@ -716,7 +733,7 @@ var StageManager = /** @class */ (function () {
         var verticalOffset = (calcheight - tallSize.height) * 0.5;
         this.offset.x = offset;
         this.offset.y = verticalOffset;
-        this.pixi.stage.position.copy(this.offset);
+        this.pixi.stage.position.copyFrom(this.offset);
         var newframe = {
             left: offset * -1,
             right: calcwidth - offset,
@@ -776,7 +793,7 @@ var StageManager = /** @class */ (function () {
         if (this.isPaused) {
             return;
         }
-        var elapsed = PIXI.ticker.shared.elapsedMS;
+        var elapsed = Ticker.shared.elapsedMS;
         if (this.captions) {
             this.captions.update(elapsed / 1000); // captions go by seconds, not ms
         }
@@ -818,7 +835,7 @@ var SoundContext = /** @class */ (function () {
                 this.applyVolume(key);
             }
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(SoundContext.prototype, "globalVolume", {
@@ -829,12 +846,12 @@ var SoundContext = /** @class */ (function () {
                 this.applyVolume(key);
             }
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     /**
      *
-     * @param {PIXI.sound.Sound} sound Sound instance to add
+     * @param {pixiSound.Sound} sound Sound instance to add
      * @param {string} id ID of sound to add
      * @param {number} volume Number 0-1 of volume for this sound
      */
@@ -924,7 +941,7 @@ var SoundContext = /** @class */ (function () {
      * @param id ID of sound to remove
      */
     SoundContext.prototype.removeSound = function (id) {
-        PIXI.sound.remove(id);
+        pixiSound.remove(id);
         delete this.sounds[id];
         delete this.volumes[id];
         if (id === this.currentSound) {
@@ -955,7 +972,7 @@ var SoundManager = /** @class */ (function () {
             this.vo.globalVolume = volume;
             this.music.globalVolume = volume;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(SoundManager.prototype, "sfxVolume", {
@@ -963,7 +980,7 @@ var SoundManager = /** @class */ (function () {
         set: function (volume) {
             this.sfx.volume = volume;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(SoundManager.prototype, "voVolume", {
@@ -971,7 +988,7 @@ var SoundManager = /** @class */ (function () {
         set: function (volume) {
             this.vo.volume = volume;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(SoundManager.prototype, "musicVolume", {
@@ -979,7 +996,7 @@ var SoundManager = /** @class */ (function () {
         set: function (volume) {
             this.music.volume = volume;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     /**
@@ -995,8 +1012,8 @@ var SoundManager = /** @class */ (function () {
     /**
      * Play sound by ID
      * @param {string} soundID ID of Sound to play
-     * @param {PIXI.sound.CompleteCallback} [onComplete] Called when Sound is finished playing
-     * @returns {PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>} instace of playing sound (or promise of to-be-played sound if not preloaded)
+     * @param {pixiSound.CompleteCallback} [onComplete] Called when Sound is finished playing
+     * @returns {pixiSound.IMediaInstance | Promise<pixiSound.IMediaInstance>} instace of playing sound (or promise of to-be-played sound if not preloaded)
      */
     SoundManager.prototype.play = function (soundID, onComplete) {
         return this.soundMeta[soundID].play(soundID, onComplete);
@@ -1007,7 +1024,7 @@ var SoundManager = /** @class */ (function () {
     };
     /** Retrieve reference to Sound instance by ID
      * @param {string} soundID ID of sound to retrieve
-     * @returns {PIXI.sound.Sound} Sound instance
+     * @returns {pixiSound.Sound} Sound instance
      */
     SoundManager.prototype.getSound = function (soundID) {
         return this.soundMeta[soundID].sounds[soundID];
@@ -1027,7 +1044,7 @@ var SoundManager = /** @class */ (function () {
      */
     SoundManager.prototype.pause = function (soundID) {
         if (!soundID) {
-            PIXI.sound.pauseAll();
+            pixiSound.pauseAll();
         }
         else {
             this.getSound(soundID).pause();
@@ -1039,7 +1056,7 @@ var SoundManager = /** @class */ (function () {
      */
     SoundManager.prototype.resume = function (soundID) {
         if (!soundID) {
-            PIXI.sound.resumeAll();
+            pixiSound.resumeAll();
         }
         else {
             this.getSound(soundID).resume();
@@ -1090,7 +1107,7 @@ var Game = /** @class */ (function () {
         this.assetManager = new AssetManager(this.sound);
         this.cache = this.assetManager.cache;
         this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth, options.altHeight);
-        this.app = new Application(options.springRollConfig);
+        this.app = new Application$1(options.springRollConfig);
         this.app.state.soundVolume.subscribe(function (volume) {
             _this.sound.volume = volume;
         });
@@ -1121,7 +1138,7 @@ var Game = /** @class */ (function () {
     }
     /** Add plugin to this instance of SpringRoll */
     Game.addPlugin = function (plugin) {
-        Application.uses(plugin);
+        Application$1.uses(plugin);
     };
     /** overrride and return list of global assets */
     Game.prototype.preload = function () {
@@ -1148,18 +1165,18 @@ var Game = /** @class */ (function () {
 }());
 
 /*! *****************************************************************************
-Copyright (c) Microsoft Corporation. All rights reserved.
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-this file except in compliance with the License. You may obtain a copy of the
-License at http://www.apache.org/licenses/LICENSE-2.0
+Copyright (c) Microsoft Corporation.
 
-THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-MERCHANTABLITY OR NON-INFRINGEMENT.
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
 
-See the Apache Version 2.0 License for specific language governing permissions
-and limitations under the License.
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
 ***************************************************************************** */
 /* global Reflect, Promise */
 
@@ -1552,7 +1569,7 @@ var Tween = /** @class */ (function () {
             }
             return this._promise;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Tween.prototype.destroy = function () {
@@ -1675,7 +1692,7 @@ var Scene = /** @class */ (function (_super) {
         //override this to clean up Scene
     };
     return Scene;
-}(PIXI.Container));
+}(Container));
 
 /// <reference types="pixi-animate" />
 

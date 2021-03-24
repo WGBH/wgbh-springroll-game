@@ -1,4 +1,4 @@
-/// <reference types="pixi-sound" />
+import pixiSound from 'pixi-sound';
 import { SoundDescriptor } from "../assets/AssetManager";
 import SoundContext from "./SoundContext";
 /**
@@ -14,32 +14,32 @@ export default class SoundManager {
     /** Mapping of which SoundContexts each Sound belongs to, by ID */
     private soundMeta;
     /** Global volume of all SoundContexts */
-    volume: number;
+    set volume(volume: number);
     /** Volume of all sounds in SFX context */
-    sfxVolume: number;
+    set sfxVolume(volume: number);
     /** Volume of all sounds in VO context */
-    voVolume: number;
+    set voVolume(volume: number);
     /** Volume of all sounds in Music context */
-    musicVolume: number;
+    set musicVolume(volume: number);
     /**
      * Add sound to a SoundManager Context
      * @param {Sound} sound Sound instance to add
      * @param {SoundDescriptor} descriptor Asset load metadata for Sound
      */
-    addSound(sound: PIXI.sound.Sound, descriptor: SoundDescriptor): void;
+    addSound(sound: pixiSound.Sound, descriptor: SoundDescriptor): void;
     /**
      * Play sound by ID
      * @param {string} soundID ID of Sound to play
-     * @param {PIXI.sound.CompleteCallback} [onComplete] Called when Sound is finished playing
-     * @returns {PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>} instace of playing sound (or promise of to-be-played sound if not preloaded)
+     * @param {pixiSound.CompleteCallback} [onComplete] Called when Sound is finished playing
+     * @returns {pixiSound.IMediaInstance | Promise<pixiSound.IMediaInstance>} instace of playing sound (or promise of to-be-played sound if not preloaded)
      */
-    play(soundID: string, onComplete?: PIXI.sound.CompleteCallback): PIXI.sound.IMediaInstance | Promise<PIXI.sound.IMediaInstance>;
+    play(soundID: string, onComplete?: pixiSound.CompleteCallback): pixiSound.IMediaInstance | Promise<pixiSound.IMediaInstance>;
     stop(soundID: string): void;
     /** Retrieve reference to Sound instance by ID
      * @param {string} soundID ID of sound to retrieve
-     * @returns {PIXI.sound.Sound} Sound instance
+     * @returns {pixiSound.Sound} Sound instance
      */
-    getSound(soundID: string): PIXI.sound.Sound;
+    getSound(soundID: string): pixiSound.Sound;
     /**
      * Retrieve reference to the SoundContext by ID
      *

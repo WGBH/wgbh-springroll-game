@@ -1,14 +1,15 @@
-/// <reference types="pixi.js" />
 import Game from '../Game';
 import { AssetList, AssetManager, SoundManager, StageManager } from '..';
 import { AssetCache } from '../assets/AssetManager';
 import Tween, { Ease } from '../tween/Tween';
 import PauseableTimer from '../timer/PauseableTimer';
 import { Application } from 'springroll';
+import { Container } from 'pixi-animate';
+import { Point } from '@pixi/math';
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
  */
-export default class Scene extends PIXI.Container {
+export default class Scene extends Container {
     /** Object containing references to cached instances of assets loaded by the AssetManager */
     protected readonly cache: AssetCache;
     /** Object for storing any data (such as state or progress) which needs to persist beyone a single Scene */
@@ -80,7 +81,7 @@ export default class Scene extends PIXI.Container {
     clearTimeout(timer: PauseableTimer): void;
     setInterval(callback: Function, time: number): PauseableTimer;
     clearInterval(timer: PauseableTimer): void;
-    resize(width: number, height: number, offset: PIXI.PointLike): void;
+    resize(width: number, height: number, offset: Point): void;
     /**
      * Called when Scene is about to transition out - override to clean up art or other objects in memory
      * @returns {void} return a Promise to resolve when any asynchronous cleanup is complete

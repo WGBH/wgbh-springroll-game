@@ -32,6 +32,11 @@ export default [
       }
     ],
     plugins: plugins,
-    external: ['springroll']
+    external: (id) => {
+      if(id.includes('@pixi') || id === 'springroll' || id === 'pixi-animate' || id === 'pixi-sound' || id === 'pixi.js'){
+        return true;
+      }
+      return false;
+    }
   }
 ];
