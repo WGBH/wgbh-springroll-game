@@ -74,9 +74,7 @@ export default class Game {
             });
 
         if(options.captions && options.captions.config) {
-            if(options.captions.config){
-                this.stageManager.addCaptions(options.captions.config, options.captions.display);
-            }
+            this.stageManager.addCaptions(options.captions.config, options.captions.display);
         }
     }
 
