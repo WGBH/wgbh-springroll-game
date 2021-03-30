@@ -11,7 +11,7 @@ export default class PauseableTimer {
     private reject;
     constructor(callback: Function, time: number, loop?: boolean);
     static clearTimers(): void;
-    readonly promise: Promise<void>;
+    get promise(): Promise<void>;
     pause(pause: boolean): void;
     reset(deltaTime: number): void;
     update: (deltaTime: number) => void;

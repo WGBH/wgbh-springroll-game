@@ -14,13 +14,13 @@ export default class SoundManager {
     /** Mapping of which SoundContexts each Sound belongs to, by ID */
     private soundMeta;
     /** Global volume of all SoundContexts */
-    volume: number;
+    set volume(volume: number);
     /** Volume of all sounds in SFX context */
-    sfxVolume: number;
+    set sfxVolume(volume: number);
     /** Volume of all sounds in VO context */
-    voVolume: number;
+    set voVolume(volume: number);
     /** Volume of all sounds in Music context */
-    musicVolume: number;
+    set musicVolume(volume: number);
     /**
      * Add sound to a SoundManager Context
      * @param {Sound} sound Sound instance to add
