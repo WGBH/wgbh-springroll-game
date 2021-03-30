@@ -35,34 +35,48 @@ export default class Game {
         this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth, options.altHeight);
 
         this.app = new SpringRoll.Application(options.springRollConfig);
-        this.app.state.soundVolume.subscribe((volume)=>{
-            this.sound.volume = volume;
-        });
-        this.app.state.musicVolume.subscribe((volume)=>{
-            this.sound.musicVolume = volume;
-        });
-        this.app.state.sfxVolume.subscribe((volume)=>{
-            this.sound.sfxVolume = volume;
-        });
-        this.app.state.voVolume.subscribe((volume)=>{
-            this.sound.voVolume = volume;
-        });
+        if(options.springRollConfig.features.sound || options.springRollConfig.features.soundVolume){
+            this.app.state.soundVolume.subscribe((volume)=>{
+                this.sound.volume = volume;
+            });
+            if(options.springRollConfig.features.music || options.springRollConfig.features.musicVolume){
+                this.app.state.musicVolume.subscribe((volume)=>{
+                    this.sound.musicVolume = volume;
+                });
+            }
+            if(options.springRollConfig.features.sfx || options.springRollConfig.features.sfxVolume){
+                this.app.state.sfxVolume.subscribe((volume)=>{
+                    this.sound.sfxVolume = volume;
+                });
+            }
+            if(options.springRollConfig.features.vo || options.springRollConfig.features.voVolume){
+                this.app.state.voVolume.subscribe((volume)=>{
+                    this.sound.voVolume = volume;
+                });
+            }
+        }
+
         this.app.state.pause.subscribe((pause)=>{
             if(this.stageManager.pause !== pause){
                 pause ? this.sound.pause() : this.sound.resume();
                 this.stageManager.pause = pause;
             }
         });
-        this.app.state.captionsMuted.subscribe((isMuted:boolean)=> {
-            this.stageManager.captionsMuted = isMuted;
-        });
+
+        if(options.springRollConfig.features.captions){
+            this.app.state.captionsMuted.subscribe((isMuted:boolean)=> {
+                this.stageManager.captionsMuted = isMuted;
+            });
+        }
 
         this.app.state.ready.subscribe(() => {
                 this.stageManager.setTransition(options.transition, this.preloadGlobal);
             });
 
-        if(options.captions) {
-            this.stageManager.addCaptions(options.captions.config,options.captions.display);
+        if(options.captions && options.captions.config) {
+            if(options.captions.config){
+                this.stageManager.addCaptions(options.captions.config, options.captions.display);
+            }
         }
     }
 

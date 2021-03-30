@@ -13,9 +13,9 @@ export default class SoundContext {
     private singleCallback;
     constructor(issingle?: boolean);
     /** Context-specific volume */
-    volume: number;
+    set volume(volume: number);
     /** Volume applied to all contexts */
-    globalVolume: number;
+    set globalVolume(volume: number);
     /**
      *
      * @param {PIXI.sound.Sound} sound Sound instance to add
