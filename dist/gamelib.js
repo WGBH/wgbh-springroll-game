@@ -1,8 +1,9 @@
-import { Property, CaptionPlayer, ScaleManager, Application as Application$1 } from 'springroll';
+import * as SpringRoll from 'springroll';
+import { Property, CaptionPlayer, ScaleManager } from 'springroll';
 import * as animate from 'pixi-animate';
 import { load, Animator, Container } from 'pixi-animate';
-import pixiSound from 'pixi-sound';
 import { utils, Loader } from 'pixi.js';
+import { sound } from '@pixi/sound';
 import { Application } from '@pixi/app';
 import { Point } from '@pixi/math';
 import { Ticker } from '@pixi/ticker';
@@ -247,7 +248,7 @@ var AssetManager = /** @class */ (function () {
             if (soundOptions.preload) {
                 soundOptions.loaded = function () { resolve(); };
             }
-            _this.soundManager.addSound(pixiSound.add(soundDescriptor.id, soundOptions), soundDescriptor);
+            _this.soundManager.addSound(sound.add(soundDescriptor.id, soundOptions), soundDescriptor);
             _this.soundIDs.push(soundDescriptor.id);
             if (soundDescriptor.isGlobal) {
                 _this.globalCache.sounds.push(soundDescriptor.id);
@@ -816,12 +817,12 @@ var SoundContext = /** @class */ (function () {
         this._globalVolume = 1;
         this._volume = 1;
         this.single = false;
-        this.singlePlayComplete = function (sound) {
+        this.singlePlayComplete = function (soundInstance) {
             _this.currentSound = null;
             if (_this.singleCallback) {
                 var call = _this.singleCallback;
                 _this.singleCallback = null;
-                call(sound);
+                call(soundInstance);
             }
         };
         this.single = (issingle === true);
@@ -851,16 +852,16 @@ var SoundContext = /** @class */ (function () {
     });
     /**
      *
-     * @param {pixiSound.Sound} sound Sound instance to add
+     * @param {pixiSound.Sound} soundInstance Sound instance to add
      * @param {string} id ID of sound to add
      * @param {number} volume Number 0-1 of volume for this sound
      */
-    SoundContext.prototype.addSound = function (sound, id, volume) {
+    SoundContext.prototype.addSound = function (soundInstance, id, volume) {
         if (volume === void 0) { volume = 1; }
         if (this.sounds[id]) {
             console.error('Sound already added with id: ', id);
         }
-        this.sounds[id] = sound;
+        this.sounds[id] = soundInstance;
         this.volumes[id] = volume;
         this.applyVolume(id);
     };
@@ -941,7 +942,7 @@ var SoundContext = /** @class */ (function () {
      * @param id ID of sound to remove
      */
     SoundContext.prototype.removeSound = function (id) {
-        pixiSound.remove(id);
+        sound.remove(id);
         delete this.sounds[id];
         delete this.volumes[id];
         if (id === this.currentSound) {
@@ -1004,10 +1005,10 @@ var SoundManager = /** @class */ (function () {
      * @param {Sound} sound Sound instance to add
      * @param {SoundDescriptor} descriptor Asset load metadata for Sound
      */
-    SoundManager.prototype.addSound = function (sound, descriptor) {
+    SoundManager.prototype.addSound = function (soundInstance, descriptor) {
         var context = this[descriptor.context || 'sfx'];
         this.soundMeta[descriptor.id] = context;
-        context.addSound(sound, descriptor.id, descriptor.volume);
+        context.addSound(soundInstance, descriptor.id, descriptor.volume);
     };
     /**
      * Play sound by ID
@@ -1044,7 +1045,7 @@ var SoundManager = /** @class */ (function () {
      */
     SoundManager.prototype.pause = function (soundID) {
         if (!soundID) {
-            pixiSound.pauseAll();
+            sound.pauseAll();
         }
         else {
             this.getSound(soundID).pause();
@@ -1056,7 +1057,7 @@ var SoundManager = /** @class */ (function () {
      */
     SoundManager.prototype.resume = function (soundID) {
         if (!soundID) {
-            pixiSound.resumeAll();
+            sound.resumeAll();
         }
         else {
             this.getSound(soundID).resume();
@@ -1107,7 +1108,7 @@ var Game = /** @class */ (function () {
         this.assetManager = new AssetManager(this.sound);
         this.cache = this.assetManager.cache;
         this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth, options.altHeight);
-        this.app = new Application$1(options.springRollConfig);
+        this.app = new SpringRoll.Application(options.springRollConfig);
         this.app.state.soundVolume.subscribe(function (volume) {
             _this.sound.volume = volume;
         });
@@ -1138,7 +1139,7 @@ var Game = /** @class */ (function () {
     }
     /** Add plugin to this instance of SpringRoll */
     Game.addPlugin = function (plugin) {
-        Application$1.uses(plugin);
+        SpringRoll.Application.uses(plugin);
     };
     /** overrride and return list of global assets */
     Game.prototype.preload = function () {
@@ -1183,11 +1184,13 @@ PERFORMANCE OF THIS SOFTWARE.
 var extendStatics = function(d, b) {
     extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
     return extendStatics(d, b);
 };
 
 function __extends(d, b) {
+    if (typeof b !== "function" && b !== null)
+        throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
     extendStatics(d, b);
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1694,7 +1697,5 @@ var Scene = /** @class */ (function (_super) {
     return Scene;
 }(Container));
 
-/// <reference types="pixi-animate" />
-
-export { Game, Scene, StageManager, AssetManager, SoundManager, SoundContext, PauseableTimer, GameTime, Tween };
+export { AssetManager, Game, GameTime, PauseableTimer, Scene, SoundContext, SoundManager, StageManager, Tween };
 //# sourceMappingURL=gamelib.js.map

@@ -1,5 +1,5 @@
 /// <reference types="pixi-animate" />
-/// <reference types="pixi-sound" />
+/// <reference types="@pixi/sound" />
 /// <reference types="pixi.js" />
 /// <reference types="springroll" />
 

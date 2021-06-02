@@ -1,8 +1,8 @@
 import { AnimateAsset, load, MovieClip } from 'pixi-animate';
 import * as animate from 'pixi-animate';
-import pixiSound from 'pixi-sound';
 import { Loader, ILoaderResource, Spritesheet, Texture, utils } from 'pixi.js';
 import SoundManager from "../sound/SoundManager";
+import { Options, sound } from '@pixi/sound';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -245,7 +245,7 @@ export default class AssetManager {
      */
     private loadSound(soundDescriptor:SoundDescriptor):Promise<void>{
         return new Promise((resolve)=>{
-            let soundOptions:pixiSound.Options = {url: soundDescriptor.path, preload:soundDescriptor.preload !== false};
+            let soundOptions:Options = {url: soundDescriptor.path, preload:soundDescriptor.preload !== false};
             if(soundDescriptor.volume !== undefined && typeof soundDescriptor.volume === 'number'){
                 soundOptions.volume = soundDescriptor.volume;
             }
@@ -253,7 +253,7 @@ export default class AssetManager {
                 soundOptions.loaded = ()=>{ resolve(); };
             }
 
-            this.soundManager.addSound(pixiSound.add(soundDescriptor.id, soundOptions), soundDescriptor);
+            this.soundManager.addSound(sound.add(soundDescriptor.id, soundOptions), soundDescriptor);
             this.soundIDs.push(soundDescriptor.id);
             if(soundDescriptor.isGlobal){
                 this.globalCache.sounds.push(soundDescriptor.id);

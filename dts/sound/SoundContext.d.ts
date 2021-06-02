@@ -1,8 +1,8 @@
-import pixiSound from 'pixi-sound';
+import { CompleteCallback, IMediaInstance, Sound } from '@pixi/sound';
 export default class SoundContext {
     /** Map of Sounds by ID */
     sounds: {
-        [key: string]: pixiSound.Sound;
+        [key: string]: Sound;
     };
     /** Map of individual Sound volumes by ID */
     private volumes;
@@ -18,11 +18,11 @@ export default class SoundContext {
     set globalVolume(volume: number);
     /**
      *
-     * @param {pixiSound.Sound} sound Sound instance to add
+     * @param {pixiSound.Sound} soundInstance Sound instance to add
      * @param {string} id ID of sound to add
      * @param {number} volume Number 0-1 of volume for this sound
      */
-    addSound(sound: pixiSound.Sound, id: string, volume?: number): void;
+    addSound(soundInstance: Sound, id: string, volume?: number): void;
     /**
      * Adjust volume of a specific sound by ID
      * @param {string} id ID of sound to set volume on
@@ -34,7 +34,7 @@ export default class SoundContext {
      * @param {string} id
      * @param {CompleteCallback} onComplete
      */
-    play(id: string, onComplete?: pixiSound.CompleteCallback): pixiSound.IMediaInstance | Promise<pixiSound.IMediaInstance>;
+    play(id: string, onComplete?: CompleteCallback): IMediaInstance | Promise<IMediaInstance>;
     private singlePlayComplete;
     stop(id: string): void;
     stopAll(): void;

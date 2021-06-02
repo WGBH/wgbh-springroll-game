@@ -1,4 +1,4 @@
-import pixiSound from 'pixi-sound';
+import { CompleteCallback, IMediaInstance, sound, Sound } from '@pixi/sound';
 import { SoundDescriptor } from "../assets/AssetManager";
 import SoundContext from "./SoundContext";
 
@@ -44,10 +44,10 @@ export default class SoundManager {
      * @param {Sound} sound Sound instance to add
      * @param {SoundDescriptor} descriptor Asset load metadata for Sound
      */
-    addSound(sound:pixiSound.Sound, descriptor:SoundDescriptor){
+    addSound(soundInstance:Sound, descriptor:SoundDescriptor){
         const context = this[descriptor.context || 'sfx'];
         this.soundMeta[descriptor.id] = context;
-        context.addSound(sound, descriptor.id, descriptor.volume);
+        context.addSound(soundInstance, descriptor.id, descriptor.volume);
     }
 
     /**
@@ -56,7 +56,7 @@ export default class SoundManager {
      * @param {pixiSound.CompleteCallback} [onComplete] Called when Sound is finished playing
      * @returns {pixiSound.IMediaInstance | Promise<pixiSound.IMediaInstance>} instace of playing sound (or promise of to-be-played sound if not preloaded)
      */
-    play(soundID:string, onComplete?:pixiSound.CompleteCallback){
+    play(soundID:string, onComplete?:CompleteCallback):IMediaInstance | Promise<IMediaInstance>{
         return this.soundMeta[soundID].play(soundID,onComplete);
        // return this.soundMeta[soundID].sounds[soundID].play(onComplete);
     }
@@ -69,7 +69,7 @@ export default class SoundManager {
      * @param {string} soundID ID of sound to retrieve
      * @returns {pixiSound.Sound} Sound instance
      */
-    getSound(soundID:string):pixiSound.Sound{
+    getSound(soundID:string):Sound{
         return this.soundMeta[soundID].sounds[soundID];
     }
 
@@ -89,7 +89,7 @@ export default class SoundManager {
      */
     pause(soundID?:string){
         if(!soundID){
-            pixiSound.pauseAll();
+            sound.pauseAll();
         }
         else{
             this.getSound(soundID).pause();
@@ -102,7 +102,7 @@ export default class SoundManager {
      */
     resume(soundID?:string){
         if(!soundID){
-            pixiSound.resumeAll();
+            sound.resumeAll();
         }
         else{
             this.getSound(soundID).resume();

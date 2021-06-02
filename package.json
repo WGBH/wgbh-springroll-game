@@ -17,24 +17,24 @@
   "license": "MIT",
   "devDependencies": {
     "@types/eases": "^1.0.1",
-    "pixi-animate": "2.0.0-rc8",
-    "pixi-sound": "^3.0.5",
-    "pixi.js": "^6.0.0",
-    "rollup": "^0.68.0",
-    "rollup-plugin-commonjs": "^9.2.0",
-    "rollup-plugin-node-resolve": "^4.0.0",
-    "rollup-plugin-terser": "^3.0.0",
-    "rollup-plugin-tslint": "^0.1.38",
-    "rollup-plugin-typescript2": "^0.20.1",
+    "pixi-animate": "2.0.0-rc11",
+    "@pixi/sound": "^4.0.4",
+    "pixi.js": "^6.0.4",
+    "rollup": "^2.50.5",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-tslint": "^0.2.2",
+    "rollup-plugin-typescript2": "^0.30.0",
     "springroll": "^2.4.0",
-    "tslib": "^1.14.1",
+    "tslib": "^2.2.0",
     "typedoc": "^0.14.2",
-    "typescript": "^4.2.3"
+    "typescript": "^4.3.2"
   },
   "peerDependencies": {
-    "pixi-animate": "2.0.0-rc8",
-    "pixi-sound": "^3.0.5",
-    "pixi.js": "^6.0.0",
+    "pixi-animate": "2.0.0-rc11",
+    "@pixi/sound": "^4.0.3",
+    "pixi.js": "^6.0.4",
     "springroll": "^2.4.0"
   },
   "dependencies": {
