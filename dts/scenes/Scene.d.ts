@@ -4,8 +4,8 @@ import { AssetCache } from '../assets/AssetManager';
 import Tween, { Ease } from '../tween/Tween';
 import PauseableTimer from '../timer/PauseableTimer';
 import { Application } from 'springroll';
-import { Container } from 'pixi-animate';
 import { Point } from '@pixi/math';
+import { Container } from 'pixi.js';
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
  */

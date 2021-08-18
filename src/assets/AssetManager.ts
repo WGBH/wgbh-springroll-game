@@ -153,23 +153,21 @@ export default class AssetManager {
                     this.cache.animations[id].destroy();
                     delete this.cache.animations[id];
                 }
-                if(this.cache.animateAssets[id]){
-                    for(let key in this.cache.animateAssets[id].shapes){
-                        delete this.cache.animateAssets[id].shapes[key];
-                    }
-                    for(let key in this.cache.animateAssets[id].textures){
-                        this.cache.animateAssets[id].textures[key].destroy(true);
-                        delete this.cache.animateAssets[id].textures[key];
-                    }
-                    for(let spritesheet of this.cache.animateAssets[id].spritesheets){
-                        spritesheet.destroy(true);
-                    }
-                    this.cache.animateAssets[id].spritesheets.length = 0;
-                }
             }
         }
         for(let id in this.cache.animateAssets){
             if(!this.globalCache.animations.includes(id)){
+                for(let key in this.cache.animateAssets[id].shapes){
+                    delete this.cache.animateAssets[id].shapes[key];
+                }
+                for(let key in this.cache.animateAssets[id].textures){
+                    this.cache.animateAssets[id].textures[key].destroy(true);
+                    delete this.cache.animateAssets[id].textures[key];
+                }
+                for(let spritesheet of this.cache.animateAssets[id].spritesheets){
+                    spritesheet.destroy(true);
+                }
+                this.cache.animateAssets[id].spritesheets.length = 0;
                 delete this.cache.animateAssets[id];
             }
         }

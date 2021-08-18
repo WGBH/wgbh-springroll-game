@@ -1,8 +1,8 @@
 import * as SpringRoll from 'springroll';
 import { Property, CaptionPlayer, ScaleManager } from 'springroll';
 import * as animate from 'pixi-animate';
-import { load, Animator, Container } from 'pixi-animate';
-import { utils, Loader } from 'pixi.js';
+import { load, Animator } from 'pixi-animate';
+import { utils, Loader, Container } from 'pixi.js';
 import { sound } from '@pixi/sound';
 import { Application } from '@pixi/app';
 import { Point } from '@pixi/math';
@@ -149,24 +149,22 @@ var AssetManager = /** @class */ (function () {
                     this.cache.animations[id].destroy();
                     delete this.cache.animations[id];
                 }
-                if (this.cache.animateAssets[id]) {
-                    for (var key in this.cache.animateAssets[id].shapes) {
-                        delete this.cache.animateAssets[id].shapes[key];
-                    }
-                    for (var key in this.cache.animateAssets[id].textures) {
-                        this.cache.animateAssets[id].textures[key].destroy(true);
-                        delete this.cache.animateAssets[id].textures[key];
-                    }
-                    for (var _i = 0, _a = this.cache.animateAssets[id].spritesheets; _i < _a.length; _i++) {
-                        var spritesheet = _a[_i];
-                        spritesheet.destroy(true);
-                    }
-                    this.cache.animateAssets[id].spritesheets.length = 0;
-                }
             }
         }
         for (var id in this.cache.animateAssets) {
             if (!this.globalCache.animations.includes(id)) {
+                for (var key in this.cache.animateAssets[id].shapes) {
+                    delete this.cache.animateAssets[id].shapes[key];
+                }
+                for (var key in this.cache.animateAssets[id].textures) {
+                    this.cache.animateAssets[id].textures[key].destroy(true);
+                    delete this.cache.animateAssets[id].textures[key];
+                }
+                for (var _i = 0, _a = this.cache.animateAssets[id].spritesheets; _i < _a.length; _i++) {
+                    var spritesheet = _a[_i];
+                    spritesheet.destroy(true);
+                }
+                this.cache.animateAssets[id].spritesheets.length = 0;
                 delete this.cache.animateAssets[id];
             }
         }
