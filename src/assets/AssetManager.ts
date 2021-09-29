@@ -13,12 +13,13 @@ export default class AssetManager {
     public cache:AssetCache = {data:{}, images:{}, animations:{}, animateAssets:{}, spritesheets:{}};
 
     /** IDs of cached assets that should persist between scenes */
-    private globalCache:{shapes:string[], textures:string[], sounds:string[], data:string[], animations:string[]} = {
+    private globalCache:{shapes:string[], textures:string[], sounds:string[], data:string[], animations:string[], spritesheets:string[]} = {
         shapes: [],
         textures: [],
         sounds: [],
         data: [],
-        animations: []
+        animations: [],
+        spritesheets:[]
     };
 
     /** IDs of loaded Sounds */
@@ -171,11 +172,24 @@ export default class AssetManager {
                 delete this.cache.animateAssets[id];
             }
         }
+        for(let id in this.cache.spritesheets){
+            if(!this.globalCache.spritesheets.includes(id)){
+                for(let key of Object.keys(this.cache.spritesheets[id].textures)){
+                    this.cache.spritesheets[id].textures[key].destroy(true);
+                }
+                for(let key of Object.keys(this.cache.spritesheets[id].animations)){
+                    for(let texture of this.cache.spritesheets[id].animations[key]){
+                        texture.destroy(true);
+                    }
+                }
+                this.cache.spritesheets[id].destroy(true);
+                delete this.cache.spritesheets[id];
+            }
+        }
         for(let id in utils.TextureCache){
             if(!this.globalCache.textures.includes(id)){
                 utils.TextureCache[id].destroy(true);
                 delete this.cache.images[id];
-                delete this.cache.spritesheets[id];
             }
         }
         for(let i = this.soundIDs.length - 1; i >= 0; i--){
@@ -291,6 +305,9 @@ export default class AssetManager {
             dataLoader.add(descriptor.id, descriptor.path);
             dataLoader.load((loader:Loader, resources:{[key:string]: ILoaderResource })=>{
                 this.cache.spritesheets[descriptor.id] = resources[descriptor.id].spritesheet;
+                if(descriptor.isGlobal){
+                    this.globalCache.spritesheets.push(descriptor.id);
+                }
                 dataLoader.destroy();
                 resolve();
             });

@@ -22,7 +22,8 @@ var AssetManager = /** @class */ (function () {
             textures: [],
             sounds: [],
             data: [],
-            animations: []
+            animations: [],
+            spritesheets: []
         };
         /** IDs of loaded Sounds */
         this.soundIDs = [];
@@ -168,11 +169,27 @@ var AssetManager = /** @class */ (function () {
                 delete this.cache.animateAssets[id];
             }
         }
+        for (var id in this.cache.spritesheets) {
+            if (!this.globalCache.spritesheets.includes(id)) {
+                for (var _b = 0, _c = Object.keys(this.cache.spritesheets[id].textures); _b < _c.length; _b++) {
+                    var key = _c[_b];
+                    this.cache.spritesheets[id].textures[key].destroy(true);
+                }
+                for (var _d = 0, _e = Object.keys(this.cache.spritesheets[id].animations); _d < _e.length; _d++) {
+                    var key = _e[_d];
+                    for (var _f = 0, _g = this.cache.spritesheets[id].animations[key]; _f < _g.length; _f++) {
+                        var texture = _g[_f];
+                        texture.destroy(true);
+                    }
+                }
+                this.cache.spritesheets[id].destroy(true);
+                delete this.cache.spritesheets[id];
+            }
+        }
         for (var id in utils.TextureCache) {
             if (!this.globalCache.textures.includes(id)) {
                 utils.TextureCache[id].destroy(true);
                 delete this.cache.images[id];
-                delete this.cache.spritesheets[id];
             }
         }
         for (var i = this.soundIDs.length - 1; i >= 0; i--) {
@@ -286,6 +303,9 @@ var AssetManager = /** @class */ (function () {
             dataLoader.add(descriptor.id, descriptor.path);
             dataLoader.load(function (loader, resources) {
                 _this.cache.spritesheets[descriptor.id] = resources[descriptor.id].spritesheet;
+                if (descriptor.isGlobal) {
+                    _this.globalCache.spritesheets.push(descriptor.id);
+                }
                 dataLoader.destroy();
                 resolve();
             });
