@@ -146,6 +146,7 @@ export default class AssetManager {
             this.globalCache.sounds.length = 0;
             this.globalCache.shapes.length = 0;
             this.globalCache.textures.length = 0;
+            this.globalCache.spritesheets.length = 0;
         }
 
         for(let id in this.cache.animations){

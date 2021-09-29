@@ -143,6 +143,7 @@ var AssetManager = /** @class */ (function () {
             this.globalCache.sounds.length = 0;
             this.globalCache.shapes.length = 0;
             this.globalCache.textures.length = 0;
+            this.globalCache.spritesheets.length = 0;
         }
         for (var id in this.cache.animations) {
             if (!this.globalCache.animations.includes(id)) {
