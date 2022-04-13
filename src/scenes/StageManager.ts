@@ -74,7 +74,16 @@ export default class StageManager{
         // transparent rendering mode is bad for overall performance, but necessary in order
         // to prevent flickering on some Android devices such as Galaxy Tab A and Kindle Fire
         const flickerProne = !!FLICKERERS.find((value) => value.test(navigator.userAgent));
-        this.pixi = new PIXI.Application({ width, height, antialias:true, transparent:flickerProne});
+
+        // Does this version of Safari break antialiasing?
+        let badSafari = navigator.userAgent.includes('Safari') && navigator.userAgent.includes('Version/15.4');
+        // For Cordova:
+        let cordovaWindow:Window & {device:{platform:string; version:string;}} = window as any;
+        if(cordovaWindow.device && cordovaWindow.device.platform === 'iOS' && cordovaWindow.device.version === '15.4.1'){
+            badSafari = true;
+        }
+
+        this.pixi = new PIXI.Application({ width, height, antialias:!badSafari, transparent:flickerProne});
         this.pixi.view.style.display = 'block';
 
 
