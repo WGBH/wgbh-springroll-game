@@ -1,4 +1,4 @@
-import { Property, CaptionPlayer, ScaleManager, Application } from 'springroll';
+import { Property, ScaleManager, CaptionPlayer, Application } from 'springroll';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -449,7 +449,7 @@ var TRANSITION_ID = 'wgbhSpringRollGameTransition';
  * Manages rendering and transitioning between Scenes
  */
 var StageManager = /** @class */ (function () {
-    function StageManager(game, containerID, width, height, altWidth, altHeight) {
+    function StageManager(game) {
         var _this = this;
         this.transitioning = true;
         this.isPaused = false;
@@ -536,10 +536,20 @@ var StageManager = /** @class */ (function () {
         this.gotResize = function (newsize) {
             _this.resize(newsize.width, newsize.height);
         };
+        this.game = game;
+    }
+    Object.defineProperty(StageManager.prototype, "scale", {
+        get: function () {
+            console.warn('scale is obsolete, please reference viewFrame for stage size info');
+            return 1;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    StageManager.prototype.createRenderer = function (containerID, width, height, altWidth, altHeight, playOptions) {
         if (altWidth && altHeight) {
             console.error('responsive scaling system only supports altWidth OR altHeight, using both will produce undesirable results');
         }
-        this.game = game;
         this.width = width;
         this.height = height;
         this.offset = new PIXI.Point(0, 0);
@@ -552,6 +562,15 @@ var StageManager = /** @class */ (function () {
         var cordovaWindow = window;
         if (cordovaWindow.device && cordovaWindow.device.platform === 'iOS' && cordovaWindow.device.version === '15.4.1') {
             badSafari = true;
+        }
+        else if (playOptions && playOptions.cordova && playOptions.platform === 'iOS') {
+            if (playOptions.osVersion) {
+                badSafari = playOptions.osVersion === '15.4.1';
+            }
+            else {
+                //if no osVersion provided by Games App, disable antialiasing on all iOS
+                badSafari = true;
+            }
         }
         this.pixi = new PIXI.Application({ width: width, height: height, antialias: !badSafari, transparent: flickerProne });
         this.pixi.view.style.display = 'block';
@@ -568,15 +587,7 @@ var StageManager = /** @class */ (function () {
         this.setScaling(scale);
         this.pixi.ticker.add(this.update.bind(this));
         this.scaleManager = new ScaleManager(this.gotResize);
-    }
-    Object.defineProperty(StageManager.prototype, "scale", {
-        get: function () {
-            console.warn('scale is obsolete, please reference viewFrame for stage size info');
-            return 1;
-        },
-        enumerable: false,
-        configurable: true
-    });
+    };
     StageManager.prototype.addCaptions = function (captionData, renderer) {
         this.captions = new CaptionPlayer(captionData, renderer);
     };
@@ -1096,8 +1107,28 @@ var Game = /** @class */ (function () {
         this.sound = new SoundManager();
         this.assetManager = new AssetManager(this.sound);
         this.cache = this.assetManager.cache;
-        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth, options.altHeight);
+        this.stageManager = new StageManager(this);
         this.app = new Application(options.springRollConfig);
+        // Wait until playOptions received before creating renderer
+        // Wait until renderer created before creating transition
+        var rendererInitialized = false;
+        var applicationReady = false;
+        var initializeRenderer = function (playOptions) {
+            if (!rendererInitialized) {
+                _this.stageManager.createRenderer(options.containerID, options.width, options.height, options.altWidth, options.altHeight, playOptions);
+                if (applicationReady) {
+                    _this.stageManager.setTransition(options.transition, _this.preloadGlobal);
+                }
+                rendererInitialized = true;
+            }
+        };
+        //If loaded in an iFrame, wait for playOptions from SpringRoll Container
+        if (options.noContainer || window.self === window.top) {
+            initializeRenderer();
+        }
+        else {
+            this.app.state.playOptions.subscribe(initializeRenderer);
+        }
         this.app.state.soundVolume.subscribe(function (volume) {
             _this.sound.volume = volume;
         });
@@ -1120,7 +1151,10 @@ var Game = /** @class */ (function () {
             _this.stageManager.captionsMuted = isMuted;
         });
         this.app.state.ready.subscribe(function () {
-            _this.stageManager.setTransition(options.transition, _this.preloadGlobal);
+            if (rendererInitialized) {
+                _this.stageManager.setTransition(options.transition, _this.preloadGlobal);
+            }
+            applicationReady = true;
         });
         if (options.captions) {
             this.stageManager.addCaptions(options.captions.config, options.captions.display);
