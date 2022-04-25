@@ -82,12 +82,12 @@ export default class StageManager{
         let badSafari = navigator.userAgent.includes('Safari') && navigator.userAgent.includes('Version/15.4');
         // For Cordova:
         let cordovaWindow:Window & {device:{platform:string; version:string;}} = window as any;
-        if(cordovaWindow.device && cordovaWindow.device.platform === 'iOS' && cordovaWindow.device.version === '15.4.1'){
+        if(cordovaWindow.device && cordovaWindow.device.platform === 'iOS' && cordovaWindow.device.version.startsWith('15.4')){
             badSafari = true;
         }
         else if(playOptions && playOptions.cordova && playOptions.platform === 'iOS'){
             if(playOptions.osVersion){
-                badSafari = playOptions.osVersion === '15.4.1';
+                badSafari = playOptions.osVersion.startsWith('15.4');
             }
             else{
                 //if no osVersion provided by Games App, disable antialiasing on all iOS
