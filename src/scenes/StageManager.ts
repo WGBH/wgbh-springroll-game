@@ -98,7 +98,7 @@ export default class StageManager{
             }
         }
 
-        this.pixi = new PIXI.Application({ width, height, antialias:!badSafari, transparent:flickerProne});
+        this.pixi = new Application({ width, height, antialias:!badSafari, transparent:flickerProne});
         this.pixi.view.style.display = 'block';
 
 
