@@ -28,8 +28,14 @@ export default class StageManager {
     private isCaptionsMuted;
     /** Map of Scenes by Scene IDs */
     private scenes;
-    readonly scale: number;
-    constructor(game: Game, containerID: string, width: number, height: number, altWidth?: number, altHeight?: number);
+    get scale(): number;
+    constructor(game: Game);
+    createRenderer(containerID: string, width: number, height: number, altWidth?: number, altHeight?: number, playOptions?: any & {
+        cordova?: string;
+        platform?: string;
+        model?: string;
+        osVersion?: string;
+    }): void;
     addCaptions(captionData: CaptionData, renderer: IRender): void;
     setCaptionRenderer(renderer: IRender): void;
     addScene(id: string, scene: typeof Scene): void;
@@ -42,8 +48,10 @@ export default class StageManager {
      * @param {string} sceneID ID of Scene to transition to
      */
     changeScene: (newScene: string) => void;
-    captionsMuted: boolean;
-    pause: boolean;
+    get captionsMuted(): boolean;
+    set captionsMuted(muted: boolean);
+    get pause(): boolean;
+    set pause(pause: boolean);
     getSize(width: number, height: number): ScreenSize;
     setScaling(scaleconfig: ScaleConfig): void;
     gotResize: (newsize: ScreenSize) => void;

@@ -15,7 +15,7 @@ export default class Tween {
     to: (targetValues: any, totalTime: number, ease?: Ease) => this;
     wait: (totalTime: number) => this;
     call: (call: Function) => this;
-    readonly promise: Promise<void>;
+    get promise(): Promise<void>;
     private doComplete;
     update: (elapsed: number) => any;
     destroy(): void;
