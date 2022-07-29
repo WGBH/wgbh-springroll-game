@@ -1,4 +1,4 @@
-import { AnimateAsset, MovieClip } from 'pixi-animate';
+import { AnimateAsset, MovieClip } from '@pixi/animate';
 import { Spritesheet, Texture } from 'pixi.js';
 import SoundManager from "../sound/SoundManager";
 /**

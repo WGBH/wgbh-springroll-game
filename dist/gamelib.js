@@ -1,7 +1,7 @@
 import * as SpringRoll from 'springroll';
 import { Property, ScaleManager, CaptionPlayer } from 'springroll';
-import * as animate from 'pixi-animate';
-import { load, Animator } from 'pixi-animate';
+import * as animate from '@pixi/animate';
+import { load, Animator } from '@pixi/animate';
 import { utils, Loader, Container } from 'pixi.js';
 import { sound } from '@pixi/sound';
 import { Application } from '@pixi/app';

@@ -4,7 +4,7 @@ import PauseableTimer from '../timer/PauseableTimer';
 import { ScaleManager, CaptionData, IRender, Property } from 'springroll';
 import { Application } from '@pixi/app';
 import { Point } from '@pixi/math';
-import { AnimateAsset, MovieClip } from 'pixi-animate';
+import { AnimateAsset, MovieClip } from '@pixi/animate';
 /**
  * Manages rendering and transitioning between Scenes
  */

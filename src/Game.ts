@@ -5,7 +5,7 @@ import StageManager from "./scenes/StageManager";
 import SoundManager from './sound/SoundManager';
 import { Scene } from '.';
 import { ApplicationPlugin } from 'springroll';
-import { AnimateAsset } from 'pixi-animate';
+import { AnimateAsset } from '@pixi/animate';
 
 
 /** Base Class for WGBH SpringRoll Games - extend this Class in your project */

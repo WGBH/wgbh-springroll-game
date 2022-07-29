@@ -5,7 +5,7 @@ import PauseableTimer from '../timer/PauseableTimer';
 import { ScaleManager, CaptionPlayer, CaptionData, IRender, Property } from 'springroll';
 import { Application } from '@pixi/app';
 import { Point } from '@pixi/math';
-import { AnimateAsset, Animator, MovieClip } from 'pixi-animate';
+import { AnimateAsset, Animator, MovieClip } from '@pixi/animate';
 import { Ticker } from '@pixi/ticker';
 
 const LOADING_DELAY = 250;

@@ -1,5 +1,5 @@
-import { AnimateAsset, load, MovieClip } from 'pixi-animate';
-import * as animate from 'pixi-animate';
+import { AnimateAsset, load, MovieClip } from '@pixi/animate';
+import * as animate from '@pixi/animate';
 import { Loader, ILoaderResource, Spritesheet, Texture, utils } from 'pixi.js';
 import SoundManager from "../sound/SoundManager";
 import { Options, sound } from '@pixi/sound';
