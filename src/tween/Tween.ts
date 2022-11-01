@@ -137,7 +137,9 @@ export default class Tween{
 
     destroy(){
         GameTime.unsubscribe(this.update);
-        Tween.tweens.splice(Tween.tweens.indexOf(this), 1);
+        if(Tween.tweens.includes(this)){
+            Tween.tweens.splice(Tween.tweens.indexOf(this), 1);
+        }
         this.target = null;
         this.steps = null;
         this.currentStep = null;
