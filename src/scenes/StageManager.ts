@@ -188,9 +188,18 @@ export default class StageManager{
                 Animator.play(this.transition, 'load');
                 if(oldScene){
                     this.pixi.stage.removeChild(oldScene);
-                    oldScene.cleanup();
-                    oldScene.destroy({children:true});
+                    return new Promise<void>((resolve) => {
+                        Promise.resolve().then(function() { 
+                            return oldScene.cleanup();
+                        })
+                        .then(() => {
+                            oldScene.destroy({ children: true});
+                            resolve();
+                        });
+                    });
                 }
+            })
+            .then(() => {
                 this.game.assetManager.unloadAssets();
             })
             .then(()=>{
