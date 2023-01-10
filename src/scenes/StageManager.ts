@@ -60,11 +60,14 @@ export default class StageManager{
         return 1;
     }
 
-    constructor(game:Game, containerID:string, width:number, height:number, altWidth?:number, altHeight?:number){
+    constructor(game:Game){
+        this.game = game;
+    }
+
+    createRenderer(containerID:string, width:number, height:number, altWidth?:number, altHeight?:number, playOptions?:any & {cordova?:string, platform?:string, model?:string, osVersion?:string}){
         if(altWidth && altHeight){
             console.error('responsive scaling system only supports altWidth OR altHeight, using both will produce undesirable results');
         }
-        this.game = game;
 
         this.width = width;
         this.height = height;
@@ -74,7 +77,25 @@ export default class StageManager{
         // transparent rendering mode is bad for overall performance, but necessary in order
         // to prevent flickering on some Android devices such as Galaxy Tab A and Kindle Fire
         const flickerProne = !!FLICKERERS.find((value) => value.test(navigator.userAgent));
-        this.pixi = new PIXI.Application({ width, height, antialias:true, transparent:flickerProne});
+
+        // Does this version of Safari break antialiasing?
+        let badSafari = navigator.userAgent.includes('Safari') && navigator.userAgent.includes('Version/15.4');
+        // For Cordova:
+        let cordovaWindow:Window & {device:{platform:string; version:string;}} = window as any;
+        if(cordovaWindow.device && cordovaWindow.device.platform === 'iOS' && cordovaWindow.device.version.startsWith('15.4')){
+            badSafari = true;
+        }
+        else if(playOptions && playOptions.cordova && playOptions.platform === 'iOS'){
+            if(playOptions.osVersion){
+                badSafari = playOptions.osVersion.startsWith('15.4');
+            }
+            else{
+                //if no osVersion provided by Games App, disable antialiasing on all iOS
+                badSafari = true;
+            }
+        }
+
+        this.pixi = new PIXI.Application({ width, height, antialias:!badSafari, transparent:flickerProne});
         this.pixi.view.style.display = 'block';
 
 

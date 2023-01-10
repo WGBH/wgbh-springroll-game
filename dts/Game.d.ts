@@ -56,6 +56,8 @@ export interface GameOptions {
     transition: AnimateStage;
     /** ID of HTML element on your page to add this game's Canvas to */
     containerID: string;
+    /** Set true if this game is made to be run outside of a SpringRoll Container */
+    noContainer?: boolean;
 }
 export declare type CaptionParams = {
     config: SpringRoll.CaptionData;

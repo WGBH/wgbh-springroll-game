@@ -32,9 +32,33 @@ export default class Game {
         this.sound = new SoundManager();
         this.assetManager = new AssetManager(this.sound);
         this.cache = this.assetManager.cache;
-        this.stageManager = new StageManager(this, options.containerID, options.width, options.height, options.altWidth, options.altHeight);
+        this.stageManager = new StageManager(this);
 
         this.app = new SpringRoll.Application(options.springRollConfig);
+
+        // Wait until playOptions received before creating renderer
+        // Wait until renderer created before creating transition
+        let rendererInitialized = false;
+        let applicationReady = false;
+        const initializeRenderer = (playOptions?:any)=>{
+            if(!rendererInitialized){
+                this.stageManager.createRenderer(options.containerID, options.width, options.height, options.altWidth, options.altHeight, playOptions);
+                if(applicationReady){
+                    this.stageManager.setTransition(options.transition, this.preloadGlobal);
+                }
+                rendererInitialized = true;
+            }
+        };
+
+        //If loaded in an iFrame, wait for playOptions from SpringRoll Container
+        if(options.noContainer || window.self === window.top){
+            initializeRenderer();
+        }
+        else{
+            this.app.state.playOptions.subscribe(initializeRenderer);
+        }
+
+
         if(options.springRollConfig.features.sound || options.springRollConfig.features.soundVolume){
             this.app.state.soundVolume.subscribe((volume)=>{
                 this.sound.volume = volume;
@@ -70,7 +94,10 @@ export default class Game {
         }
 
         this.app.state.ready.subscribe(() => {
-                this.stageManager.setTransition(options.transition, this.preloadGlobal);
+                if(rendererInitialized){
+                    this.stageManager.setTransition(options.transition, this.preloadGlobal);
+                }
+                applicationReady = true;
             });
 
         if(options.captions && options.captions.config) {
@@ -137,6 +164,8 @@ export interface GameOptions {
     transition: AnimateStage;
     /** ID of HTML element on your page to add this game's Canvas to */
     containerID: string;
+    /** Set true if this game is made to be run outside of a SpringRoll Container */
+    noContainer?: boolean;
 }
 
 export type CaptionParams = {
