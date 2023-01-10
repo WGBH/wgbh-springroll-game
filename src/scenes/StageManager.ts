@@ -126,7 +126,12 @@ export default class StageManager{
     }
 
     setCaptionRenderer(renderer:IRender) {
-        this.captions.renderer = renderer;
+        if(this.captions){
+            this.captions.renderer = renderer;
+        }
+        else{
+            console.warn('no captions player exists. call `addCaptions()` or include in GameOptions');
+        }
     }
 
     addScene(id:string, scene:typeof Scene){
@@ -247,7 +252,7 @@ export default class StageManager{
     }
     set captionsMuted(muted:boolean){
         this.isCaptionsMuted = muted;
-        if (muted) {
+        if (muted && this.captions) {
             this.captions.stop();
         }
     }
@@ -400,12 +405,13 @@ export default class StageManager{
     }
 
     showCaption(captionid:string,begin?:number,args?:any) {
-        if (this.isCaptionsMuted) { return; }
+        if (this.isCaptionsMuted || !this.captions) { return; }
         begin = begin || 0;
         this.captions.start(captionid,begin,args);
     }
 
     stopCaption() {
+        if(!this.captions){ return; }
         this.captions.stop();
     }
 
