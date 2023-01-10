@@ -629,7 +629,12 @@ var StageManager = /** @class */ (function () {
         this.captions = new CaptionPlayer(captionData, renderer);
     };
     StageManager.prototype.setCaptionRenderer = function (renderer) {
-        this.captions.renderer = renderer;
+        if (this.captions) {
+            this.captions.renderer = renderer;
+        }
+        else {
+            console.warn('no captions player exists. call `addCaptions()` or include in GameOptions');
+        }
     };
     StageManager.prototype.addScene = function (id, scene) {
         this.scenes[id] = scene;
@@ -670,7 +675,7 @@ var StageManager = /** @class */ (function () {
         },
         set: function (muted) {
             this.isCaptionsMuted = muted;
-            if (muted) {
+            if (muted && this.captions) {
                 this.captions.stop();
             }
         },
@@ -817,13 +822,16 @@ var StageManager = /** @class */ (function () {
         PauseableTimer.clearTimers();
     };
     StageManager.prototype.showCaption = function (captionid, begin, args) {
-        if (this.isCaptionsMuted) {
+        if (this.isCaptionsMuted || !this.captions) {
             return;
         }
         begin = begin || 0;
         this.captions.start(captionid, begin, args);
     };
     StageManager.prototype.stopCaption = function () {
+        if (!this.captions) {
+            return;
+        }
         this.captions.stop();
     };
     StageManager.prototype.update = function () {
@@ -1166,34 +1174,44 @@ var Game = /** @class */ (function () {
         else {
             this.app.state.playOptions.subscribe(initializeRenderer);
         }
-        this.app.state.soundVolume.subscribe(function (volume) {
-            _this.sound.volume = volume;
-        });
-        this.app.state.musicVolume.subscribe(function (volume) {
-            _this.sound.musicVolume = volume;
-        });
-        this.app.state.sfxVolume.subscribe(function (volume) {
-            _this.sound.sfxVolume = volume;
-        });
-        this.app.state.voVolume.subscribe(function (volume) {
-            _this.sound.voVolume = volume;
-        });
+        if (options.springRollConfig.features.sound || options.springRollConfig.features.soundVolume) {
+            this.app.state.soundVolume.subscribe(function (volume) {
+                _this.sound.volume = volume;
+            });
+            if (options.springRollConfig.features.music || options.springRollConfig.features.musicVolume) {
+                this.app.state.musicVolume.subscribe(function (volume) {
+                    _this.sound.musicVolume = volume;
+                });
+            }
+            if (options.springRollConfig.features.sfx || options.springRollConfig.features.sfxVolume) {
+                this.app.state.sfxVolume.subscribe(function (volume) {
+                    _this.sound.sfxVolume = volume;
+                });
+            }
+            if (options.springRollConfig.features.vo || options.springRollConfig.features.voVolume) {
+                this.app.state.voVolume.subscribe(function (volume) {
+                    _this.sound.voVolume = volume;
+                });
+            }
+        }
         this.app.state.pause.subscribe(function (pause) {
             if (_this.stageManager.pause !== pause) {
                 pause ? _this.sound.pause() : _this.sound.resume();
                 _this.stageManager.pause = pause;
             }
         });
-        this.app.state.captionsMuted.subscribe(function (isMuted) {
-            _this.stageManager.captionsMuted = isMuted;
-        });
+        if (options.springRollConfig.features.captions) {
+            this.app.state.captionsMuted.subscribe(function (isMuted) {
+                _this.stageManager.captionsMuted = isMuted;
+            });
+        }
         this.app.state.ready.subscribe(function () {
             if (rendererInitialized) {
                 _this.stageManager.setTransition(options.transition, _this.preloadGlobal);
             }
             applicationReady = true;
         });
-        if (options.captions) {
+        if (options.captions && options.captions.config) {
             this.stageManager.addCaptions(options.captions.config, options.captions.display);
         }
     }

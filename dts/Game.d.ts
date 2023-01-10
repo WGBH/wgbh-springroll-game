@@ -60,7 +60,7 @@ export interface GameOptions {
     /** Set true if this game is made to be run outside of a SpringRoll Container */
     noContainer?: boolean;
 }
-export declare type CaptionParams = {
+export type CaptionParams = {
     config: SpringRoll.CaptionData;
     display?: SpringRoll.IRender;
 };

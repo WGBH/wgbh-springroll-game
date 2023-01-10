@@ -24,10 +24,10 @@ export default class Captions {
     captionCombined(audiofiles: Array<string>): void;
     update(delta: number): void;
 }
-export declare type CaptionConfig = {
+export type CaptionConfig = {
     [audiofile: string]: Array<CaptionInfo>;
 };
-export declare type CaptionInfo = {
+export type CaptionInfo = {
     content: string;
     start: number;
     end: number;

@@ -61,7 +61,7 @@ export default class AssetManager {
     private loadManifest;
 }
 /** Array of  */
-export declare type AssetList = (ManifestDescriptor | AnimateAssetDescriptor | DataDescriptor | ImageDescriptor | SoundDescriptor | SpritesheetDescriptor)[];
+export type AssetList = (ManifestDescriptor | AnimateAssetDescriptor | DataDescriptor | ImageDescriptor | SoundDescriptor | SpritesheetDescriptor)[];
 /** Load instruction base interface */
 export interface AssetDescriptor {
     /** Should asset stay in cache after current Scene is exited? */

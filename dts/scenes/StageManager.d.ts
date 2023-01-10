@@ -72,22 +72,22 @@ export default class StageManager {
     stopCaption(): void;
     update(): void;
 }
-export declare type ScreenSize = {
+export type ScreenSize = {
     width: number;
     height: number;
     ratio: number;
 };
-export declare type RectLike = {
+export type RectLike = {
     width: number;
     height: number;
 };
-export declare type ScaleConfig = {
+export type ScaleConfig = {
     /** DEPRECATED */
     origin?: RectLike;
     min?: RectLike;
     max?: RectLike;
 };
-export declare type ViewFrame = {
+export type ViewFrame = {
     left: number;
     right: number;
     top: number;
