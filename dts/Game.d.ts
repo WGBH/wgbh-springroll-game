@@ -1,9 +1,10 @@
 import * as SpringRoll from 'springroll';
-import AssetManager, { AnimateStage, AssetCache, AssetList } from "./assets/AssetManager";
+import AssetManager, { AssetCache, AssetList } from "./assets/AssetManager";
 import StageManager from "./scenes/StageManager";
 import SoundManager from './sound/SoundManager';
 import { Scene } from '.';
 import { ApplicationPlugin } from 'springroll';
+import { AnimateAsset } from '@pixi/animate';
 /** Base Class for WGBH SpringRoll Games - extend this Class in your project */
 export default class Game {
     /** SpringRoll Application, interface to Container */
@@ -52,14 +53,14 @@ export interface GameOptions {
     altHeight?: number;
     /** caption configuration */
     captions?: CaptionParams;
-    /** Class of Animate Stage to use for transitions */
-    transition: AnimateStage;
+    /** Published Animate file to use for transitions */
+    transition: AnimateAsset;
     /** ID of HTML element on your page to add this game's Canvas to */
     containerID: string;
     /** Set true if this game is made to be run outside of a SpringRoll Container */
     noContainer?: boolean;
 }
-export declare type CaptionParams = {
+export type CaptionParams = {
     config: SpringRoll.CaptionData;
     display?: SpringRoll.IRender;
 };

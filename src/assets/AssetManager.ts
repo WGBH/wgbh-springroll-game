@@ -1,4 +1,8 @@
+import { AnimateAsset, load, MovieClip } from '@pixi/animate';
+import * as animate from '@pixi/animate';
+import { Loader, ILoaderResource, Spritesheet, Texture, utils } from 'pixi.js';
 import SoundManager from "../sound/SoundManager";
+import { Options, sound } from '@pixi/sound';
 
 /**
  * Manages loading, caching, and unloading of assets
@@ -6,15 +10,16 @@ import SoundManager from "../sound/SoundManager";
 export default class AssetManager {
     
     /** object containing references to cached instances of loaded assets */
-    public cache:AssetCache = {data:{}, images:{}, animations:{}, spritesheets:{}};
+    public cache:AssetCache = {data:{}, images:{}, animations:{}, animateAssets:{}, spritesheets:{}};
 
     /** IDs of cached assets that should persist between scenes */
-    private globalCache:{shapes:string[], textures:string[], sounds:string[], data:string[], animations:string[]} = {
+    private globalCache:{shapes:string[], textures:string[], sounds:string[], data:string[], animations:string[], spritesheets:string[]} = {
         shapes: [],
         textures: [],
         sounds: [],
         data: [],
-        animations: []
+        animations: [],
+        spritesheets:[]
     };
 
     /** IDs of loaded Sounds */
@@ -123,12 +128,7 @@ export default class AssetManager {
 
     /** Save current state of PIXI Global caches, to prevent unloading global assets */
     private saveCacheState = () => {
-        Object.keys(PIXI.animate.ShapesCache).forEach((key) => {
-            if(!this.globalCache.shapes.includes(key)){
-                this.globalCache.shapes.push(key);
-            }
-        });
-        Object.keys(PIXI.utils.TextureCache).forEach((key) => {
+        Object.keys(utils.TextureCache).forEach((key) => {
             if(!this.globalCache.textures.includes(key)){
                 this.globalCache.textures.push(key);
             }
@@ -146,6 +146,7 @@ export default class AssetManager {
             this.globalCache.sounds.length = 0;
             this.globalCache.shapes.length = 0;
             this.globalCache.textures.length = 0;
+            this.globalCache.spritesheets.length = 0;
         }
 
         for(let id in this.cache.animations){
@@ -156,16 +157,40 @@ export default class AssetManager {
                 }
             }
         }
-        for(let id in PIXI.utils.TextureCache){
-            if(!this.globalCache.textures.includes(id)){
-                (PIXI.utils.TextureCache[id] as PIXI.Texture).destroy(true);
-                delete this.cache.images[id];
+        for(let id in this.cache.animateAssets){
+            if(!this.globalCache.animations.includes(id)){
+                for(let key in this.cache.animateAssets[id].shapes){
+                    delete this.cache.animateAssets[id].shapes[key];
+                }
+                for(let key in this.cache.animateAssets[id].textures){
+                    this.cache.animateAssets[id].textures[key].destroy(true);
+                    delete this.cache.animateAssets[id].textures[key];
+                }
+                for(let spritesheet of this.cache.animateAssets[id].spritesheets){
+                    spritesheet.destroy(true);
+                }
+                this.cache.animateAssets[id].spritesheets.length = 0;
+                delete this.cache.animateAssets[id];
+            }
+        }
+        for(let id in this.cache.spritesheets){
+            if(!this.globalCache.spritesheets.includes(id)){
+                for(let key of Object.keys(this.cache.spritesheets[id].textures)){
+                    this.cache.spritesheets[id].textures[key].destroy(true);
+                }
+                for(let key of Object.keys(this.cache.spritesheets[id].animations)){
+                    for(let texture of this.cache.spritesheets[id].animations[key]){
+                        texture.destroy(true);
+                    }
+                }
+                this.cache.spritesheets[id].destroy(true);
                 delete this.cache.spritesheets[id];
             }
         }
-        for(let id in PIXI.animate.ShapesCache){
-            if(!this.globalCache.shapes.includes(id)){
-                PIXI.animate.ShapesCache.remove(id);
+        for(let id in utils.TextureCache){
+            if(!this.globalCache.textures.includes(id)){
+                utils.TextureCache[id].destroy(true);
+                delete this.cache.images[id];
             }
         }
         for(let i = this.soundIDs.length - 1; i >= 0; i--){
@@ -175,29 +200,31 @@ export default class AssetManager {
                 this.soundIDs.splice(i, 1);
             }
         }
-        for(let id in PIXI.loader.resources){
-            console.warn('unmanaged resource detected: ', id, PIXI.loader.resources[id]);
+        for(let id in Loader.shared.resources){
+            console.warn('unmanaged resource detected: ', id, Loader.shared.resources[id]);
         }
         this.sceneActive = false;
     }
     
     /**
      * load assets for a PixiAnimate stage
-     * @param {AnimateStageDescriptor} animateStageDescriptor 
+     * @param {AnimateAssetDescriptor} animateAssetDescriptor 
      */
-    private loadAnimate(animateStageDescriptor:AnimateStageDescriptor):Promise<any>{
-        return new Promise((resolve) => {
-            PIXI.animate.load(
+    private loadAnimate(animateAssetDescriptor:AnimateAssetDescriptor):Promise<any>{
+        return new Promise<void>((resolve) => {
+            animateAssetDescriptor.asset.setup(animate);
+            load(
+                animateAssetDescriptor.asset,
                 {
-                    createInstance:!!animateStageDescriptor.cacheInstance,
-                    stage:animateStageDescriptor.stage,
+                    createInstance:!!animateAssetDescriptor.cacheInstance,
                     complete: (movieClip?)=>{
-                        if(animateStageDescriptor.cacheInstance){
-                            this.cache.animations[animateStageDescriptor.id] = movieClip;
+                        if(animateAssetDescriptor.cacheInstance){
+                            this.cache.animations[animateAssetDescriptor.id] = movieClip;
                         }
-                        if(animateStageDescriptor.isGlobal){
-                            this.globalCache.animations.push(animateStageDescriptor.id);
+                        if(animateAssetDescriptor.isGlobal){
+                            this.globalCache.animations.push(animateAssetDescriptor.id);
                         }
+                        this.cache.animateAssets[animateAssetDescriptor.id] = animateAssetDescriptor.asset;
                         resolve();
                     }
                 }
@@ -210,12 +237,12 @@ export default class AssetManager {
      * @param {ImageDescriptor[]} assets Array of imnages assets to load
      */
     private loadImages(assets:ImageDescriptor[]):Promise<any>{
-        let imageLoader = new PIXI.loaders.Loader();
-        return new Promise((resolve)=>{
+        let imageLoader = new Loader();
+        return new Promise<void>((resolve)=>{
             for(let asset of assets){
                 imageLoader.add(asset.id, asset.path);
             }
-            imageLoader.load((loader:PIXI.loaders.Loader, resources:PIXI.loaders.ResourceDictionary)=>{
+            imageLoader.load((loader:Loader, resources:{[key:string]: ILoaderResource })=>{
                 for(let key of Object.keys(resources)){
                     this.cache.images[key] = resources[key].texture;
                 }
@@ -231,7 +258,7 @@ export default class AssetManager {
      */
     private loadSound(soundDescriptor:SoundDescriptor):Promise<void>{
         return new Promise((resolve)=>{
-            let soundOptions:PIXI.sound.Options = {url: soundDescriptor.path, preload:soundDescriptor.preload !== false};
+            let soundOptions:Options = {url: soundDescriptor.path, preload:soundDescriptor.preload !== false};
             if(soundDescriptor.volume !== undefined && typeof soundDescriptor.volume === 'number'){
                 soundOptions.volume = soundDescriptor.volume;
             }
@@ -239,7 +266,7 @@ export default class AssetManager {
                 soundOptions.loaded = ()=>{ resolve(); };
             }
 
-            this.soundManager.addSound(PIXI.sound.add(soundDescriptor.id, soundOptions), soundDescriptor);
+            this.soundManager.addSound(sound.add(soundDescriptor.id, soundOptions), soundDescriptor);
             this.soundIDs.push(soundDescriptor.id);
             if(soundDescriptor.isGlobal){
                 this.globalCache.sounds.push(soundDescriptor.id);
@@ -255,10 +282,10 @@ export default class AssetManager {
      * @param {DataDescriptor} dataDescriptor 
      */
     private loadData(dataDescriptor:DataDescriptor):Promise<void>{
-        const dataLoader = new PIXI.loaders.Loader();
+        const dataLoader = new Loader();
         return new Promise((resolve)=>{
             dataLoader.add(dataDescriptor.id, dataDescriptor.path);
-            dataLoader.load((loader:PIXI.loaders.Loader, resources:PIXI.loaders.ResourceDictionary)=>{
+            dataLoader.load((loader:Loader, resources:{[key:string]: ILoaderResource })=>{
                 this.cache.data[dataDescriptor.id] = resources[dataDescriptor.id].data;
                 if(dataDescriptor.isGlobal){
                     this.globalCache.data.push(dataDescriptor.id);
@@ -274,11 +301,14 @@ export default class AssetManager {
      * @param {SpritesheetDescriptor} descriptor 
      */
     private loadSpritesheet(descriptor:SpritesheetDescriptor):Promise<void>{
-        const dataLoader = new PIXI.loaders.Loader();
+        const dataLoader = new Loader();
         return new Promise((resolve)=>{
             dataLoader.add(descriptor.id, descriptor.path);
-            dataLoader.load((loader:PIXI.loaders.Loader, resources:PIXI.loaders.ResourceDictionary)=>{
+            dataLoader.load((loader:Loader, resources:{[key:string]: ILoaderResource })=>{
                 this.cache.spritesheets[descriptor.id] = resources[descriptor.id].spritesheet;
+                if(descriptor.isGlobal){
+                    this.globalCache.spritesheets.push(descriptor.id);
+                }
                 dataLoader.destroy();
                 resolve();
             });
@@ -290,11 +320,10 @@ export default class AssetManager {
      * @param {ManifestDescriptor} manifestDescriptor 
      */
     private loadManifest(manifestDescriptor:ManifestDescriptor):Promise<AssetDescriptor[]>{
-
-        const dataLoader = new PIXI.loaders.Loader();
+        const dataLoader = new Loader();
         return new Promise((resolve)=>{
             dataLoader.add(manifestDescriptor.path);
-            dataLoader.load((loader:PIXI.loaders.Loader, resources:PIXI.loaders.ResourceDictionary)=>{
+            dataLoader.load((loader:Loader, resources:{[key:string]: ILoaderResource })=>{
                 const data:AssetDescriptor[] = resources[manifestDescriptor.path].data;
                 dataLoader.destroy();
                 if(manifestDescriptor.isGlobal){
@@ -310,7 +339,7 @@ export default class AssetManager {
 }
 
 /** Array of  */
-export type AssetList = (ManifestDescriptor|AnimateStageDescriptor|DataDescriptor|ImageDescriptor|SoundDescriptor|SpritesheetDescriptor)[];
+export type AssetList = (ManifestDescriptor|AnimateAssetDescriptor|DataDescriptor|ImageDescriptor|SoundDescriptor|SpritesheetDescriptor)[];
 
 /** Load instruction base interface */
 export interface AssetDescriptor {
@@ -370,25 +399,24 @@ export interface SpritesheetDescriptor extends AssetDescriptor {
 }
 
 /** Load instructions for PixiAnimate stage dependency assets */
-export interface AnimateStageDescriptor extends AssetDescriptor {
+export interface AnimateAssetDescriptor extends AssetDescriptor {
     /** identifier of Animate stage for later retrieval from cache */
     id: string;
-    /** `stage` property from PixiAnimate export */
-    stage: AnimateStage;
+    /** full imported PixiAnimate publish – call asset.setup(animate) before loading */
+    asset: AnimateAsset;
     type: 'animate';
     /** should an instance of this Stage be saved on assets.animations? */
     cacheInstance?:boolean;
 }
 
-/** Stage of PixiAnimate export, includes asset dependency manifest */
-export type AnimateStage = typeof PIXI.animate.MovieClip & {assets: {[key: string]: string}};
-
 export interface AssetCache {
     /** references to data objects from loaded JSON files */
     data: { [key: string]: any };
     /** references to Textures for loaded Images */
-    images: { [key: string]: PIXI.Texture };
+    images: { [key: string]: Texture };
     /** instances of loaded PixiAnimate stages - use these first when possible */
-    animations: { [key: string]: PIXI.animate.MovieClip };
-    spritesheets:{ [key: string]: PIXI.Spritesheet };
+    animations: { [key: string]: MovieClip };
+    /** published Animate asset data, includes stage constructor, metadata, and loaded resources */
+    animateAssets: { [key: string]: AnimateAsset };
+    spritesheets:{ [key: string]: Spritesheet };
 }

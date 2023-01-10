@@ -20,7 +20,7 @@ export default class Tween {
     update: (elapsed: number) => any;
     destroy(): void;
 }
-export declare type TweenStep = {
+export type TweenStep = {
     targetValues?: any;
     initialValues?: any;
     currentTime?: number;
@@ -28,9 +28,9 @@ export declare type TweenStep = {
     ease?: (t: number) => number;
     call?: Function;
 };
-export declare type TweenOptions = {
+export type TweenOptions = {
     override?: boolean;
     loop?: number;
     onComplete?: Function;
 };
-export declare type Ease = 'backInOut' | 'backIn' | 'backOut' | 'bounceInOut' | 'bounceIn' | 'bounceOut' | 'circInOut' | 'circIn' | 'circOut' | 'cubicInOut' | 'cubicIn' | 'cubicOut' | 'elasticInOut' | 'elasticIn' | 'elasticOut' | 'expoInOut' | 'expoIn' | 'expoOut' | 'linear' | 'quadInOut' | 'quadIn' | 'quadOut' | 'quartInOut' | 'quartIn' | 'quartOut' | 'quintInOut' | 'quintIn' | 'quintOut' | 'sineInOut' | 'sineIn' | 'sineOut';
+export type Ease = 'backInOut' | 'backIn' | 'backOut' | 'bounceInOut' | 'bounceIn' | 'bounceOut' | 'circInOut' | 'circIn' | 'circOut' | 'cubicInOut' | 'cubicIn' | 'cubicOut' | 'elasticInOut' | 'elasticIn' | 'elasticOut' | 'expoInOut' | 'expoIn' | 'expoOut' | 'linear' | 'quadInOut' | 'quadIn' | 'quadOut' | 'quartInOut' | 'quartIn' | 'quartOut' | 'quintInOut' | 'quintIn' | 'quintOut' | 'sineInOut' | 'sineIn' | 'sineOut';

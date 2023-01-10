@@ -4,11 +4,13 @@ import { AssetCache } from '../assets/AssetManager';
 import Tween, { Ease } from '../tween/Tween';
 import PauseableTimer from '../timer/PauseableTimer';
 import { Application } from 'springroll';
+import { Point } from '@pixi/math';
+import { Container } from 'pixi.js';
 
 /**
  * Generic Scene base class, parent container for all art and functionality in a given scene
  */
-export default class Scene extends PIXI.Container {
+export default class Scene extends Container {
 
     /** Object containing references to cached instances of assets loaded by the AssetManager */
     protected readonly cache: AssetCache;
@@ -133,7 +135,7 @@ export default class Scene extends PIXI.Container {
         }
     }
 
-    resize(width:number, height:number, offset:PIXI.PointLike) {
+    resize(width:number, height:number, offset:Point) {
         // in case something special needs to happen on resize
     }
 

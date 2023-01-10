@@ -1,7 +1,9 @@
+import { CompleteCallback, IMediaInstance, Sound, sound } from '@pixi/sound';
+
 export default class SoundContext {
 
     /** Map of Sounds by ID */
-    public sounds: {[key:string]: PIXI.sound.Sound} = {};
+    public sounds: {[key:string]: Sound} = {};
     /** Map of individual Sound volumes by ID */
     private volumes: {[key:string]: number} = {};
 
@@ -10,7 +12,7 @@ export default class SoundContext {
 
     public currentSound:string;
     public single:boolean = false;
-    private singleCallback:PIXI.sound.CompleteCallback;
+    private singleCallback:CompleteCallback;
 
     constructor(issingle?:boolean) {
         this.single = (issingle === true);
@@ -35,15 +37,15 @@ export default class SoundContext {
 
     /**
      * 
-     * @param {PIXI.sound.Sound} sound Sound instance to add
+     * @param {pixiSound.Sound} soundInstance Sound instance to add
      * @param {string} id ID of sound to add
      * @param {number} volume Number 0-1 of volume for this sound
      */
-    addSound(sound:PIXI.sound.Sound, id:string, volume:number = 1){
+    addSound(soundInstance:Sound, id:string, volume:number = 1){
         if(this.sounds[id]){
             console.error('Sound already added with id: ', id);
         }
-        this.sounds[id] = sound;
+        this.sounds[id] = soundInstance;
         this.volumes[id] = volume;
         this.applyVolume(id);
     }
@@ -65,7 +67,7 @@ export default class SoundContext {
      * @param {string} id 
      * @param {CompleteCallback} onComplete 
      */
-    play(id:string, onComplete?:PIXI.sound.CompleteCallback) {
+    play(id:string, onComplete?:CompleteCallback):IMediaInstance | Promise<IMediaInstance> {
         if (this.single){
             if(this.currentSound) {
                 // stop currently playing sound
@@ -77,12 +79,12 @@ export default class SoundContext {
         return this.sounds[id].play(this.single ? this.singlePlayComplete : onComplete);
     }
 
-    private singlePlayComplete = (sound:PIXI.sound.Sound)=>{
+    private singlePlayComplete = (soundInstance:Sound)=>{
         this.currentSound = null;
         if(this.singleCallback){
             const call = this.singleCallback;
             this.singleCallback = null;
-            call(sound);
+            call(soundInstance);
         }
     }
 
@@ -139,7 +141,7 @@ export default class SoundContext {
      * @param id ID of sound to remove
      */
     removeSound(id:string){
-        PIXI.sound.remove(id);
+        sound.remove(id);
         delete this.sounds[id];
         delete this.volumes[id];
         if(id === this.currentSound){

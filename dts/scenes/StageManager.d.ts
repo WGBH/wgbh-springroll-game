@@ -1,19 +1,19 @@
-/// <reference types="pixi.js" />
-/// <reference types="pixi-animate" />
 import Scene from './Scene';
-import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
 import PauseableTimer from '../timer/PauseableTimer';
 import { ScaleManager, CaptionData, IRender, Property } from 'springroll';
+import { Application } from '@pixi/app';
+import { Point } from '@pixi/math';
+import { AnimateAsset, MovieClip } from '@pixi/animate';
 /**
  * Manages rendering and transitioning between Scenes
  */
 export default class StageManager {
-    pixi: PIXI.Application;
+    pixi: Application;
     width: number;
     height: number;
-    offset: PIXI.PointLike;
-    transition: PIXI.animate.MovieClip;
+    offset: Point;
+    transition: MovieClip;
     viewFrame: Property<ViewFrame>;
     leftEdge: number;
     rightEdge: number;
@@ -42,7 +42,7 @@ export default class StageManager {
     addScenes(sceneMap: {
         [key: string]: typeof Scene;
     }): void;
-    setTransition(stage: AnimateStage, callback: Function): void;
+    setTransition(asset: AnimateAsset, callback: Function): void;
     /**
      * Transition to specified scene
      * @param {string} sceneID ID of Scene to transition to
@@ -62,7 +62,7 @@ export default class StageManager {
      *
      * @param pointin
      */
-    globalToScene(pointin: PIXI.PointLike): {
+    globalToScene(pointin: Point): {
         x: number;
         y: number;
     };
@@ -72,22 +72,22 @@ export default class StageManager {
     stopCaption(): void;
     update(): void;
 }
-export declare type ScreenSize = {
+export type ScreenSize = {
     width: number;
     height: number;
     ratio: number;
 };
-export declare type RectLike = {
+export type RectLike = {
     width: number;
     height: number;
 };
-export declare type ScaleConfig = {
+export type ScaleConfig = {
     /** DEPRECATED */
     origin?: RectLike;
     min?: RectLike;
     max?: RectLike;
 };
-export declare type ViewFrame = {
+export type ViewFrame = {
     left: number;
     right: number;
     top: number;
@@ -96,5 +96,5 @@ export declare type ViewFrame = {
     verticalCenter: number;
     width: number;
     height: number;
-    offset: PIXI.PointLike;
+    offset: Point;
 };

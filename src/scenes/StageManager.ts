@@ -1,9 +1,12 @@
 import Scene from './Scene';
-import { AnimateStage } from '../assets/AssetManager';
 import { Game } from '..';
 import GameTime from '../timer/GameTime';
 import PauseableTimer from '../timer/PauseableTimer';
 import { ScaleManager, CaptionPlayer, CaptionData, IRender, Property } from 'springroll';
+import { Application } from '@pixi/app';
+import { Point } from '@pixi/math';
+import { AnimateAsset, Animator, MovieClip } from '@pixi/animate';
+import { Ticker } from '@pixi/ticker';
 
 const LOADING_DELAY = 250;
 
@@ -31,11 +34,11 @@ const TRANSITION_ID = 'wgbhSpringRollGameTransition';
  * Manages rendering and transitioning between Scenes
  */
 export default class StageManager{
-    public pixi: PIXI.Application;
+    public pixi: Application;
     public width: number;
     public height: number;
-    public offset:PIXI.PointLike; // offset for the x,y origin when resizing
-    public transition:PIXI.animate.MovieClip;
+    public offset:Point; // offset for the x,y origin when resizing
+    public transition:MovieClip;
     public viewFrame:Property<ViewFrame>;
     public leftEdge:number; // deprecate leftEdge/rightEdge in favor of more comprehensive viewFrame
     public rightEdge:number;
@@ -72,7 +75,7 @@ export default class StageManager{
         this.width = width;
         this.height = height;
 
-        this.offset = new PIXI.Point(0,0);
+        this.offset = new Point(0,0);
 
         // transparent rendering mode is bad for overall performance, but necessary in order
         // to prevent flickering on some Android devices such as Galaxy Tab A and Kindle Fire
@@ -95,7 +98,7 @@ export default class StageManager{
             }
         }
 
-        this.pixi = new PIXI.Application({ width, height, antialias:!badSafari, transparent:flickerProne});
+        this.pixi = new Application({ width, height, antialias:!badSafari, transparent:flickerProne});
         this.pixi.view.style.display = 'block';
 
 
@@ -140,9 +143,9 @@ export default class StageManager{
         }
     }
 
-    setTransition(stage:AnimateStage, callback:Function){
+    setTransition(asset:AnimateAsset, callback:Function){
         this.game.assetManager.loadAssets([
-                {type:'animate', stage:stage, id:TRANSITION_ID, isGlobal:true, cacheInstance:true}
+                {type:'animate', asset:asset, id:TRANSITION_ID, isGlobal:true, cacheInstance:true}
             ], ()=>{
                 this.transition = this.game.cache.animations[TRANSITION_ID];
                 const curtainLabels = [
@@ -181,13 +184,13 @@ export default class StageManager{
                 this.pixi.stage.addChild(this.transition);
                 this.transition.stop();
                 if(oldScene){
-                    return new Promise((resolve)=>{
-                        PIXI.animate.Animator.play(this.transition, 'cover', resolve);
+                    return new Promise<void>((resolve)=>{
+                        Animator.play(this.transition, 'cover', resolve);
                     });
                 }
             })
             .then(()=>{
-                PIXI.animate.Animator.play(this.transition, 'load');
+                Animator.play(this.transition, 'load');
                 if(oldScene){
                     this.pixi.stage.removeChild(oldScene);
                     oldScene.cleanup();
@@ -233,8 +236,8 @@ export default class StageManager{
                 });
             })
             .then(()=>{
-                return new Promise((resolve)=>{
-                    PIXI.animate.Animator.play(this.transition, 'reveal', resolve);
+                return new Promise<void>((resolve)=>{
+                    Animator.play(this.transition, 'reveal', resolve);
                 });
             })
             .then(()=>{
@@ -263,10 +266,10 @@ export default class StageManager{
         }
         if(this.pixi && this.pixi.ticker){
             if(pause){
-                PIXI.ticker.shared.stop();
+                Ticker.shared.stop();
             }
             else{
-                PIXI.ticker.shared.start();
+                Ticker.shared.start();
             }
         }
     }
@@ -348,7 +351,7 @@ export default class StageManager{
         let verticalOffset = (calcheight - tallSize.height) * 0.5;
         this.offset.x = offset;
         this.offset.y = verticalOffset;
-        this.pixi.stage.position.copy(this.offset);
+        this.pixi.stage.position.copyFrom(this.offset);
         const newframe = {
             left: offset * -1,
             right: calcwidth - offset,
@@ -388,7 +391,7 @@ export default class StageManager{
      * 
      * @param pointin 
      */
-    globalToScene(pointin:PIXI.PointLike) {
+    globalToScene(pointin:Point) {
         return {x:pointin.x - this.offset.x, y:pointin.y - this.offset.y};
     }
 
@@ -417,7 +420,7 @@ export default class StageManager{
         if (this.isPaused){
             return;
         }
-        const elapsed = PIXI.ticker.shared.elapsedMS;
+        const elapsed = Ticker.shared.elapsedMS;
         if (this.captions) {
             this.captions.update(elapsed/1000); // captions go by seconds, not ms
         }
@@ -458,5 +461,5 @@ export type ViewFrame = {
     verticalCenter:number,
     width:number,
     height:number,
-    offset:PIXI.PointLike
+    offset:Point
 };

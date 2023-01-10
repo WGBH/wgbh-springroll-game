@@ -1,5 +1,5 @@
-/// <reference types="pixi-animate" />
-/// <reference types="pixi.js" />
+import { AnimateAsset, MovieClip } from '@pixi/animate';
+import { Spritesheet, Texture } from 'pixi.js';
 import SoundManager from "../sound/SoundManager";
 /**
  * Manages loading, caching, and unloading of assets
@@ -31,7 +31,7 @@ export default class AssetManager {
     unloadAssets(includeGlobal?: boolean): void;
     /**
      * load assets for a PixiAnimate stage
-     * @param {AnimateStageDescriptor} animateStageDescriptor
+     * @param {AnimateAssetDescriptor} animateAssetDescriptor
      */
     private loadAnimate;
     /**
@@ -61,7 +61,7 @@ export default class AssetManager {
     private loadManifest;
 }
 /** Array of  */
-export declare type AssetList = (ManifestDescriptor | AnimateStageDescriptor | DataDescriptor | ImageDescriptor | SoundDescriptor | SpritesheetDescriptor)[];
+export type AssetList = (ManifestDescriptor | AnimateAssetDescriptor | DataDescriptor | ImageDescriptor | SoundDescriptor | SpritesheetDescriptor)[];
 /** Load instruction base interface */
 export interface AssetDescriptor {
     /** Should asset stay in cache after current Scene is exited? */
@@ -114,21 +114,15 @@ export interface SpritesheetDescriptor extends AssetDescriptor {
     type: 'spritesheet';
 }
 /** Load instructions for PixiAnimate stage dependency assets */
-export interface AnimateStageDescriptor extends AssetDescriptor {
+export interface AnimateAssetDescriptor extends AssetDescriptor {
     /** identifier of Animate stage for later retrieval from cache */
     id: string;
-    /** `stage` property from PixiAnimate export */
-    stage: AnimateStage;
+    /** full imported PixiAnimate publish – call asset.setup(animate) before loading */
+    asset: AnimateAsset;
     type: 'animate';
     /** should an instance of this Stage be saved on assets.animations? */
     cacheInstance?: boolean;
 }
-/** Stage of PixiAnimate export, includes asset dependency manifest */
-export declare type AnimateStage = typeof PIXI.animate.MovieClip & {
-    assets: {
-        [key: string]: string;
-    };
-};
 export interface AssetCache {
     /** references to data objects from loaded JSON files */
     data: {
@@ -136,13 +130,17 @@ export interface AssetCache {
     };
     /** references to Textures for loaded Images */
     images: {
-        [key: string]: PIXI.Texture;
+        [key: string]: Texture;
     };
     /** instances of loaded PixiAnimate stages - use these first when possible */
     animations: {
-        [key: string]: PIXI.animate.MovieClip;
+        [key: string]: MovieClip;
+    };
+    /** published Animate asset data, includes stage constructor, metadata, and loaded resources */
+    animateAssets: {
+        [key: string]: AnimateAsset;
     };
     spritesheets: {
-        [key: string]: PIXI.Spritesheet;
+        [key: string]: Spritesheet;
     };
 }
