@@ -178,7 +178,8 @@ export default class StageManager{
         this.transitioning = true;
         Promise.resolve()
             .then(()=>{
-                this.pixi.stage.addChild(this.transition);
+				const layerAbove = this.pixi.stage.getChildByName("letterbox_top");
+				if (layerAbove !== null) { this.pixi.stage.addChildAt(this.transition, this.pixi.stage.getChildIndex(layerAbove)); } else { this.pixi.stage.addChild(this.transition); }
                 this.transition.stop();
                 if(oldScene){
                     return new Promise((resolve)=>{
