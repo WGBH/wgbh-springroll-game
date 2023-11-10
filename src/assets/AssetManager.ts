@@ -74,7 +74,7 @@ export default class AssetManager {
                 (asset.type === 'sound' && this.globalCache.sounds.includes(asset.id)) ||
                 (asset.type === 'image' && this.globalCache.textures.includes(asset.id))
             ){
-                console.info('Using global asset: ', asset.id);
+                //console.info('Using global asset: ', asset.id);
                 continue;
             }
             asset.isGlobal ? globalList.push(asset) : localList.push(asset);

@@ -80,7 +80,7 @@ var AssetManager = /** @class */ (function () {
                 (asset.type === 'data' && this.globalCache.data.includes(asset.id)) ||
                 (asset.type === 'sound' && this.globalCache.sounds.includes(asset.id)) ||
                 (asset.type === 'image' && this.globalCache.textures.includes(asset.id))) {
-                console.info('Using global asset: ', asset.id);
+                //console.info('Using global asset: ', asset.id);
                 continue;
             }
             asset.isGlobal ? globalList.push(asset) : localList.push(asset);
@@ -468,7 +468,13 @@ var StageManager = /** @class */ (function () {
             _this.transitioning = true;
             Promise.resolve()
                 .then(function () {
-                _this.pixi.stage.addChild(_this.transition);
+                var layerAbove = _this.pixi.stage.getChildByName("letterbox_top");
+                if (layerAbove !== null) {
+                    _this.pixi.stage.addChildAt(_this.transition, _this.pixi.stage.getChildIndex(layerAbove));
+                }
+                else {
+                    _this.pixi.stage.addChild(_this.transition);
+                }
                 _this.transition.stop();
                 if (oldScene) {
                     return new Promise(function (resolve) {
