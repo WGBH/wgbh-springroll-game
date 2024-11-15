@@ -98,11 +98,11 @@ export default class StageManager{
             }
         }
 
-        this.pixi = new Application({ width, height, antialias:!badSafari, transparent:flickerProne});
-        this.pixi.view.style.display = 'block';
+        this.pixi = new Application({ width, height, antialias:!badSafari, backgroundAlpha:flickerProne ? 0 : 1});
+        let view = this.pixi.view as HTMLCanvasElement;
+        view.style.display = 'block';
 
-
-        document.getElementById(containerID).appendChild(this.pixi.view);
+        document.getElementById(containerID).appendChild(view);
 
         const baseSize = {width:width,height:height};
 
@@ -306,21 +306,22 @@ export default class StageManager{
         const tallSize = this._maxSize.height > this._minSize.height ? this._maxSize : this._minSize;
         let calcwidth:number;
         let calcheight:number;
+        let view = this.pixi.view as HTMLCanvasElement;
         if(aspect > wideSize.ratio) {
             // locked in at max (2:1)
             calcwidth = wideSize.width;
             calcheight = wideSize.height;
             // these styles could - probably should - be replaced by media queries in CSS
-            this.pixi.view.style.height = `${height}px`;
-            this.pixi.view.style.width = `${Math.floor(wideSize.ratio * height)}px`;
-            this.pixi.view.style.margin = '0 auto';
+            view.style.height = `${height}px`;
+            view.style.width = `${Math.floor(wideSize.ratio * height)}px`;
+            view.style.margin = '0 auto';
         } else if (aspect < tallSize.ratio) {
             calcwidth = tallSize.width;
             calcheight = tallSize.height;
             let viewHeight = Math.floor(width / tallSize.ratio);
-            this.pixi.view.style.height = `${viewHeight}px`;
-            this.pixi.view.style.width = `${width}px`;
-            this.pixi.view.style.margin = `${Math.floor((height - viewHeight)/2)}px 0`;
+            view.style.height = `${viewHeight}px`;
+            view.style.width = `${width}px`;
+            view.style.margin = `${Math.floor((height - viewHeight)/2)}px 0`;
         } else {
             // between min and max ratio
             if(wideSize.width !== tallSize.width){
@@ -343,9 +344,9 @@ export default class StageManager{
             }
 
 
-            this.pixi.view.style.height = `${height}px`;
-            this.pixi.view.style.width = `${width}px`;
-            this.pixi.view.style.margin = '0';
+            view.style.height = `${height}px`;
+            view.style.width = `${width}px`;
+            view.style.margin = '0';
         }
         let offset = (calcwidth - wideSize.width) * 0.5; // offset assumes that the upper left on MIN is 0,0 and the center is fixed
         let verticalOffset = (calcheight - tallSize.height) * 0.5;

@@ -78,7 +78,7 @@ export interface SoundDescriptor extends AssetDescriptor {
     /** identifier of sound for later retrieval from cache */
     id: string;
     /** path to audio file. Supports automatic format selection via './path/to/file.{ogg,mp3}' */
-    path: string;
+    path: string | string[];
     type: 'sound';
     /** volume to initialize this sound to */
     volume?: number;
