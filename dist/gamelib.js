@@ -222,7 +222,6 @@ class AssetManager {
             assetsToLoad.push({ alias: asset.id, src: asset.path });
         }
         return Assets.load(assetsToLoad).then((records) => {
-            console.log('loaded images: ', records);
             for (let key of Object.keys(records)) {
                 this.cache.images[key] = records[key];
             }
@@ -257,7 +256,6 @@ class AssetManager {
      */
     loadData(dataDescriptor) {
         return Assets.load({ alias: dataDescriptor.id, src: dataDescriptor.path }).then((record) => {
-            console.log('loaded data: ', record);
             this.cache.data[dataDescriptor.id] = record;
             if (dataDescriptor.isGlobal) {
                 this.globalCache.data.push(dataDescriptor.id);
@@ -270,7 +268,6 @@ class AssetManager {
      */
     loadSpritesheet(descriptor) {
         return Assets.load({ alias: descriptor.id, src: descriptor.path }).then((record) => {
-            console.log('loaded spritesheet: ', record);
             this.cache.spritesheets[descriptor.id] = record;
             if (descriptor.isGlobal) {
                 this.globalCache.spritesheets.push(descriptor.id);
@@ -283,7 +280,6 @@ class AssetManager {
      */
     loadManifest(manifestDescriptor) {
         return Assets.load(manifestDescriptor.path).then((record) => {
-            console.log('loaded manifest: ', record);
             const data = record;
             if (manifestDescriptor.isGlobal) {
                 for (let entry of data) {
