@@ -115,7 +115,7 @@ export default class AssetManager {
                         loads.push(this.loadSound(asset));
                         break;
                     case 'image':
-                    imageAssets.push(asset);
+                        imageAssets.push(asset);
                         break;
                 }
             }
@@ -159,38 +159,32 @@ export default class AssetManager {
         }
         for(let id in this.cache.animateAssets){
             if(!this.globalCache.animations.includes(id)){
+                //Clear out references to shapes, textures, and spritesheets.
+                //These will all be destroyed by calling Assets.unload() for each asset
                 for(let key in this.cache.animateAssets[id].shapes){
                     delete this.cache.animateAssets[id].shapes[key];
                 }
                 for(let key in this.cache.animateAssets[id].textures){
-                    this.cache.animateAssets[id].textures[key].destroy(true);
                     delete this.cache.animateAssets[id].textures[key];
                 }
-                for(let spritesheet of this.cache.animateAssets[id].spritesheets){
-                    spritesheet.destroy(true);
-                }
                 this.cache.animateAssets[id].spritesheets.length = 0;
+
+                for(let key in this.cache.animateAssets[id].assets){
+                    Assets.unload(key);
+                }
                 delete this.cache.animateAssets[id];
             }
         }
         for(let id in this.cache.spritesheets){
             if(!this.globalCache.spritesheets.includes(id)){
-                for(let key of Object.keys(this.cache.spritesheets[id].textures)){
-                    this.cache.spritesheets[id].textures[key].destroy(true);
-                }
-                for(let key of Object.keys(this.cache.spritesheets[id].animations)){
-                    for(let texture of this.cache.spritesheets[id].animations[key]){
-                        texture.destroy(true);
-                    }
-                }
-                this.cache.spritesheets[id].destroy(true);
                 delete this.cache.spritesheets[id];
+                Assets.unload(id);
             }
         }
-        for(let id in utils.TextureCache){
+        for(let id in this.cache.images){
             if(!this.globalCache.textures.includes(id)){
-                utils.TextureCache[id].destroy(true);
                 delete this.cache.images[id];
+                Assets.unload(id);
             }
         }
         for(let i = this.soundIDs.length - 1; i >= 0; i--){
