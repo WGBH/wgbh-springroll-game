@@ -1,24 +1,21 @@
 {
-    "compilerOptions": {
-        "outDir": "dist",
-        "declaration": true,
-        "declarationDir": "dts",
-        "inlineSources": true,
-        "sourceMap": true,
-        "target": "es5",
-        "allowJs": false,
-        "module": "ES2015",
-        "lib":["es2016", "dom"],
-        "moduleResolution": "node",
-        "noUnusedLocals": true,
-        "noImplicitAny": true,
-        "removeComments": false,
-        "stripInternal": true,
-        "types": []
-    },
-    "compileOnSave": false,
-    "include": [
-        "src/**/*.d.ts",
-        "src/**/*.ts"
-    ]
+  "compilerOptions": {
+    "outDir": "dist",
+    "declaration": true,
+    "declarationDir": "dts",
+    "inlineSources": true,
+    "sourceMap": true,
+    "target": "es5",
+    "allowJs": false,
+    "module": "ES2015",
+    "lib": ["es2016", "dom"],
+    "moduleResolution": "node",
+    "noUnusedLocals": true,
+    "noImplicitAny": true,
+    "removeComments": false,
+    "stripInternal": true,
+    "types": []
+  },
+  "compileOnSave": false,
+  "include": ["src/**/*.d.ts", "src/**/*.ts"]
 }
