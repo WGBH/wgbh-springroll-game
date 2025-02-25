@@ -426,6 +426,9 @@ class StageManager {
         console.warn('scale is obsolete, please reference viewFrame for stage size info');
         return 1;
     }
+    get currentScene() {
+        return this._currentScene;
+    }
     constructor(game) {
         this.transitioning = true;
         this.isPaused = false;
@@ -1524,6 +1527,7 @@ Tween.tweens = [];
 class Scene extends Container {
     constructor(game) {
         super();
+        this.game = game;
         this.app = game.app;
         this.assetManager = game.assetManager;
         this.cache = this.assetManager.cache;

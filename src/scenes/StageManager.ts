@@ -63,6 +63,10 @@ export default class StageManager{
         return 1;
     }
 
+    public get currentScene():Scene {
+        return this._currentScene;
+    }
+
     constructor(game:Game){
         this.game = game;
     }

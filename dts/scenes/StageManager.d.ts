@@ -29,6 +29,7 @@ export default class StageManager {
     /** Map of Scenes by Scene IDs */
     private scenes;
     get scale(): number;
+    get currentScene(): Scene;
     constructor(game: Game);
     createRenderer(containerID: string, width: number, height: number, altWidth?: number, altHeight?: number, playOptions?: any & {
         cordova?: string;
