@@ -86,15 +86,15 @@ export default class StageManager{
         const flickerProne = !!FLICKERERS.find((value) => value.test(navigator.userAgent));
 
         // Does this version of Safari break antialiasing?
-        let badSafari = navigator.userAgent.includes('Safari') && navigator.userAgent.includes('Version/15.4');
+        let badSafari = navigator.userAgent.includes('Safari') && navigator.userAgent.includes('Version/15');
         // For Cordova:
         let cordovaWindow:Window & {device:{platform:string; version:string;}} = window as any;
-        if(cordovaWindow.device && cordovaWindow.device.platform === 'iOS' && cordovaWindow.device.version.startsWith('15.4')){
+        if(cordovaWindow.device && cordovaWindow.device.platform === 'iOS' && cordovaWindow.device.version.startsWith('15')){
             badSafari = true;
         }
         else if(playOptions && playOptions.cordova && playOptions.platform === 'iOS'){
             if(playOptions.osVersion){
-                badSafari = playOptions.osVersion.startsWith('15.4');
+                badSafari = playOptions.osVersion.startsWith('15');
             }
             else{
                 //if no osVersion provided by Games App, disable antialiasing on all iOS
