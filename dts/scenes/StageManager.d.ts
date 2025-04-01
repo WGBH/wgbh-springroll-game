@@ -1,7 +1,7 @@
 import Scene from './Scene';
 import { Game } from '..';
 import PauseableTimer from '../timer/PauseableTimer';
-import { ScaleManager, CaptionData, IRender, Property } from 'springroll';
+import { ScaleManager, CaptionPlayer, CaptionData, IRender, Property } from 'springroll';
 import { Application } from '@pixi/app';
 import { Point } from '@pixi/math';
 import { AnimateAsset, MovieClip } from '@pixi/animate';
@@ -24,7 +24,7 @@ export default class StageManager {
     private transitioning;
     private isPaused;
     private game;
-    private captions;
+    captions: CaptionPlayer;
     private isCaptionsMuted;
     /** Map of Scenes by Scene IDs */
     private scenes;

@@ -53,7 +53,7 @@ export default class StageManager{
     private isPaused = false;
     private game:Game;
 
-    private captions:CaptionPlayer;
+    public captions:CaptionPlayer;
     private isCaptionsMuted:boolean;
 
     /** Map of Scenes by Scene IDs */
