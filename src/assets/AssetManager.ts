@@ -1,6 +1,6 @@
 import { AnimateAsset, load, MovieClip } from '@pixi/animate';
 import * as animate from '@pixi/animate';
-import { Loader, ILoaderResource, Spritesheet, Texture, utils } from 'pixi.js';
+import { Assets, Spritesheet, Texture, UnresolvedAsset, utils } from 'pixi.js';
 import SoundManager from "../sound/SoundManager";
 import { Options, sound } from '@pixi/sound';
 
@@ -115,7 +115,7 @@ export default class AssetManager {
                         loads.push(this.loadSound(asset));
                         break;
                     case 'image':
-                    imageAssets.push(asset);
+                        imageAssets.push(asset);
                         break;
                 }
             }
@@ -159,38 +159,32 @@ export default class AssetManager {
         }
         for(let id in this.cache.animateAssets){
             if(!this.globalCache.animations.includes(id)){
+                //Clear out references to shapes, textures, and spritesheets.
+                //These will all be destroyed by calling Assets.unload() for each asset
                 for(let key in this.cache.animateAssets[id].shapes){
                     delete this.cache.animateAssets[id].shapes[key];
                 }
                 for(let key in this.cache.animateAssets[id].textures){
-                    this.cache.animateAssets[id].textures[key].destroy(true);
                     delete this.cache.animateAssets[id].textures[key];
                 }
-                for(let spritesheet of this.cache.animateAssets[id].spritesheets){
-                    spritesheet.destroy(true);
-                }
                 this.cache.animateAssets[id].spritesheets.length = 0;
+
+                for(let key in this.cache.animateAssets[id].assets){
+                    Assets.unload(key);
+                }
                 delete this.cache.animateAssets[id];
             }
         }
         for(let id in this.cache.spritesheets){
             if(!this.globalCache.spritesheets.includes(id)){
-                for(let key of Object.keys(this.cache.spritesheets[id].textures)){
-                    this.cache.spritesheets[id].textures[key].destroy(true);
-                }
-                for(let key of Object.keys(this.cache.spritesheets[id].animations)){
-                    for(let texture of this.cache.spritesheets[id].animations[key]){
-                        texture.destroy(true);
-                    }
-                }
-                this.cache.spritesheets[id].destroy(true);
                 delete this.cache.spritesheets[id];
+                Assets.unload(id);
             }
         }
-        for(let id in utils.TextureCache){
+        for(let id in this.cache.images){
             if(!this.globalCache.textures.includes(id)){
-                utils.TextureCache[id].destroy(true);
                 delete this.cache.images[id];
+                Assets.unload(id);
             }
         }
         for(let i = this.soundIDs.length - 1; i >= 0; i--){
@@ -199,9 +193,6 @@ export default class AssetManager {
                 this.soundManager.removeSound(id);
                 this.soundIDs.splice(i, 1);
             }
-        }
-        for(let id in Loader.shared.resources){
-            console.warn('unmanaged resource detected: ', id, Loader.shared.resources[id]);
         }
         this.sceneActive = false;
     }
@@ -237,18 +228,15 @@ export default class AssetManager {
      * @param {ImageDescriptor[]} assets Array of imnages assets to load
      */
     private loadImages(assets:ImageDescriptor[]):Promise<any>{
-        let imageLoader = new Loader();
-        return new Promise<void>((resolve)=>{
-            for(let asset of assets){
-                imageLoader.add(asset.id, asset.path);
+        let assetsToLoad:UnresolvedAsset[] = [];
+
+        for(let asset of assets){
+            assetsToLoad.push({alias:asset.id, src:asset.path});
+        }
+        return Assets.load(assetsToLoad).then((records)=>{
+            for(let key of Object.keys(records)){
+                this.cache.images[key] = records[key];
             }
-            imageLoader.load((loader:Loader, resources:{[key:string]: ILoaderResource })=>{
-                for(let key of Object.keys(resources)){
-                    this.cache.images[key] = resources[key].texture;
-                }
-                imageLoader.destroy();
-                resolve();
-            });
         });
     }
 
@@ -282,17 +270,11 @@ export default class AssetManager {
      * @param {DataDescriptor} dataDescriptor 
      */
     private loadData(dataDescriptor:DataDescriptor):Promise<void>{
-        const dataLoader = new Loader();
-        return new Promise((resolve)=>{
-            dataLoader.add(dataDescriptor.id, dataDescriptor.path);
-            dataLoader.load((loader:Loader, resources:{[key:string]: ILoaderResource })=>{
-                this.cache.data[dataDescriptor.id] = resources[dataDescriptor.id].data;
-                if(dataDescriptor.isGlobal){
-                    this.globalCache.data.push(dataDescriptor.id);
-                }
-                dataLoader.destroy();
-                resolve();
-            });
+        return Assets.load({alias:dataDescriptor.id, src:dataDescriptor.path}).then((record)=>{
+            this.cache.data[dataDescriptor.id] = record;
+            if(dataDescriptor.isGlobal){
+                this.globalCache.data.push(dataDescriptor.id);
+            }
         });
     }
 
@@ -301,17 +283,11 @@ export default class AssetManager {
      * @param {SpritesheetDescriptor} descriptor 
      */
     private loadSpritesheet(descriptor:SpritesheetDescriptor):Promise<void>{
-        const dataLoader = new Loader();
-        return new Promise((resolve)=>{
-            dataLoader.add(descriptor.id, descriptor.path);
-            dataLoader.load((loader:Loader, resources:{[key:string]: ILoaderResource })=>{
-                this.cache.spritesheets[descriptor.id] = resources[descriptor.id].spritesheet;
-                if(descriptor.isGlobal){
-                    this.globalCache.spritesheets.push(descriptor.id);
-                }
-                dataLoader.destroy();
-                resolve();
-            });
+        return Assets.load({alias:descriptor.id, src:descriptor.path}).then((record)=>{
+            this.cache.spritesheets[descriptor.id] = record;
+            if(descriptor.isGlobal){
+                this.globalCache.spritesheets.push(descriptor.id);
+            }
         });
     }
 
@@ -320,20 +296,14 @@ export default class AssetManager {
      * @param {ManifestDescriptor} manifestDescriptor 
      */
     private loadManifest(manifestDescriptor:ManifestDescriptor):Promise<AssetDescriptor[]>{
-        const dataLoader = new Loader();
-        return new Promise((resolve)=>{
-            dataLoader.add(manifestDescriptor.path);
-            dataLoader.load((loader:Loader, resources:{[key:string]: ILoaderResource })=>{
-                const data:AssetDescriptor[] = resources[manifestDescriptor.path].data;
-                dataLoader.destroy();
-                if(manifestDescriptor.isGlobal){
-                    for(let entry of data){
-                        entry.isGlobal = true;
-                    }
+        return Assets.load(manifestDescriptor.path).then((record)=>{
+            const data:AssetDescriptor[] = record;
+            if(manifestDescriptor.isGlobal){
+                for(let entry of data){
+                    entry.isGlobal = true;
                 }
-                resolve(data);
-                
-            });
+            }
+            return data;
         });
     }
 }
@@ -359,7 +329,7 @@ export interface SoundDescriptor extends AssetDescriptor {
     /** identifier of sound for later retrieval from cache */
     id: string;
     /** path to audio file. Supports automatic format selection via './path/to/file.{ogg,mp3}' */
-    path: string;
+    path: string | string[];
     type: 'sound';
     /** volume to initialize this sound to */
     volume?: number;

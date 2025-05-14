@@ -27,6 +27,8 @@ export default class Scene extends Container {
     protected readonly stageManager: StageManager;
     /** Object reference to Game's SpringRoll Application, interface to Container */
     protected readonly app: Application;
+    /** instance of Game that this Scene belongs to */
+    protected readonly game: Game;
     constructor(game: Game);
     /**
      * Provide list of assets to preload.

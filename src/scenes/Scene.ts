@@ -33,8 +33,12 @@ export default class Scene extends Container {
     /** Object reference to Game's SpringRoll Application, interface to Container */
     protected readonly app: Application;
 
+    /** instance of Game that this Scene belongs to */
+    protected readonly game: Game;
+
     constructor(game:Game) {
         super();
+        this.game = game;
         this.app = game.app;
         this.assetManager = game.assetManager;
         this.cache = this.assetManager.cache;
